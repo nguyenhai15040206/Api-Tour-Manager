@@ -19,5 +19,5 @@ namespace QuanLyTourDuLich
         public bool showFirst => currentPage != 1;
         public bool showLast => currentPage != totalPage;
     }
-    // Nguyen Tan Hai
+    // Thái Trần Kiều Diêmx
 }
