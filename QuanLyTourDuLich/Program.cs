@@ -22,7 +22,7 @@ namespace QuanLyTourDuLich
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-
+        // OK
         //Scaffold-DbContext "Server=DESKTOP-4MGR8RB\SQLEXPRESS;Database=HUFI_09DHTH_TourManager;User ID=sa;Password=tanhai123;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
     }
 }
