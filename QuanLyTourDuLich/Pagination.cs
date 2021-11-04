@@ -19,4 +19,5 @@ namespace QuanLyTourDuLich
         public bool showFirst => currentPage != 1;
         public bool showLast => currentPage != totalPage;
     }
+    // Thái Trần Kiều Diêmx
 }
