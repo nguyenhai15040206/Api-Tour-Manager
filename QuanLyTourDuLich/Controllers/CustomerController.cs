@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -91,26 +92,97 @@ namespace QuanLyTourDuLich.Controllers
                           ).FirstOrDefaultAsync();
         }
 
-        // Đăng kí
+
+        // [Thai Tran Kieu Diem][11/06/2021]
+        // get danh sách khách hàng
+        [HttpGet("CustomerList")]
+        public async Task<IActionResult> GetCustomer_List(int page=1,int limit = 10)
+        {
+            try {
+                var list = await (from kh in _context.Customer
+                                  where (kh.IsDelete == null || kh.IsDelete == false)
+                                  select new
+                                  {
+                                      kh.CustomerName,
+                                      kh.Gender,
+                                      kh.PhoneNumber,
+                                      kh.Address
+                                  }).Skip((page - 1) * limit).Take(limit).ToListAsync();
+                int totalRecord = list.Count();
+                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
+                var pagination = new Pagination
+                {
+                    count = totalRecord,
+                    currentPage = page,
+                    pagsize = limit,
+                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
+                    indexOne = ((page - 1) * limit + 1),
+                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
+                };
+                // status code 200
+                return Ok(new
+                {
+                    data = list,
+                    pagination = pagination
+
+                });
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+
+        //get danh sách khách hàng theo mã khách hàng
+        [HttpGet("{cusId:int}")]
+        public async Task<Customer> getCustomerById(int cusId)
+        {
+            return await (from kh in _context.Customer
+                          where (kh.IsDelete == null || kh.IsDelete == false)
+                          && kh.CustomerId==cusId
+                          select kh).FirstOrDefaultAsync();
+        }
+
+        // [Thai Tran Kieu Diem][11/06/2021]
+        // Đăng kí khách hàng
         [HttpPost]
         public async Task<ActionResult<IEnumerable<Customer>>> Register([FromBody] Customer khachHang)
         {
             // Ý Nghĩa:  đăng kí thông tin khách
-            if(khachHang != null)
+            try {
+                if (khachHang != null)
+                {
+                    Customer kh = new Customer();
+                    kh.CustomerName = khachHang.CustomerName;
+                    kh.Gender = khachHang.Gender;
+                    kh.PhoneNumber = khachHang.PhoneNumber;
+                    kh.Email = khachHang.Email;
+                    kh.Address = khachHang.Address;
+                    kh.Password = khachHang.Password;
+                    kh.DateInsert = DateTime.Now;
+                    kh.DateUpdate = null;
+                    kh.IsDelete = null;
+                    _context.Customer.Add(kh);
+                    await _context.SaveChangesAsync();
+                    return Ok(kh);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            } 
+            catch(Exception)
             {
-                _context.Customer.Add(khachHang);
-                await _context.SaveChangesAsync();
-                return new ObjectResult(khachHang);
-            }
-            else
-            {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
 
+
+        // [Thai Tran Kieu Diem][11/06/2021]
         // Update Khách hàng
-        [Authorize]
-        [HttpPut("{maKhachHang}")]
+        //[Authorize]
+        [HttpPut("UpdateCustomer/{customerID:int}")]
         public async Task<IActionResult> UpdateCustomer(int customerID, [FromBody] Customer khachHang)
         {
             // Ý nghĩa : Cập nhật thông tin một khách hàng
@@ -120,22 +192,53 @@ namespace QuanLyTourDuLich.Controllers
             }
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch(DbUpdateConcurrencyException)
-            {
-                if (!CustomerExits(customerID))
+                var UpdateCus = await (from kh in _context.Customer
+                                       where (kh.IsDelete == null || kh.IsDelete == false)
+                                       && kh.CustomerId == customerID
+                                       select kh).FirstOrDefaultAsync();
+                if (UpdateCus == null)
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                UpdateCus.CustomerName = khachHang.CustomerName;
+                UpdateCus.PhoneNumber = khachHang.PhoneNumber;
+                UpdateCus.Gender = khachHang.Gender;
+                UpdateCus.Address = khachHang.Address;
+                UpdateCus.Password = khachHang.Password;
+                UpdateCus.DateUpdate = DateTime.Now;
+                await _context.SaveChangesAsync();
+                return Ok(UpdateCus);
             }
-            return NoContent();
+            catch(DbUpdateConcurrencyException)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
         }
 
+
+        // [Thai Tran Kieu Diem][11/06/2021]
+        //Vô hiệu hóa tài khoản khách hàng  
+        [HttpPut("DeleteCustomer/{customerId:int}")]
+        public async Task<IActionResult> DeleteCustomer (int customerId)
+        {
+            try 
+            {
+                var delCus = await (from cus in _context.Customer
+                                    where (cus.IsDelete == null || cus.IsDelete == false)
+                                    && cus.CustomerId == customerId
+                                    select cus).FirstOrDefaultAsync();
+                if (delCus == null)
+                    return NotFound();
+                delCus.DateUpdate = DateTime.Now;
+                delCus.IsDelete = true;
+                await _context.SaveChangesAsync();
+                return Ok(delCus);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
         // Kiểm tra tồn tại moot khách hàng
         private bool CustomerExits(int customerID)
         {

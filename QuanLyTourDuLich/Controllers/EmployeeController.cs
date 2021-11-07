@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
@@ -94,5 +95,172 @@ namespace QuanLyTourDuLich.Controllers
                           select c
                           ).FirstOrDefaultAsync();
         }
+
+
+        //[Thai Tran Kieu Diem][11/06/2021]
+        // get danh sách nhân viên với page=1 limit=20
+
+        [HttpGet("EmployeesList")]
+        public async Task<IActionResult> GetEmployee(int page=1,int limit = 20)
+        {
+            try
+            {
+                var newEmp = await (from emp in _context.Employee
+                                    where (emp.IsDelete == null || emp.IsDelete == false)
+                                    orderby emp.DateUpdate == null ? emp.DateInsert : emp.DateUpdate descending
+                                    select new
+                                    {
+                                        emp.EmpId,
+                                        emp.EmpName,
+                                        emp.Gender,
+                                        emp.DateOfBirth,
+                                        emp.WorkingDate,
+                                        emp.PhoneNumber,
+                                        emp.Email,
+                                        emp.Avatar
+                                    }).Skip((page - 1) * limit).Take(limit).ToListAsync();
+                int totalRecord = newEmp.Count();
+                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
+                var pagination = new Pagination
+                {
+                    count = totalRecord,
+                    currentPage = page,
+                    pagsize = limit,
+                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
+                    indexOne = ((page - 1) * limit + 1),
+                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
+                };
+                // status code 200
+                return Ok(new
+                {
+                    data = newEmp,
+                    pagination = pagination
+
+                });
+            }
+            catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        // [Thai Tran Kieu Diem][11/06/2021]
+        // Thêm nhân viên
+        //[Authorize]
+        [HttpPost("CreateEmp")]
+        public async Task<ActionResult<Employee>> CreateEmp([FromBody] Employee emp)
+        {
+            try
+            {
+                if (emp == null)
+                {
+                    return BadRequest();
+                }
+                Employee newEmp = new Employee();
+                newEmp.EmpName = emp.EmpName;
+                newEmp.Gender = emp.Gender;
+                newEmp.DateOfBirth = emp.DateOfBirth;
+                newEmp.WorkingDate = DateTime.Now;
+                newEmp.PhoneNumber = emp.PhoneNumber;
+                newEmp.Email = emp.Email;
+                newEmp.UserName = emp.UserName;
+                newEmp.Password = emp.Password;
+                newEmp.Avatar = emp.Avatar;
+                newEmp.DateInsert = DateTime.Now;
+                newEmp.DateUpdate = null;
+                newEmp.Status = true;
+                newEmp.IsDelete = null;
+                await _context.Employee.AddAsync(newEmp);
+                await _context.SaveChangesAsync();
+                return Ok(newEmp);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+            }
+        }
+
+
+
+        // [Thai Tran Kieu Diem][11/06/2021]
+        // Sửa thông tin nhân viên
+        [HttpPut("UpdateEmp/{empID:int}")]
+        public async Task<IActionResult> UpdateEmp([FromBody] Employee emp, int empID)
+        {
+            if (empID != emp.EmpId)
+            {
+                return BadRequest();
+            }
+            try
+            {
+                var empUpdate = await (from e in _context.Employee
+                                       where (e.IsDelete == null || e.IsDelete == false)
+                                       && e.EmpId==empID
+                                       select e).FirstOrDefaultAsync();
+                if (empUpdate == null)
+                {
+                    return NotFound();
+                }
+                empUpdate.EmpName = emp.EmpName;
+                empUpdate.Gender = emp.Gender;
+                empUpdate.DateOfBirth = emp.DateOfBirth;
+                empUpdate.Avatar = emp.Avatar;
+                empUpdate.PhoneNumber = emp.PhoneNumber;
+                empUpdate.Email = emp.Email;
+                empUpdate.DateUpdate = DateTime.Now;
+                await _context.SaveChangesAsync();
+                return Ok(empUpdate);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+            }
+        }
+
+        //[Thai Tran Kieu Diem][11/06/2021]
+        //Xóa nhân viên, tình trạng isDelete==true
+
+        [HttpPut("DeleteEmp/{empId:int}")]
+        public async Task<IActionResult> DeleteEmp(int empId, Employee emp)
+        {
+            if (empId !=emp.EmpId)
+            {
+                return BadRequest();
+            }
+            try {
+                var empDelete = await (from e in _context.Employee
+                                       where (e.IsDelete == null || e.IsDelete == false)
+                                       && e.EmpId == empId
+                                       select e).FirstOrDefaultAsync();
+                if (empDelete == null)
+                {
+                    return NotFound();
+                }
+                empDelete.DateUpdate = DateTime.Now;
+                empDelete.IsDelete = true;
+                await _context.SaveChangesAsync();
+                return Ok(empDelete);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+
+
+            }
+        }
+
+        //[Thai Tran Kieu Diem][11/06/2021]
+        //get thông tin nhân viên theo mã nhân viên
+        
+        [HttpGet("getEmpId/{empId:int}")]
+        public async Task<Employee> GetEmployeeById(int empId)
+        {
+                return await (from e in _context.Employee
+                                 where (e.IsDelete == null || e.IsDelete == false)
+                                 && e.EmpId == empId
+                                 select e).FirstOrDefaultAsync();
+     
+        }
+
     }
 }
