@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using QuanLyTourDuLich.Models;
 using Microsoft.EntityFrameworkCore;
+using QuanLyTourDuLich.SearchModels;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -59,45 +60,44 @@ namespace QuanLyTourDuLich.Controllers
 
 
         // Lấy tất tả danh sách tour phân trang cho Client
-        [HttpGet("TourPaginationList")]
-        public async Task<IActionResult> TourPaginationList(int page = 1, int limit = 9)
+        [HttpPost("GetData_TourList")]
+        public async Task<IActionResult> TourList_Client([FromBody] TourSearchModel tourSearch)
         {
-            //List<Tour> tourListModels = new List<Tour>();
             try
             {
-                var tourList = await (from t in _context.Tour
-                                      join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                      join up in _context.UnitPrice on t.TourId equals up.TourId
-                                      join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                      from a in ttg.DefaultIfEmpty()
-                                      where (t.IsDelete == null || t.IsDelete == true)
-                                      orderby t.DateStart descending
-                                      select new
-                                      {
-                                          t.TourId,
-                                          t.TourName,
-                                          t.TourImg,
-                                          t.DateStart,
-                                          t.Rating,
-                                          up.AdultUnitPrice,
-                                          p.ProvinceName,
-                                      }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                var tourListModels = tourList;
-                int totalRecord = tourList.Count();
-                var pagination = new Pagination
-                {
-                    count = totalRecord,
-                    currentPage = page,
-                    pagsize = limit,
-                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
-                    indexOne = ((page - 1) * limit + 1),
-                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
-                };
-                return Ok(new
-                {
-                    data = tourListModels,
-                    pagination = pagination
-                });
+                // xuất theo model search -- start
+                bool isTourID = int.TryParse(tourSearch.TourID.ToString(), out int tourID);
+                bool isTourName = (!string.IsNullOrEmpty(tourSearch.TourName));
+                bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
+                // -- end
+                var result = await (from t in _context.Tour
+                                    join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                    join up in _context.UnitPrice on t.TourId equals up.TourId
+                                    join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                    from a in ttg.DefaultIfEmpty()
+                                    where (t.IsDelete == null || t.IsDelete == true) &&
+                                    // Xử lý search
+                                    // Start
+                                    (
+                                        (isTourID && t.TourId == tourSearch.TourID)
+                                        || (isTourName && t.TourName.Contains(tourSearch.TourName))
+                                        || (isDateStart && t.DateStart == tourSearch.DateStart)
+                                    )
+                                    // End
+                                    orderby t.DateStart descending
+                                    select new
+                                    {
+                                        t.TourId,
+                                        t.TourName,
+                                        t.TourImg,
+                                        t.DateStart,
+                                        t.Rating,
+                                        up.AdultUnitPrice,
+                                        p.ProvinceName,
+                                    }).ToListAsync();
+                return Ok(result);
+
+
             }
             catch (Exception)
             {
