@@ -28,7 +28,7 @@ namespace QuanLyTourDuLich
             services.AddCors(options => options.AddPolicy("AllowAll", p => p.AllowAnyOrigin()
                                                                     .AllowAnyMethod()
                                                                      .AllowAnyHeader()));
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
             services.AddRazorPages();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
             {
