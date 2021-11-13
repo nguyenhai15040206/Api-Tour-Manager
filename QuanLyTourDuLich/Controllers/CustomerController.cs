@@ -12,6 +12,8 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using System;
 using Microsoft.AspNetCore.Http;
+using QuanLyTourDuLich.SearchModels;
+using Newtonsoft.Json;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -93,39 +95,54 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
-        // [Thai Tran Kieu Diem][11/06/2021]
-        // get danh sách khách hàng
-        [HttpGet("CustomerList")]
-        public async Task<IActionResult> GetCustomer_List(int page=1,int limit = 10)
+        // [Thai Tran Kieu Diem][11/09/2021]
+        // search danh sách khách hàng
+        [HttpPost("Adm_GetDataCustomerList")]
+        public async Task<IActionResult> Adm_GetDataCustomerList([FromBody] CustomerSearchModel customerSearch)
         {
             try {
-                var list = await (from kh in _context.Customer
-                                  where (kh.IsDelete == null || kh.IsDelete == false)
+
+                
+
+                bool isCustomerId = int.TryParse(customerSearch.customerId.ToString(), out int cusomerID);
+                bool isCustomerName = (!string.IsNullOrEmpty(customerSearch.customerName));
+                bool isGender = bool.TryParse(customerSearch.gender.ToString(), out bool gender);
+                bool isPhoneNumber = (!string.IsNullOrEmpty(customerSearch.phoneNumber));
+                bool isEmail = (!string.IsNullOrEmpty(customerSearch.email));
+
+                bool checkModelSearchIsNull = true;
+
+                if (isCustomerId || isCustomerName || isGender || isPhoneNumber || isEmail)
+                {
+                    checkModelSearchIsNull= false;
+                }
+
+                var cusSearch = await (from kh in _context.Customer
+                                  where (kh.IsDelete == null || kh.IsDelete == false) 
+                                  && checkModelSearchIsNull == true ? true:
+                                  (
+                                    (isCustomerId && kh.CustomerId==customerSearch.customerId)
+                                    ||(isCustomerName && kh.CustomerName.Contains(customerSearch.customerName))
+                                    ||(isGender && kh.Gender==customerSearch.gender)
+                                    ||(isPhoneNumber && kh.PhoneNumber.Contains(customerSearch.phoneNumber))
+                                    ||(isEmail && kh.Email.Contains(customerSearch.email))
+                                  )
+                                  orderby kh.DateUpdate descending
                                   select new
                                   {
+                                      kh.CustomerId,
                                       kh.CustomerName,
                                       kh.Gender,
+                                      kh.Email,
                                       kh.PhoneNumber,
                                       kh.Address
-                                  }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                int totalRecord = list.Count();
-                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
-                var pagination = new Pagination
+                                  }).ToListAsync();
+                if (cusSearch == null)
                 {
-                    count = totalRecord,
-                    currentPage = page,
-                    pagsize = limit,
-                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
-                    indexOne = ((page - 1) * limit + 1),
-                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
-                };
-                // status code 200
-                return Ok(new
-                {
-                    data = list,
-                    pagination = pagination
-
-                });
+                    return NotFound();
+                }
+                
+                return Ok(cusSearch);
             }
             catch
             {
@@ -134,20 +151,45 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
-        //get danh sách khách hàng theo mã khách hàng
-        [HttpGet("{cusId:int}")]
-        public async Task<Customer> getCustomerById(int cusId)
+        ///get danh sách khách hàng theo mã khách hàng
+        ///chưa get được
+        ///
+
+
+        [HttpGet("Adm_GetCustomerById/{CustomerId:int}")]
+        public async Task<IActionResult> Adm_GetCustomerById(int CustomerId)
         {
-            return await (from kh in _context.Customer
-                          where (kh.IsDelete == null || kh.IsDelete == false)
-                          && kh.CustomerId==cusId
-                          select kh).FirstOrDefaultAsync();
+            try {
+
+                var cusSearch = await (from kh in _context.Customer
+                                       where (kh.IsDelete == null || kh.IsDelete == false)
+                                       && kh.CustomerId== CustomerId
+                                       select new
+                                       {
+                                           kh.CustomerId,
+                                           kh.CustomerName,
+                                           kh.Gender,
+                                           kh.Email,
+                                           kh.PhoneNumber,
+                                           kh.Address
+                                       }).FirstOrDefaultAsync();
+                if (cusSearch == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(cusSearch);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
         }
 
         // [Thai Tran Kieu Diem][11/06/2021]
         // Đăng kí khách hàng
-        [HttpPost]
-        public async Task<ActionResult<IEnumerable<Customer>>> Register([FromBody] Customer khachHang)
+        [HttpPost ("Adm_RegisterCustomer")]
+        public async Task<ActionResult<IEnumerable<Customer>>> Adm_RegisterCustomer([FromBody] Customer khachHang)
         {
             // Ý Nghĩa:  đăng kí thông tin khách
             try {
@@ -161,9 +203,10 @@ namespace QuanLyTourDuLich.Controllers
                     kh.Address = khachHang.Address;
                     kh.Password = khachHang.Password;
                     kh.DateInsert = DateTime.Now;
-                    kh.DateUpdate = null;
+                    kh.DateUpdate = DateTime.Now;
                     kh.IsDelete = null;
-                    _context.Customer.Add(kh);
+
+                    await _context.Customer.AddAsync(kh);
                     await _context.SaveChangesAsync();
                     return Ok(kh);
                 }
@@ -182,8 +225,8 @@ namespace QuanLyTourDuLich.Controllers
         // [Thai Tran Kieu Diem][11/06/2021]
         // Update Khách hàng
         //[Authorize]
-        [HttpPut("UpdateCustomer/{customerID:int}")]
-        public async Task<IActionResult> UpdateCustomer(int customerID, [FromBody] Customer khachHang)
+        [HttpPut("Adm_UpdateCustomer/{customerID:int}")]
+        public async Task<IActionResult> Adm_UpdateCustomer(int customerID, [FromBody] Customer khachHang)
         {
             // Ý nghĩa : Cập nhật thông tin một khách hàng
             if(customerID != khachHang.CustomerId)
@@ -218,8 +261,8 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Thai Tran Kieu Diem][11/06/2021]
         //Vô hiệu hóa tài khoản khách hàng  
-        [HttpPut("DeleteCustomer/{customerId:int}")]
-        public async Task<IActionResult> DeleteCustomer (int customerId)
+        [HttpPut("Adm_DeleteCustomer/{customerId:int}")]
+        public async Task<IActionResult> Adm_DeleteCustomer(int customerId)
         {
             try 
             {
