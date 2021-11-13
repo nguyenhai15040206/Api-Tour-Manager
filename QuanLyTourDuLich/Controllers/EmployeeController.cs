@@ -14,6 +14,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using QuanLyTourDuLich.SearchModels;
+using Newtonsoft.Json;
+using System.Globalization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -21,6 +24,7 @@ namespace QuanLyTourDuLich.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
+        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public EmployeeController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -97,17 +101,41 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
-        //[Thai Tran Kieu Diem][11/06/2021]
-        // get danh sách nhân viên với page=1 limit=20
+        //[Thai Tran Kieu Diem][11/08/2021]
+        // search danh sách nhân viên với id,name,gender,workingdate,phone,email
 
-        [HttpGet("EmployeesList")]
-        public async Task<IActionResult> GetEmployee(int page=1,int limit = 20)
+        [HttpPost("Adm_GetDataEmployeeList")]
+        public async Task<IActionResult> Adm_GetDataEmployeeList([FromBody] EmployeeSearchModel empSearch)
         {
+            
             try
             {
-                var newEmp = await (from emp in _context.Employee
+                bool checkModelSearchIsNull = true;
+
+                bool isEmployeeId = int.TryParse(empSearch.empID.ToString(), out int empID);
+                bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.empName));
+                bool isGender = bool.TryParse(empSearch.gender.ToString(), out bool gender);
+                bool isWorkingDate = DateTime.TryParse(empSearch.workingDate.ToString(), out DateTime workingdate);
+                bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.phoneNumber));
+                bool isEmail = (!string.IsNullOrEmpty(empSearch.email));
+
+                if (isEmployeeId || isEmployeeName || isGender || isWorkingDate || isPhoneNumber || isEmail)
+                {
+                    checkModelSearchIsNull = false;
+                }
+
+                var searchEmp = await (from emp in _context.Employee
                                     where (emp.IsDelete == null || emp.IsDelete == false)
-                                    orderby emp.DateUpdate == null ? emp.DateInsert : emp.DateUpdate descending
+                                    && checkModelSearchIsNull==true? true
+                                     : (
+                                        (isEmployeeId && emp.EmpId == empSearch.empID)
+                                        || (isEmployeeName && emp.EmpName.Contains(empSearch.empName))
+                                        || (isGender && emp.Gender == empSearch.gender)
+                                        || (isWorkingDate && emp.WorkingDate == empSearch.workingDate)
+                                        || (isPhoneNumber && emp.PhoneNumber.Contains(empSearch.phoneNumber))
+                                        || (isEmail && emp.Email.Contains(empSearch.email))
+                                    )
+                                       orderby  emp.DateUpdate descending
                                     select new
                                     {
                                         emp.EmpId,
@@ -117,26 +145,15 @@ namespace QuanLyTourDuLich.Controllers
                                         emp.WorkingDate,
                                         emp.PhoneNumber,
                                         emp.Email,
-                                        emp.Avatar
-                                    }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                int totalRecord = newEmp.Count();
-                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
-                var pagination = new Pagination
-                {
-                    count = totalRecord,
-                    currentPage = page,
-                    pagsize = limit,
-                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
-                    indexOne = ((page - 1) * limit + 1),
-                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
-                };
-                // status code 200
-                return Ok(new
-                {
-                    data = newEmp,
-                    pagination = pagination
+                                        emp.Avatar,
+                                        DateUpdate= DateTime.Parse(emp.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
+                                    }).ToListAsync();
 
-                });
+                if (searchEmp == null)
+                {
+                    return NotFound();
+                }
+                return Ok(searchEmp);
             }
             catch(Exception)
             {
@@ -144,11 +161,48 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
+        //[Thai Tran Kieu Diem][11/06/2021]
+        //get thông tin nhân viên theo mã nhân viên
+
+        [HttpGet("Adm_getEmployeeById/{empId:int}")]  
+        public async Task<IActionResult> Adm_GetEmployeeById(int empId)
+        {
+            try
+            {
+                var rs = await (from emp in _context.Employee
+                                where (emp.IsDelete == null || emp.IsDelete == false)
+                                && emp.EmpId == empId
+                                select new
+                                {
+                                    emp.EmpId,
+                                    emp.EmpName,
+                                    emp.Gender,
+                                    emp.DateOfBirth,
+                                    emp.WorkingDate,
+                                    emp.PhoneNumber,
+                                    emp.Email,
+                                    emp.Avatar,
+                                    DateUpdate = DateTime.Parse(emp.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                }).FirstOrDefaultAsync();
+                if (rs == null)
+                {
+                    return NotFound();
+                }
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+
+        }
+
         // [Thai Tran Kieu Diem][11/06/2021]
         // Thêm nhân viên
         //[Authorize]
-        [HttpPost("CreateEmp")]
-        public async Task<ActionResult<Employee>> CreateEmp([FromBody] Employee emp)
+        [HttpPost("Adm_CreateEmployee")]
+        public async Task<ActionResult<Employee>> Adm_CreateEmployee([FromBody] Employee emp)
         {
             try
             {
@@ -167,8 +221,8 @@ namespace QuanLyTourDuLich.Controllers
                 newEmp.Password = emp.Password;
                 newEmp.Avatar = emp.Avatar;
                 newEmp.DateInsert = DateTime.Now;
-                newEmp.DateUpdate = null;
-                newEmp.Status = true;
+                newEmp.DateUpdate = DateTime.Now;
+                newEmp.Status = emp.Status;
                 newEmp.IsDelete = null;
                 await _context.Employee.AddAsync(newEmp);
                 await _context.SaveChangesAsync();
@@ -184,8 +238,8 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Thai Tran Kieu Diem][11/06/2021]
         // Sửa thông tin nhân viên
-        [HttpPut("UpdateEmp/{empID:int}")]
-        public async Task<IActionResult> UpdateEmp([FromBody] Employee emp, int empID)
+        [HttpPut("Adm_UpdateEmployee/{empID:int}")]
+        public async Task<IActionResult> Adm_UpdateEmployee([FromBody] Employee emp, int empID)
         {
             if (empID != emp.EmpId)
             {
@@ -208,6 +262,7 @@ namespace QuanLyTourDuLich.Controllers
                 empUpdate.PhoneNumber = emp.PhoneNumber;
                 empUpdate.Email = emp.Email;
                 empUpdate.DateUpdate = DateTime.Now;
+                empUpdate.Status = emp.Status;
                 await _context.SaveChangesAsync();
                 return Ok(empUpdate);
             }
@@ -220,13 +275,10 @@ namespace QuanLyTourDuLich.Controllers
         //[Thai Tran Kieu Diem][11/06/2021]
         //Xóa nhân viên, tình trạng isDelete==true
 
-        [HttpPut("DeleteEmp/{empId:int}")]
-        public async Task<IActionResult> DeleteEmp(int empId, Employee emp)
+        [HttpPut("Adm_DeleteEmployee/{empId:int}")]
+        public async Task<IActionResult> Adm_DeleteEmployee(int empId)
         {
-            if (empId !=emp.EmpId)
-            {
-                return BadRequest();
-            }
+
             try {
                 var empDelete = await (from e in _context.Employee
                                        where (e.IsDelete == null || e.IsDelete == false)
@@ -249,18 +301,7 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        //[Thai Tran Kieu Diem][11/06/2021]
-        //get thông tin nhân viên theo mã nhân viên
         
-        [HttpGet("getEmpId/{empId:int}")]
-        public async Task<Employee> GetEmployeeById(int empId)
-        {
-                return await (from e in _context.Employee
-                                 where (e.IsDelete == null || e.IsDelete == false)
-                                 && e.EmpId == empId
-                                 select e).FirstOrDefaultAsync();
-     
-        }
 
     }
 }
