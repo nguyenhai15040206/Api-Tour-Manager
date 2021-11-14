@@ -8,6 +8,7 @@ using QuanLyTourDuLich.Models;
 using Microsoft.EntityFrameworkCore;
 using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -67,26 +68,30 @@ namespace QuanLyTourDuLich.Controllers
         public async Task<IActionResult> Adm_TourList([FromBody] TourSearchModel tourSearch = null)
         {
             try
-            {  
+            {
                 // xuất theo model search -- start
                 // nếu có dữ liệu => nhã tất cả
-                var checkModelSearchIsNull = JsonConvert.SerializeObject(tourSearch, Formatting.None,
-                            new JsonSerializerSettings
-                            {
-                                NullValueHandling = NullValueHandling.Ignore
-                            }) == "{}"? true: false;
+                bool checkModelSearchIsNull = true;
                 // Ngược lại xử lý với luồng dữ liệu này
                 bool isTourID = int.TryParse(tourSearch.TourID.ToString(), out int tourID);
                 bool isTourName = (!string.IsNullOrEmpty(tourSearch.TourName));
                 bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
+                bool isDateEnd = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateEnd);
+                bool isTravelTypeID = int.TryParse(tourSearch.TravelTypeID.ToString(), out int tourTypeID);
+                bool isDeparturePlace = int.TryParse(tourSearch.DeparturePlace.ToString(), out int departurePlace);
                 // -- end
+
+                if(isDateEnd || isTourID || isTourName || isDateStart || isTravelTypeID || isDeparturePlace)
+                {
+                    checkModelSearchIsNull = false;
+                }    
                 var result = await (from t in _context.Tour
-                                    join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
-                                    join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                    join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                    join up in _context.UnitPrice on t.TourId equals up.TourId
-                                    join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                    from a in ttg.DefaultIfEmpty()
+                                    //join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
+                                    //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                    //join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
+                                    //join up in _context.UnitPrice on t.TourId equals up.TourId
+                                    //join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                    //from a in ttg.DefaultIfEmpty()
                                     where (t.IsDelete == null || t.IsDelete == true)  && 
                                     // Xử lý search 
                                     // nếu check == true => xuất tất cả => ngược lại
@@ -96,6 +101,9 @@ namespace QuanLyTourDuLich.Controllers
                                             (isTourID && t.TourId == tourSearch.TourID)
                                         || (isTourName && t.TourName.Contains(tourSearch.TourName))
                                         || (isDateStart && t.DateStart == tourSearch.DateStart)
+                                        || (isDateEnd && t.DateEnd == tourSearch.DateEnd)
+                                        || (isTravelTypeID && t.TravelTypeId == tourSearch.TravelTypeID)
+                                        || (isDeparturePlace && t.DeparturePlace == tourSearch.DeparturePlace)
                                     )
                                     // End
                                     orderby t.DateStart descending
@@ -106,21 +114,21 @@ namespace QuanLyTourDuLich.Controllers
                                         t.Description,
                                         t.TourImg,
                                         t.PhuongTienXuatPhat,
-                                        t.DateStart,
-                                        t.DateEnd,
+                                        dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                        dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         t.QuanityMax,
                                         t.QuanityMin,
                                         t.CurrentQuanity,
                                         t.Schedule,
                                         t.Rating,
                                         t.Suggest,
-                                        emp.EmpName,
-                                        t.DateUpdate,
-                                        up.AdultUnitPrice,
-                                        p.ProvinceName,
-                                        type.TravelTypeName,
+                                        //emp.EmpName,
+                                        //dateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                        //up.AdultUnitPrice,
+                                        //p.ProvinceName,
+                                        //type.TravelTypeName,
 
-                                        tourGuideName = a.TourGuideName??null
+                                        //tourGuideName = a.TourGuideName??null
                                     }).ToListAsync();
                 return Ok(result);
             }
@@ -187,8 +195,8 @@ namespace QuanLyTourDuLich.Controllers
         
 
         // [Nguyễn Tấn Hải - 20211105]: Thực hiện Post Data
-        [HttpPost]
-        public async Task<ActionResult<IEnumerable<Tour>>> POST([FromBody] Tour tour)
+        [HttpPost("Adm_InsertTour")]
+        public async Task<ActionResult<IEnumerable<Tour>>> InsertTour([FromBody] Tour tour)
         {
             try
             {
@@ -197,10 +205,12 @@ namespace QuanLyTourDuLich.Controllers
                     // 400
                     return BadRequest();
                 }
+                tour.DateInsert = DateTime.Now.Date;
+                tour.DateUpdate = DateTime.Now.Date;
                 await _context.Tour.AddAsync(tour);
                 await _context.SaveChangesAsync();
-                // nếu oke => stattus code 201
-                return CreatedAtAction("GET", new { maTour = tour.TourId }, tour);
+                // nếu oke => stattus code 200
+                return Ok(tour);
             }
             catch (Exception)
             {
