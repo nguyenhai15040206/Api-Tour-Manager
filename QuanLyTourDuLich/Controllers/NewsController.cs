@@ -48,7 +48,7 @@ namespace QuanLyTourDuLich.Controllers
                 var newsList = await (from n in _context.News
                                       join k in _context.KindOfNews on n.KindOfNewsId equals k.KindOfNewsId
                                       join e in _context.Employee on n.EmpIdupdate equals e.EmpId
-                                      where (n.IsDelete == null || n.IsDelete == false)
+                                      where (n.IsDelete == null || n.IsDelete == true)
                                       && checkModelSearchIsNull == true ? true 
                                       :(
                                         (isNewsId && n.NewsId==newSearch.newsId)
@@ -83,7 +83,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from n in _context.News
-                       where (n.IsDelete == null || n.IsDelete == false)
+                       where (n.IsDelete == null || n.IsDelete == true)
                             && n.NewsId == newsID
                        select new
                        {
@@ -160,7 +160,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var update = await (from n in _context.News
-                                    where (n.IsDelete == null || n.IsDelete == false)
+                                    where (n.IsDelete == null || n.IsDelete == true)
                                     && n.NewsId==id
                                     select n).FirstOrDefaultAsync();
                 if (update == null)
@@ -195,12 +195,12 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var delete = await (from n in _context.News
-                                    where (n.IsDelete == null || n.IsDelete == false)
+                                    where (n.IsDelete == null || n.IsDelete == true)
                                     && n.NewsId == NewsID
                                     select n).FirstOrDefaultAsync();
                 if (delete == null)
                     return NotFound();
-                delete.IsDelete = true;
+                delete.IsDelete = false;
                 delete.EmpIdupdate = empId;
                 delete.DateUpdate = DateTime.Now;
 

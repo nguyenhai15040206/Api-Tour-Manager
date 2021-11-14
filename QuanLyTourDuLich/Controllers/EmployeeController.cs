@@ -95,7 +95,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             return await (from c in _context.Employee
                           where c.UserName == userName && c.Password == password
-                            && (c.IsDelete == null || c.IsDelete == false)
+                            && (c.IsDelete == null || c.IsDelete == true)
                           select c
                           ).FirstOrDefaultAsync();
         }
@@ -125,7 +125,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 var searchEmp = await (from emp in _context.Employee
-                                    where (emp.IsDelete == null || emp.IsDelete == false)
+                                    where (emp.IsDelete == null || emp.IsDelete == true)
                                     && checkModelSearchIsNull==true? true
                                      : (
                                         (isEmployeeId && emp.EmpId == empSearch.empID)
@@ -171,7 +171,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from emp in _context.Employee
-                                where (emp.IsDelete == null || emp.IsDelete == false)
+                                where (emp.IsDelete == null || emp.IsDelete == true)
                                 && emp.EmpId == empId
                                 select new
                                 {
@@ -248,7 +248,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var empUpdate = await (from e in _context.Employee
-                                       where (e.IsDelete == null || e.IsDelete == false)
+                                       where (e.IsDelete == null || e.IsDelete == true)
                                        && e.EmpId==empID
                                        select e).FirstOrDefaultAsync();
                 if (empUpdate == null)
@@ -289,7 +289,7 @@ namespace QuanLyTourDuLich.Controllers
                     return NotFound();
                 }
                 empDelete.DateUpdate = DateTime.Now;
-                empDelete.IsDelete = true;
+                empDelete.IsDelete = false;
                 await _context.SaveChangesAsync();
                 return Ok(empDelete);
             }

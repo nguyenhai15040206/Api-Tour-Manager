@@ -89,7 +89,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             return await (from c in _context.Customer
                           where c.Email == email && c.Password == password
-                            && (c.IsDelete == null || c.IsDelete == false)
+                            && (c.IsDelete == null || c.IsDelete == true)
                           select c
                           ).FirstOrDefaultAsync();
         }
@@ -118,7 +118,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 var cusSearch = await (from kh in _context.Customer
-                                  where (kh.IsDelete == null || kh.IsDelete == false) 
+                                  where (kh.IsDelete == null || kh.IsDelete == true) 
                                   && checkModelSearchIsNull == true ? true:
                                   (
                                     (isCustomerId && kh.CustomerId==customerSearch.customerId)
@@ -162,7 +162,7 @@ namespace QuanLyTourDuLich.Controllers
             try {
 
                 var cusSearch = await (from kh in _context.Customer
-                                       where (kh.IsDelete == null || kh.IsDelete == false)
+                                       where (kh.IsDelete == null || kh.IsDelete == true)
                                        && kh.CustomerId== CustomerId
                                        select new
                                        {
@@ -236,7 +236,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var UpdateCus = await (from kh in _context.Customer
-                                       where (kh.IsDelete == null || kh.IsDelete == false)
+                                       where (kh.IsDelete == null || kh.IsDelete == true)
                                        && kh.CustomerId == customerID
                                        select kh).FirstOrDefaultAsync();
                 if (UpdateCus == null)
@@ -267,13 +267,13 @@ namespace QuanLyTourDuLich.Controllers
             try 
             {
                 var delCus = await (from cus in _context.Customer
-                                    where (cus.IsDelete == null || cus.IsDelete == false)
+                                    where (cus.IsDelete == null || cus.IsDelete == true)
                                     && cus.CustomerId == customerId
                                     select cus).FirstOrDefaultAsync();
                 if (delCus == null)
                     return NotFound();
                 delCus.DateUpdate = DateTime.Now;
-                delCus.IsDelete = true;
+                delCus.IsDelete = false;
                 await _context.SaveChangesAsync();
                 return Ok(delCus);
             }

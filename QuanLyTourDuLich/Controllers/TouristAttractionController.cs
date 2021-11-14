@@ -52,7 +52,7 @@ namespace QuanLyTourDuLich.Controllers
                 var tourAttrac = await (from t in _context.TouristAttraction
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                        where (t.IsDelete == null || t.IsDelete == false)
+                                        where (t.IsDelete == null || t.IsDelete == true)
                                         && checkModelSearchIsNull == true ? true
                                         :
                                         (
@@ -134,7 +134,7 @@ namespace QuanLyTourDuLich.Controllers
                 var tourAttrac = await (from t in _context.TouristAttraction
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                        where (t.IsDelete == null || t.IsDelete == false)
+                                        where (t.IsDelete == null || t.IsDelete == true)
                                         && t.TouristAttrId == TourAttrId
                                         select new
                                         {
@@ -173,7 +173,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from t in _context.TouristAttraction
-                                where (t.IsDelete == null || t.IsDelete == false)
+                                where (t.IsDelete == null || t.IsDelete == true)
                                 && t.TouristAttrId == TourAttrId
                                 select t).FirstOrDefaultAsync();
                 if(rs == null)
@@ -209,7 +209,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from t in _context.TouristAttraction
-                                where (t.IsDelete == null || t.IsDelete == false)
+                                where (t.IsDelete == null || t.IsDelete == true)
                                 && t.TouristAttrId == TourAttrId
                                 select t).FirstOrDefaultAsync();
                 if (rs == null)
@@ -220,7 +220,7 @@ namespace QuanLyTourDuLich.Controllers
        
                 rs.EmpIdupdate = empID;
                 rs.DateUpdate = DateTime.Now;
-                rs.IsDelete = true;
+                rs.IsDelete = false;
 
                 await _context.SaveChangesAsync();
                 return Ok(rs);
