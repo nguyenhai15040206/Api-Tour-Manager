@@ -15,9 +15,8 @@ namespace QuanLyTourDuLich.SearchModels
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
 
-        // Phương tiện di chuyện
-        public string Transport { get; set; }
-        public int? Rating { get; set; }
+        // loại tour
+        public int? TravelTypeID { get; set; }
 
         // địa điểm xuất phát
         public int? DeparturePlace { get; set; }
