@@ -40,7 +40,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var rs = await (from k in _context.KindOfNews
                                 join e in _context.Employee on k.EmpIdupdate equals e.EmpId
-                                where (k.IsDelete == null || k.IsDelete == false)
+                                where (k.IsDelete == null || k.IsDelete == true)
                                 select new
                                 {
                                     k.KindOfNewsId,
@@ -69,7 +69,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var rs = await (from k in _context.KindOfNews
                                 join e in _context.Employee on k.EmpIdupdate equals e.EmpId
-                                where (k.IsDelete == null || k.IsDelete == false)
+                                where (k.IsDelete == null || k.IsDelete == true)
                                 select new
                                 {
                                     k.KindOfNewsId,
@@ -134,7 +134,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from k in _context.KindOfNews
-                                where (k.IsDelete == null || k.IsDelete == false)
+                                where (k.IsDelete == null || k.IsDelete == true)
                                 && k.KindOfNewsId==KindOfNewsId
                                 select k).FirstOrDefaultAsync();
                 if (rs == null)
@@ -165,7 +165,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from k in _context.KindOfNews
-                                where (k.IsDelete == null || k.IsDelete == false)
+                                where (k.IsDelete == null || k.IsDelete == true)
                                 && k.KindOfNewsId == KindOfNewsId
                                 select k).FirstOrDefaultAsync();
                 if (rs == null)
@@ -175,7 +175,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 rs.EmpIdupdate = empID;
                 rs.DateUpdate = DateTime.Now;
-                rs.IsDelete = true;
+                rs.IsDelete = false;
 
                 await _context.SaveChangesAsync();
                 return Ok(rs);

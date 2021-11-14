@@ -50,7 +50,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 var list = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdupdate equals e.EmpId
-                                  where (guide.IsDelete == null || guide.IsDelete == false)
+                                  where (guide.IsDelete == null || guide.IsDelete == true)
                                   
                                   && checkModelSearchIsNull == true ? true :
                                   (
@@ -97,7 +97,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 var list = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdupdate equals e.EmpId
-                                  where (guide.IsDelete == null || guide.IsDelete == false)
+                                  where (guide.IsDelete == null || guide.IsDelete == true)
                                   && guide.TourGuideId== TourGuideId
                                   select new
                                   {
@@ -169,7 +169,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var guiUpdate = await (from nv in _context.TourGuide
-                                       where (nv.IsDelete == null || nv.IsDelete == false)
+                                       where (nv.IsDelete == null || nv.IsDelete == true)
                                        && nv.TourGuideId == TourGuideId
                                        select nv).FirstOrDefaultAsync();
                 if (guiUpdate == null)
@@ -205,7 +205,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var guiDelete = await (from nv in _context.TourGuide
-                                       where (nv.IsDelete == null || nv.IsDelete == false)
+                                       where (nv.IsDelete == null || nv.IsDelete == true)
                                        && nv.TourGuideId == TourGuideId
                                        select nv).FirstOrDefaultAsync();
                 if (guiDelete == null)
@@ -214,7 +214,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 guiDelete.EmpIdupdate = empID;
                 guiDelete.DateUpdate = DateTime.Now;
-                guiDelete.IsDelete = true;
+                guiDelete.IsDelete = false;
 
 
                 await _context.SaveChangesAsync();

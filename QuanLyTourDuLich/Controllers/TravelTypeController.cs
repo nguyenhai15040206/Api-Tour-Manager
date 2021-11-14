@@ -37,7 +37,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var rs = await (from t in _context.TravelType
                                 join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                where (t.IsDelete == null || t.IsDelete == false)
+                                where (t.IsDelete == null || t.IsDelete == true)
                                 select new
                                 {
                                     t.TravelTypeId,
@@ -68,7 +68,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var rs = await (from t in _context.TravelType
                                 join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                where (t.IsDelete == null || t.IsDelete == false)
+                                where (t.IsDelete == null || t.IsDelete == true)
                                 && t.TravelTypeId == travelTypeId
                                 select new
                                 {
@@ -139,7 +139,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from t in _context.TravelType
-                                where (t.IsDelete == null || t.IsDelete == false)
+                                where (t.IsDelete == null || t.IsDelete == true)
                                 && t.TravelTypeId == travelTypeId
                                 select t).FirstOrDefaultAsync();
                 if (rs == null)
