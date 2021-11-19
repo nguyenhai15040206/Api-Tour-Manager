@@ -19,7 +19,6 @@ namespace QuanLyTourDuLich.Controllers
     {
         //Thái Trần Kiều Diễm [06/11/2021]
         //
-        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourGuideController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -49,8 +48,8 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 var list = await (from guide in _context.TourGuide
-                                  join e in _context.Employee on guide.EmpIdupdate equals e.EmpId
-                                  where (guide.IsDelete == null || guide.IsDelete == true)
+                                  join e in _context.Employee on guide.EmpIdinsert equals e.EmpId
+                                  where ( guide.IsDelete == null || guide.IsDelete == true)
                                   
                                   && checkModelSearchIsNull == true ? true :
                                   (
@@ -71,7 +70,7 @@ namespace QuanLyTourDuLich.Controllers
                                       guide.Email,
                                       guide.Address,
                                       guide.Avatar,
-                                      e.EmpName,
+                                      //e.EmpName,
                                       DateUpdate=DateTime.Parse(guide.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
                                   }).ToListAsync();
 
@@ -82,7 +81,7 @@ namespace QuanLyTourDuLich.Controllers
                 // status code 200
                 return Ok(list);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }

@@ -24,7 +24,6 @@ namespace QuanLyTourDuLich.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public EmployeeController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
