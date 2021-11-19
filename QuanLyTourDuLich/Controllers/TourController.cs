@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -86,12 +87,12 @@ namespace QuanLyTourDuLich.Controllers
                     checkModelSearchIsNull = false;
                 }    
                 var result = await (from t in _context.Tour
-                                    //join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
-                                    //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                    //join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                    //join up in _context.UnitPrice on t.TourId equals up.TourId
-                                    //join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                    //from a in ttg.DefaultIfEmpty()
+                                    join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
+                                    join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                    join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
+                                    join up in _context.UnitPrice on t.TourId equals up.TourId
+                                    join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                    from a in ttg.DefaultIfEmpty()
                                     where (t.IsDelete == null || t.IsDelete == true)  && 
                                     // Xử lý search 
                                     // nếu check == true => xuất tất cả => ngược lại
@@ -122,13 +123,13 @@ namespace QuanLyTourDuLich.Controllers
                                         t.Schedule,
                                         t.Rating,
                                         t.Suggest,
-                                        //emp.EmpName,
-                                        //dateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                        //up.AdultUnitPrice,
-                                        //p.ProvinceName,
-                                        //type.TravelTypeName,
+                                        emp.EmpName,
+                                        dateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                        up.AdultUnitPrice,
+                                        p.ProvinceName,
+                                        type.TravelTypeName,
 
-                                        //tourGuideName = a.TourGuideName??null
+                                        tourGuideName = a.TourGuideName ?? null
                                     }).ToListAsync();
                 return Ok(result);
             }
@@ -136,7 +137,6 @@ namespace QuanLyTourDuLich.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
-            
         }
 
         // [Nguyễn Tấn Hải -] - Xử lý Lấy dữ liệu tourDetails
@@ -196,6 +196,7 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Nguyễn Tấn Hải - 20211105]: Thực hiện Post Data
         [HttpPost("Adm_InsertTour")]
+        //[Authorize]
         public async Task<ActionResult<IEnumerable<Tour>>> InsertTour([FromBody] Tour tour)
         {
             try
@@ -207,6 +208,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 tour.DateInsert = DateTime.Now.Date;
                 tour.DateUpdate = DateTime.Now.Date;
+                tour.IsDelete = null;
                 await _context.Tour.AddAsync(tour);
                 await _context.SaveChangesAsync();
                 // nếu oke => stattus code 200
@@ -215,6 +217,40 @@ namespace QuanLyTourDuLich.Controllers
             catch (Exception)
             {
                 // 500
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+
+
+        // Delete Multi row
+        [HttpPost("Adm_DeleteTourByIds/{empID:int}")]
+        //[Authorize]
+        public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] int[] Ids, int empID)
+        {
+            try
+            {
+                // cách 1, nếu cần kết nhiều bảng
+                //var rs = (from t in _context.Tour
+                //          join .....
+                //          where Ids.Contains(t.TourId)
+                //          select ....
+                //          ).ToListAsync();
+
+                //chỉ cần có 1 bảng 
+                // Nếu listObj = null, thì client call lại dữ liệu, nên không cần check lại listObj == null
+                var listObj = await _context.Tour.Where(m => Ids.Contains(m.TourId)).ToListAsync();
+                listObj.ForEach(m =>
+                {
+                    m.IsDelete = false;
+                    m.DateUpdate = DateTime.Now.Date;
+                    m.EmpIdupdate = empID;
+                });
+                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status200OK, "Delete tour success!");
+            }
+            catch(Exception)
+            {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }

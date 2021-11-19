@@ -21,7 +21,6 @@ namespace QuanLyTourDuLich.Controllers
         /// [Thái Trần Kiều Diễm 20211109- xử lý danh sách địa điểm du lịch]
         /// </summary>
 
-        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
 
         public TouristAttractionController(HUFI_09DHTH_TourManagerContext context)
@@ -32,14 +31,14 @@ namespace QuanLyTourDuLich.Controllers
 
         /// [Get danh sách địa điểm du lịch]
         /// 
-        [HttpPost("Admin_GetTouristAttractionList")]
-        public async Task<IActionResult> Admin_GetTouristAttractionList([FromBody] touristAttactionSearchModel trsa)
+        [HttpPost]
+        [Route("Admin_GetTouristAttractionList")]
+        public async Task<IActionResult> Admin_GetTouristAttractionList([FromForm] touristAttactionSearchModel trsa = null)
         {
             
             try
             {
                 bool checkModelSearchIsNull = true;
-                // anh dau muon code trong file của anh, conflict bây giờ
                 bool istouristAttrID = int.TryParse(trsa.touristAttrID.ToString(), out int touristAttcID);
                 bool istouristAttrName = (!string.IsNullOrEmpty(trsa.touristAttrName));
                 bool isprovinceID = int.TryParse(trsa.provinceID.ToString(), out int provinceID);
@@ -78,7 +77,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 return Ok(tourAttrac);
             }
-            catch
+            catch(Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }

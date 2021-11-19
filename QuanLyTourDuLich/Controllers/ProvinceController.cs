@@ -20,24 +20,21 @@ namespace QuanLyTourDuLich.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Province>>> GET()
+        [HttpGet("Adm_GetProvince")]
+        public async Task<ActionResult> Adm_GetProvince()
         {
-            var rs = await (from p in _context.Province
-                            select new Province
-                            {
-                                ProvinceId = p.ProvinceId,
-                                ProvinceName = p.ProvinceName,
-                                DivisionType = p.DivisionType,
-                                PhoneCode = p.PhoneCode
-                            }).ToListAsync(); 
-            if(rs== null || rs.Count == 0)
-            {
-                return BadRequest();
-            }
-            else
-            {
+            try {
+                var rs = await (from p in _context.Province
+                                select new
+                                {
+                                    value = p.ProvinceId,
+                                    label = p.ProvinceName,
+                                }).ToListAsync();
                 return Ok(rs);
+            }
+            catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
     }
