@@ -215,17 +215,17 @@ namespace QuanLyTourDuLich.Controllers
                 var phone = _context.Employee.Where(m => m.PhoneNumber == emp.PhoneNumber).Count();
                 if (phone > 0)
                 {
-                    return BadRequest();
+                    return StatusCode(StatusCodes.Status400BadRequest,"Số điện thoại đã tồn tại");
                 }
                 var email = _context.Employee.Where(m => m.Email == emp.Email).Count();
                 if (email > 0)
                 {
-                    return BadRequest();
+                    return StatusCode(StatusCodes.Status400BadRequest, "Email đã tồn tại");
                 }
                 var user = _context.Employee.Where(m => m.UserName == emp.UserName).Count();
                 if (user > 0)
                 {
-                    return BadRequest();
+                    return StatusCode(StatusCodes.Status400BadRequest, "Tên người dùng đã tồn tại");
                 }
                 emp.WorkingDate = DateTime.Now.Date;
                 emp.DateInsert = DateTime.Now.Date;
@@ -262,7 +262,7 @@ namespace QuanLyTourDuLich.Controllers
                 empUpdate.EmpName = emp.EmpName;
                 empUpdate.Gender = emp.Gender;
                 empUpdate.DateOfBirth = emp.DateOfBirth;
-                empUpdate.Avatar = "abc";
+                empUpdate.Avatar = emp.Avatar;
                 empUpdate.PhoneNumber = emp.PhoneNumber;
                 empUpdate.Email = emp.Email;
                 empUpdate.DateUpdate = DateTime.Now.Date;
