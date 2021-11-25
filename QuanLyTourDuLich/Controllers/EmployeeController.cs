@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿    using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Options;
@@ -140,8 +140,8 @@ namespace QuanLyTourDuLich.Controllers
                                         emp.EmpId,
                                         emp.EmpName,
                                         emp.Gender,
-                                        emp.DateOfBirth,
-                                        emp.WorkingDate,
+                                        DateOfBirth=DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
+                                        WorkingDate=DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         emp.PhoneNumber,
                                         emp.Email,
                                         emp.Avatar,
@@ -164,8 +164,8 @@ namespace QuanLyTourDuLich.Controllers
         //[Thai Tran Kieu Diem][11/06/2021]
         //get thông tin nhân viên theo mã nhân viên
 
-        [HttpGet("Adm_getEmployeeById/{empId:int}")]  
-        public async Task<IActionResult> Adm_GetEmployeeById(int empId)
+        [HttpGet("Adm_getEmployeeById")]  
+        public async Task<IActionResult> Adm_GetEmployeeById(int? empId =null)
         {
             try
             {
@@ -177,11 +177,13 @@ namespace QuanLyTourDuLich.Controllers
                                     emp.EmpId,
                                     emp.EmpName,
                                     emp.Gender,
-                                    emp.DateOfBirth,
-                                    emp.WorkingDate,
+                                    DateOfBirth = DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    WorkingDate = DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     emp.PhoneNumber,
                                     emp.Email,
                                     emp.Avatar,
+                                    emp.UserName,
+                                    emp.Password,
                                     DateUpdate = DateTime.Parse(emp.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                 }).FirstOrDefaultAsync();
                 if (rs == null)
@@ -209,23 +211,29 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return BadRequest();
                 }
-                Employee newEmp = new Employee();
-                newEmp.EmpName = emp.EmpName;
-                newEmp.Gender = emp.Gender;
-                newEmp.DateOfBirth = emp.DateOfBirth;
-                newEmp.WorkingDate = DateTime.Now;
-                newEmp.PhoneNumber = emp.PhoneNumber;
-                newEmp.Email = emp.Email;
-                newEmp.UserName = emp.UserName;
-                newEmp.Password = emp.Password;
-                newEmp.Avatar = emp.Avatar;
-                newEmp.DateInsert = DateTime.Now;
-                newEmp.DateUpdate = DateTime.Now;
-                newEmp.Status = emp.Status;
-                newEmp.IsDelete = null;
-                await _context.Employee.AddAsync(newEmp);
+
+                var phone = _context.Employee.Where(m => m.PhoneNumber == emp.PhoneNumber).Count();
+                if (phone > 0)
+                {
+                    return BadRequest();
+                }
+                var email = _context.Employee.Where(m => m.Email == emp.Email).Count();
+                if (email > 0)
+                {
+                    return BadRequest();
+                }
+                var user = _context.Employee.Where(m => m.UserName == emp.UserName).Count();
+                if (user > 0)
+                {
+                    return BadRequest();
+                }
+                emp.WorkingDate = DateTime.Now.Date;
+                emp.DateInsert = DateTime.Now.Date;
+                emp.DateUpdate = DateTime.Now.Date;
+                emp.IsDelete = null;
+                await _context.Employee.AddAsync(emp);
                 await _context.SaveChangesAsync();
-                return Ok(newEmp);
+                return Ok(emp);
             }
             catch
             {
@@ -237,18 +245,15 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Thai Tran Kieu Diem][11/06/2021]
         // Sửa thông tin nhân viên
-        [HttpPut("Adm_UpdateEmployee/{empID:int}")]
-        public async Task<IActionResult> Adm_UpdateEmployee([FromBody] Employee emp, int empID)
+        [HttpPut("Adm_UpdateEmployee")]
+        public async Task<IActionResult> Adm_UpdateEmployee([FromBody] Employee emp)
         {
-            if (empID != emp.EmpId)
-            {
-                return BadRequest();
-            }
+
             try
             {
                 var empUpdate = await (from e in _context.Employee
                                        where (e.IsDelete == null || e.IsDelete == true)
-                                       && e.EmpId==empID
+                                       && e.EmpId==emp.EmpId
                                        select e).FirstOrDefaultAsync();
                 if (empUpdate == null)
                 {
@@ -257,11 +262,12 @@ namespace QuanLyTourDuLich.Controllers
                 empUpdate.EmpName = emp.EmpName;
                 empUpdate.Gender = emp.Gender;
                 empUpdate.DateOfBirth = emp.DateOfBirth;
-                empUpdate.Avatar = emp.Avatar;
+                empUpdate.Avatar = "abc";
                 empUpdate.PhoneNumber = emp.PhoneNumber;
                 empUpdate.Email = emp.Email;
-                empUpdate.DateUpdate = DateTime.Now;
+                empUpdate.DateUpdate = DateTime.Now.Date;
                 empUpdate.Status = emp.Status;
+                // ai update ghi ra
                 await _context.SaveChangesAsync();
                 return Ok(empUpdate);
             }
@@ -274,21 +280,18 @@ namespace QuanLyTourDuLich.Controllers
         //[Thai Tran Kieu Diem][11/06/2021]
         //Xóa nhân viên, tình trạng isDelete==true
 
-        [HttpPut("Adm_DeleteEmployee/{empId:int}")]
-        public async Task<IActionResult> Adm_DeleteEmployee(int empId)
+        [HttpPut("Adm_DeleteEmployee")]
+        public async Task<IActionResult> Adm_DeleteEmployee([FromBody]int []Ids)
         {
 
-            try {
-                var empDelete = await (from e in _context.Employee
-                                       where (e.IsDelete == null || e.IsDelete == false)
-                                       && e.EmpId == empId
-                                       select e).FirstOrDefaultAsync();
-                if (empDelete == null)
+            try
+            {
+                var empDelete = await _context.Employee.Where(m => Ids.Contains(m.EmpId)).ToListAsync();
+                empDelete.ForEach(m =>
                 {
-                    return NotFound();
-                }
-                empDelete.DateUpdate = DateTime.Now;
-                empDelete.IsDelete = false;
+                    m.DateUpdate = DateTime.Now.Date;
+                    m.IsDelete = false;
+                });
                 await _context.SaveChangesAsync();
                 return Ok(empDelete);
             }
