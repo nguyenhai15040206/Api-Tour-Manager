@@ -52,11 +52,11 @@ namespace QuanLyTourDuLich.Controllers
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
                                         where (t.IsDelete == null || t.IsDelete == true)
-                                        && checkModelSearchIsNull == true ? true
+                                        && checkModelSearchIsNull == true ?true: istouristAttrID==true?
+                                        ((istouristAttrID && t.TouristAttrId == trsa.touristAttrID))
                                         :
                                         (
-                                            (istouristAttrID && t.TouristAttrId == trsa.touristAttrID)
-                                            || (istouristAttrName && t.TouristAttrName.Contains(trsa.touristAttrName))
+                                             (istouristAttrName && t.TouristAttrName.Contains(trsa.touristAttrName))
                                             || (isprovinceID && t.ProvinceId == trsa.provinceID)
                                         )
                                         orderby t.DateUpdate descending
@@ -102,6 +102,8 @@ namespace QuanLyTourDuLich.Controllers
                 tourAttrac.DateInsert = DateTime.Now.Date;
                 tourAttrac.DateUpdate = DateTime.Now.Date;
                 tourAttrac.IsDelete = null;
+                tourAttrac.EmpIdinsert = 1;
+                tourAttrac.EmpIdupdate = 1;
 
                 await _context.TouristAttraction.AddAsync(tourAttrac);
                 await _context.SaveChangesAsync();
