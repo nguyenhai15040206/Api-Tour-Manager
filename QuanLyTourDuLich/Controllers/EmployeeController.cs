@@ -113,12 +113,11 @@ namespace QuanLyTourDuLich.Controllers
 
                 bool isEmployeeId = int.TryParse(empSearch.empID.ToString(), out int empID);
                 bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.empName));
-                bool isGender = bool.TryParse(empSearch.gender.ToString(), out bool gender);
                 bool isWorkingDate = DateTime.TryParse(empSearch.workingDate.ToString(), out DateTime workingdate);
                 bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.phoneNumber));
                 bool isEmail = (!string.IsNullOrEmpty(empSearch.email));
 
-                if (isEmployeeId || isEmployeeName || isGender || isWorkingDate || isPhoneNumber || isEmail)
+                if (isEmployeeId || isEmployeeName || isWorkingDate || isPhoneNumber || isEmail)
                 {
                     checkModelSearchIsNull = false;
                 }
@@ -126,14 +125,14 @@ namespace QuanLyTourDuLich.Controllers
                 var searchEmp = await (from emp in _context.Employee
                                     where (emp.IsDelete == null || emp.IsDelete == true)
                                     && checkModelSearchIsNull==true? true
-                                     : (
-                                        (isEmployeeId && emp.EmpId == empSearch.empID)
-                                        || (isEmployeeName && emp.EmpName.Contains(empSearch.empName))
-                                        || (isGender && emp.Gender == empSearch.gender)
+                                     : isEmployeeId==false? (
+                                        (isEmployeeName && emp.EmpName.Contains(empSearch.empName))
                                         || (isWorkingDate && emp.WorkingDate == empSearch.workingDate)
                                         || (isPhoneNumber && emp.PhoneNumber.Contains(empSearch.phoneNumber))
                                         || (isEmail && emp.Email.Contains(empSearch.email))
-                                    )
+
+                                    ) :(
+                                    (emp.EmpId == empSearch.empID))
                                        orderby  emp.DateUpdate descending
                                     select new
                                     {
@@ -215,7 +214,7 @@ namespace QuanLyTourDuLich.Controllers
                 var phone = _context.Employee.Where(m => m.PhoneNumber == emp.PhoneNumber).Count();
                 if (phone > 0)
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest,"Số điện thoại đã tồn tại");
+                    return StatusCode(StatusCodes.Status400BadRequest, "Số điện thoại đã tồn tại");
                 }
                 var email = _context.Employee.Where(m => m.Email == emp.Email).Count();
                 if (email > 0)
@@ -259,17 +258,37 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return NotFound();
                 }
-                empUpdate.EmpName = emp.EmpName;
-                empUpdate.Gender = emp.Gender;
-                empUpdate.DateOfBirth = emp.DateOfBirth;
-                empUpdate.Avatar = emp.Avatar;
-                empUpdate.PhoneNumber = emp.PhoneNumber;
-                empUpdate.Email = emp.Email;
-                empUpdate.DateUpdate = DateTime.Now.Date;
-                empUpdate.Status = emp.Status;
-                // ai update ghi ra
-                await _context.SaveChangesAsync();
-                return Ok(empUpdate);
+                else
+                {
+                    if (empUpdate.PhoneNumber != emp.PhoneNumber)
+                    {
+                        var phone = _context.Employee.Where(m => m.PhoneNumber == emp.PhoneNumber).Count();
+                        if (phone > 0)
+                        {
+                            return StatusCode(StatusCodes.Status400BadRequest, "Số điện thoại đã tồn tại");
+                        }
+                    }
+                    if (empUpdate.Email != emp.Email)
+                    {
+                        var email = _context.Employee.Where(m => m.Email == emp.Email).Count();
+                        if (email > 0)
+                        {
+                            return StatusCode(StatusCodes.Status400BadRequest, "Email đã tồn tại");
+                        }
+                    }
+                    empUpdate.EmpName = emp.EmpName;
+                    empUpdate.Gender = emp.Gender;
+                    empUpdate.DateOfBirth = emp.DateOfBirth;
+                    empUpdate.Avatar = emp.Avatar;
+                    empUpdate.PhoneNumber = emp.PhoneNumber;
+                    empUpdate.Email = emp.Email;
+                    empUpdate.DateUpdate = DateTime.Now.Date;
+                    empUpdate.Status = emp.Status;
+                    // ai update ghi ra
+                    await _context.SaveChangesAsync();
+                    return Ok(empUpdate);
+                }
+                
             }
             catch
             {
