@@ -282,11 +282,7 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
-        // Kiểm tra tồn tại moot khách hàng
-        private bool CustomerExits(Guid? customerID)
-        {
-            return _context.Customer.Any(m => m.CustomerId == customerID);
-        }
+        
 
 
     }
