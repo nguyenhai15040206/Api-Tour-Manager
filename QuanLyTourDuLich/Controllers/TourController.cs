@@ -78,7 +78,7 @@ namespace QuanLyTourDuLich.Controllers
                 bool isTourName = (!string.IsNullOrEmpty(tourSearch.TourName));
                 bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
                 bool isDateEnd = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateEnd);
-                bool isTravelTypeID = int.TryParse(tourSearch.TravelTypeID.ToString(), out int tourTypeID);
+                bool isTravelTypeID = Guid.TryParse(tourSearch.TravelTypeID.ToString(), out Guid tourTypeID);
                 bool isDeparturePlace = int.TryParse(tourSearch.DeparturePlace.ToString(), out int departurePlace);
                 // -- end
 

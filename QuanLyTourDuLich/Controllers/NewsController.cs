@@ -34,9 +34,9 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isNewsId = int.TryParse(newSearch.newsId.ToString(), out int newsId);
+                bool isNewsId = Guid.TryParse(newSearch.newsId.ToString(), out Guid newsId);
                 bool isNewsName = (!string.IsNullOrEmpty(newSearch.newsName));
-                bool isKindOfNewsId = int.TryParse(newSearch.kindOfNewsId.ToString(), out int kindOfNews);
+                bool isKindOfNewsId = Guid.TryParse(newSearch.kindOfNewsId.ToString(), out Guid kindOfNews);
 
                 if (isNewsId || isNewsName || isKindOfNewsId)
                 {

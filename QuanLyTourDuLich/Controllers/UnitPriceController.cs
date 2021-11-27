@@ -70,39 +70,5 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
-
-
-
-        // Delete Multi row
-        [HttpPost("Adm_DeleteTourDetailsByIds/{empID:int}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<TourDetails>>> DeleteTourDetails([FromBody] Guid[] Ids, Guid? empID)
-        {
-            try
-            {
-                // cách 1, nếu cần kết nhiều bảng
-                //var rs = (from t in _context.Tour
-                //          join .....
-                //          where Ids.Contains(t.TourId)
-                //          select ....
-                //          ).ToListAsync();
-
-                //chỉ cần có 1 bảng 
-                // Nếu listObj = null, thì client call lại dữ liệu, nên không cần check lại listObj == null
-                var listObj = await _context.Tour.Where(m => Ids.Contains(m.TourId)).ToListAsync();
-                listObj.ForEach(m =>
-                {
-                    m.IsDelete = false;
-                    m.DateUpdate = DateTime.Now.Date;
-                    m.EmpIdupdate = empID;
-                });
-                await _context.SaveChangesAsync();
-                return StatusCode(StatusCodes.Status200OK, "Delete tour success!");
-            }
-            catch(Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
     }
 }

@@ -36,7 +36,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isTourGuideId = int.TryParse(guiSearch.touGuideId.ToString(), out int tourGuideId);
+                bool isTourGuideId = Guid.TryParse(guiSearch.touGuideId.ToString(), out Guid tourGuideId);
                 bool isTourGuideName = (!string.IsNullOrEmpty(guiSearch.tourGuideName));
                 bool isGender = bool.TryParse(guiSearch.gender.ToString(), out bool gender);
                 bool isPhoneNumber = (!string.IsNullOrEmpty(guiSearch.phoneNumber));

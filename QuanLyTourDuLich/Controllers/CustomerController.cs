@@ -104,7 +104,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 
 
-                bool isCustomerId = int.TryParse(customerSearch.customerId.ToString(), out int cusomerID);
+                bool isCustomerId = Guid.TryParse(customerSearch.customerId.ToString(), out Guid cusomerID);
                 bool isCustomerName = (!string.IsNullOrEmpty(customerSearch.customerName));
                 bool isGender = bool.TryParse(customerSearch.gender.ToString(), out bool gender);
                 bool isPhoneNumber = (!string.IsNullOrEmpty(customerSearch.phoneNumber));

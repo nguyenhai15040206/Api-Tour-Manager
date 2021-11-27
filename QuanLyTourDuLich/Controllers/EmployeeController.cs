@@ -111,7 +111,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isEmployeeId = int.TryParse(empSearch.empID.ToString(), out int empID);
+                bool isEmployeeId = Guid.TryParse(empSearch.empID.ToString(), out Guid empID);
                 bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.empName));
                 bool isWorkingDate = DateTime.TryParse(empSearch.workingDate.ToString(), out DateTime workingdate);
                 bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.phoneNumber));
