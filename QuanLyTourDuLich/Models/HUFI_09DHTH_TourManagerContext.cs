@@ -6,9 +6,6 @@ namespace QuanLyTourDuLich.Models
 {
     public partial class HUFI_09DHTH_TourManagerContext : DbContext
     {
-        public HUFI_09DHTH_TourManagerContext()
-        {
-        }
 
         public HUFI_09DHTH_TourManagerContext(DbContextOptions<HUFI_09DHTH_TourManagerContext> options)
             : base(options)
@@ -32,15 +29,6 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<TravelType> TravelType { get; set; }
         public virtual DbSet<UnitPrice> UnitPrice { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-4MGR8RB\\SQLEXPRESS;Database=HUFI_09DHTH_TourManager;User ID=sa;Password=tanhai123;");
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
