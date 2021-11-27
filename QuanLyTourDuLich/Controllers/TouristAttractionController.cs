@@ -133,8 +133,8 @@ namespace QuanLyTourDuLich.Controllers
                 tourAttrac.DateInsert = DateTime.Now.Date;
                 tourAttrac.DateUpdate = DateTime.Now.Date;
                 tourAttrac.IsDelete = null;
-                tourAttrac.EmpIdinsert = 1;
-                tourAttrac.EmpIdupdate = 1;
+                tourAttrac.EmpIdinsert = null;
+                tourAttrac.EmpIdupdate = null;
 
                 await _context.TouristAttraction.AddAsync(tourAttrac);
                 await _context.SaveChangesAsync();
@@ -153,7 +153,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpGet("Adm_GetTourAttrByID")]
-        public async Task<IActionResult> Adm_GetTouristAttractionById(int? touristAttrId=null)
+        public async Task<IActionResult> Adm_GetTouristAttractionById(Guid? touristAttrId=null)
         {
             try
             {
@@ -208,7 +208,7 @@ namespace QuanLyTourDuLich.Controllers
                 rs.Description = tour.Description;
                 rs.ImagesList = tour.ImagesList;
                 rs.ProvinceId = tour.ProvinceId;
-                rs.EmpIdupdate = 1;
+                rs.EmpIdupdate = null;
                 rs.Status = tour.Status;
                 rs.DateUpdate = DateTime.Now.Date;
 
@@ -226,7 +226,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpPut("Adm_deleteTouristAttraction")]
-        public async Task<IActionResult> Adm_deleteTouristAttraction( [FromBody] int[] Ids)
+        public async Task<IActionResult> Adm_deleteTouristAttraction( [FromBody] Guid[] Ids)
         {
            try
             {

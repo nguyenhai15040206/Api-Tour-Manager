@@ -60,7 +60,8 @@ namespace QuanLyTourDuLich.Controllers
                     checkModelSearchIsNull = false;
                 }
                 var rs = await (from p in _context.Province
-                                where checkModelSearchIsNull == true ? true
+                                where 
+                                checkModelSearchIsNull == true ? true
                                 : isProvinceID == true ? (provinceSearch.provinceID.Contains(p.ProvinceId))
                                 : (
                                     (isProvinceName && p.ProvinceName.Contains(provinceSearch.provinceName))
