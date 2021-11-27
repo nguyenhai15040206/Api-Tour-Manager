@@ -153,7 +153,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 return Ok(searchEmp);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
@@ -162,12 +162,13 @@ namespace QuanLyTourDuLich.Controllers
 
         //[Thai Tran Kieu Diem][11/06/2021]
         //get thông tin nhân viên theo mã nhân viên
-
+        // TanHai - Note: Kiem tra ngay null hay khong => de elect ngay
         [HttpGet("Adm_getEmployeeById")]  
         public async Task<IActionResult> Adm_GetEmployeeById(Guid? empId =null)
         {
             try
             {
+                //var rs = await _context.Employee.FirstOrDefaultAsync(m => m.EmpId == empId);
                 var rs = await (from emp in _context.Employee
                                 where (emp.IsDelete == null || emp.IsDelete == true)
                                 && emp.EmpId == empId
@@ -176,6 +177,7 @@ namespace QuanLyTourDuLich.Controllers
                                     emp.EmpId,
                                     emp.EmpName,
                                     emp.Gender,
+                                    // check
                                     DateOfBirth = DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     WorkingDate = DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     emp.PhoneNumber,
