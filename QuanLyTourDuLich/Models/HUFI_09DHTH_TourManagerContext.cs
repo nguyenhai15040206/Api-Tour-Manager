@@ -6,6 +6,9 @@ namespace QuanLyTourDuLich.Models
 {
     public partial class HUFI_09DHTH_TourManagerContext : DbContext
     {
+        public HUFI_09DHTH_TourManagerContext()
+        {
+        }
 
         public HUFI_09DHTH_TourManagerContext(DbContextOptions<HUFI_09DHTH_TourManagerContext> options)
             : base(options)
@@ -30,11 +33,22 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<UnitPrice> UnitPrice { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+                optionsBuilder.UseSqlServer("Server=DESKTOP-4MGR8RB\\SQLEXPRESS;Database=HUFI_09DHTH_TourManager;User ID=sa;Password=tanhai123;");
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BookingTour>(entity =>
             {
-                entity.Property(e => e.BookingTourId).HasColumnName("bookingTourID");
+                entity.Property(e => e.BookingTourId)
+                    .HasColumnName("bookingTourID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.BookingDate)
                     .HasColumnName("bookingDate")
@@ -93,9 +107,11 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<Comments>(entity =>
             {
                 entity.HasKey(e => e.CommentId)
-                    .HasName("PK__Comments__CDDE91BD6FC4B66A");
+                    .HasName("PK__Comments__CDDE91BDCD0A123C");
 
-                entity.Property(e => e.CommentId).HasColumnName("commentID");
+                entity.Property(e => e.CommentId)
+                    .HasColumnName("commentID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Active).HasColumnName("active");
 
@@ -115,7 +131,7 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("dateUpdate")
                     .HasColumnType("date");
 
-                entity.Property(e => e.EmpIdactive).HasColumnName("empIDActive");
+                entity.Property(e => e.EmpIdinsert).HasColumnName("empIDInsert");
 
                 entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
 
@@ -130,9 +146,9 @@ namespace QuanLyTourDuLich.Models
                     .HasForeignKey(d => d.CustomerId)
                     .HasConstraintName("fk_Comments_Customer");
 
-                entity.HasOne(d => d.EmpIdactiveNavigation)
+                entity.HasOne(d => d.EmpIdinsertNavigation)
                     .WithMany(p => p.Comments)
-                    .HasForeignKey(d => d.EmpIdactive)
+                    .HasForeignKey(d => d.EmpIdinsert)
                     .HasConstraintName("fk_Comments_Employee");
 
                 entity.HasOne(d => d.Tour)
@@ -143,7 +159,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<Customer>(entity =>
             {
-                entity.Property(e => e.CustomerId).HasColumnName("customerID");
+                entity.Property(e => e.CustomerId)
+                    .HasColumnName("customerID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Address)
                     .HasColumnName("address")
@@ -204,13 +222,15 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<Employee>(entity =>
             {
                 entity.HasKey(e => e.EmpId)
-                    .HasName("PK__Employee__AFB3EC6DC25A956E");
+                    .HasName("PK__Employee__AFB3EC6DF0978E25");
 
-                entity.Property(e => e.EmpId).HasColumnName("empID");
+                entity.Property(e => e.EmpId)
+                    .HasColumnName("empID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Avatar)
                     .HasColumnName("avatar")
-                    .HasMaxLength(150);
+                    .HasMaxLength(1000);
 
                 entity.Property(e => e.DateInsert)
                     .HasColumnName("dateInsert")
@@ -261,7 +281,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<Hotel>(entity =>
             {
-                entity.Property(e => e.HotelId).HasColumnName("hotelID");
+                entity.Property(e => e.HotelId)
+                    .HasColumnName("hotelID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Address)
                     .HasColumnName("address")
@@ -292,7 +314,7 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.ImagesList)
                     .HasColumnName("imagesList")
-                    .HasMaxLength(500);
+                    .HasMaxLength(2000);
 
                 entity.Property(e => e.Introduce).HasColumnName("introduce");
 
@@ -340,7 +362,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<HotelType>(entity =>
             {
-                entity.Property(e => e.HotelTypeId).HasColumnName("hotelTypeID");
+                entity.Property(e => e.HotelTypeId)
+                    .HasColumnName("hotelTypeID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.DateInsert)
                     .HasColumnName("dateInsert")
@@ -383,7 +407,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<KindOfNews>(entity =>
             {
-                entity.Property(e => e.KindOfNewsId).HasColumnName("kindOfNewsID");
+                entity.Property(e => e.KindOfNewsId)
+                    .HasColumnName("kindOfNewsID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.DateInsert)
                     .HasColumnName("dateInsert")
@@ -418,7 +444,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<News>(entity =>
             {
-                entity.Property(e => e.NewsId).HasColumnName("newsID");
+                entity.Property(e => e.NewsId)
+                    .HasColumnName("newsID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Active).HasColumnName("active");
 
@@ -472,16 +500,18 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("divisionType")
                     .HasMaxLength(151);
 
-                entity.Property(e => e.PhoneCode).HasColumnName("phoneCode");
-
                 entity.Property(e => e.ProvinceName)
                     .HasColumnName("provinceName")
                     .HasMaxLength(151);
+
+                entity.Property(e => e.Regions).HasColumnName("regions");
             });
 
             modelBuilder.Entity<Tour>(entity =>
             {
-                entity.Property(e => e.TourId).HasColumnName("tourID");
+                entity.Property(e => e.TourId)
+                    .HasColumnName("tourID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.CurrentQuanity).HasColumnName("currentQuanity");
 
@@ -511,10 +541,6 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.IsDelete).HasColumnName("isDelete");
 
-                entity.Property(e => e.PhuongTienXuatPhat)
-                    .HasColumnName("phuongTienXuatPhat")
-                    .HasMaxLength(50);
-
                 entity.Property(e => e.QuanityMax).HasColumnName("quanityMax");
 
                 entity.Property(e => e.QuanityMin).HasColumnName("quanityMin");
@@ -532,6 +558,10 @@ namespace QuanLyTourDuLich.Models
                 entity.Property(e => e.TourImg).HasColumnName("tourImg");
 
                 entity.Property(e => e.TourName).HasColumnName("tourName");
+
+                entity.Property(e => e.Transport)
+                    .HasColumnName("transport")
+                    .HasMaxLength(50);
 
                 entity.Property(e => e.TravelTypeId).HasColumnName("travelTypeID");
 
@@ -564,7 +594,7 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<TourDetails>(entity =>
             {
                 entity.HasKey(e => new { e.TourId, e.TouristAttrId })
-                    .HasName("PK__TourDeta__ED339C400513D76A");
+                    .HasName("PK__TourDeta__ED339C4015792552");
 
                 entity.Property(e => e.TourId).HasColumnName("tourID");
 
@@ -616,7 +646,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<TourGuide>(entity =>
             {
-                entity.Property(e => e.TourGuideId).HasColumnName("tourGuideID");
+                entity.Property(e => e.TourGuideId)
+                    .HasColumnName("tourGuideID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Address)
                     .HasColumnName("address")
@@ -676,9 +708,11 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<TouristAttraction>(entity =>
             {
                 entity.HasKey(e => e.TouristAttrId)
-                    .HasName("PK__TouristA__CAE8143AC56AEE28");
+                    .HasName("PK__TouristA__CAE8143AE69C3364");
 
-                entity.Property(e => e.TouristAttrId).HasColumnName("touristAttrID");
+                entity.Property(e => e.TouristAttrId)
+                    .HasColumnName("touristAttrID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.DateInsert)
                     .HasColumnName("dateInsert")
@@ -724,7 +758,9 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<TravelType>(entity =>
             {
-                entity.Property(e => e.TravelTypeId).HasColumnName("travelTypeID");
+                entity.Property(e => e.TravelTypeId)
+                    .HasColumnName("travelTypeID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.DateInsert)
                     .HasColumnName("dateInsert")
@@ -764,7 +800,7 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<UnitPrice>(entity =>
             {
                 entity.HasKey(e => new { e.TourId, e.DateUpdate })
-                    .HasName("PK__UnitPric__470A97E4722D0761");
+                    .HasName("PK__UnitPric__470A97E44F431611");
 
                 entity.Property(e => e.TourId).HasColumnName("tourID");
 
@@ -783,6 +819,8 @@ namespace QuanLyTourDuLich.Models
                 entity.Property(e => e.ChildrenUnitPrice)
                     .HasColumnName("childrenUnitPrice")
                     .HasColumnType("money");
+
+                entity.Property(e => e.DateInsert).HasColumnName("dateInsert");
 
                 entity.Property(e => e.Discount).HasColumnName("discount");
 
@@ -816,7 +854,7 @@ namespace QuanLyTourDuLich.Models
             modelBuilder.Entity<Wards>(entity =>
             {
                 entity.HasKey(e => e.WardId)
-                    .HasName("PK__Wards__A14E2C70B4E14DCD");
+                    .HasName("PK__Wards__A14E2C70F7051529");
 
                 entity.Property(e => e.WardId).HasColumnName("wardID");
 

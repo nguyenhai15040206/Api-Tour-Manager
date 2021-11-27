@@ -48,9 +48,9 @@ namespace QuanLyTourDuLich.Controllers
                         new Claim(JwtRegisteredClaimNames.Sub, _config["Jwt:Subject"]),
                         new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                        new Claim("MaKhachHang",customer.CustomerId.ToString()),
-                        new Claim("TenKhachHang",customer.CustomerName),
-                        new Claim("SoDienThoai",customer.PhoneNumber),
+                        new Claim("CustomerID",customer.CustomerId.ToString()),
+                        new Claim("CustomerName",customer.CustomerName),
+                        new Claim("PhoneNumber",customer.PhoneNumber),
                         new Claim("Email",customer.Email)
                     };
 
@@ -157,7 +157,7 @@ namespace QuanLyTourDuLich.Controllers
 
 
         [HttpGet("Adm_GetCustomerById/{CustomerId:int}")]
-        public async Task<IActionResult> Adm_GetCustomerById(int CustomerId)
+        public async Task<IActionResult> Adm_GetCustomerById(Guid? CustomerId)
         {
             try {
 
@@ -226,7 +226,7 @@ namespace QuanLyTourDuLich.Controllers
         // Update Khách hàng
         //[Authorize]
         [HttpPut("Adm_UpdateCustomer/{customerID:int}")]
-        public async Task<IActionResult> Adm_UpdateCustomer(int customerID, [FromBody] Customer khachHang)
+        public async Task<IActionResult> Adm_UpdateCustomer(Guid? customerID, [FromBody] Customer khachHang)
         {
             // Ý nghĩa : Cập nhật thông tin một khách hàng
             if(customerID != khachHang.CustomerId)
@@ -262,7 +262,7 @@ namespace QuanLyTourDuLich.Controllers
         // [Thai Tran Kieu Diem][11/06/2021]
         //Vô hiệu hóa tài khoản khách hàng  
         [HttpPut("Adm_DeleteCustomer/{customerId:int}")]
-        public async Task<IActionResult> Adm_DeleteCustomer(int customerId)
+        public async Task<IActionResult> Adm_DeleteCustomer(Guid? customerId)
         {
             try 
             {
@@ -283,7 +283,7 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
         // Kiểm tra tồn tại moot khách hàng
-        private bool CustomerExits(int customerID)
+        private bool CustomerExits(Guid? customerID)
         {
             return _context.Customer.Any(m => m.CustomerId == customerID);
         }

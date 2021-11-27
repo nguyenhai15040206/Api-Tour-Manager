@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QuanLyTourDuLich.Models;
+using QuanLyTourDuLich.SearchModels;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -37,6 +38,33 @@ namespace QuanLyTourDuLich.Controllers
         {
             var rs = await _context.District.Where(m => m.ProvinceId == provinceID).ToListAsync();
             return Ok(rs);
+        }
+
+        [HttpPost("Adm_GetDistrictByProvinceID")]
+        public async Task<ActionResult<IEnumerable<District>>> Adm_GetDistrictList([FromBody] int[] provinceID)
+        // xu ly lai 
+        {
+            try
+            {
+                //var rs = await _context.District.Where(m => m.ProvinceId == provinceID).ToListAsync();
+                var rs = await (from d in _context.District
+                                join p in _context.Province on d.ProvinceId equals p.ProvinceId
+                                where provinceID.Contains(p.ProvinceId)
+                                select new
+                                {
+                                    d.DistrictId,
+                                    d.DistrictName,
+                                    d.DivisionType,
+                                    p.ProvinceName,
+                                    count = _context.Wards.Where(m => m.DistrictId == d.DistrictId).Count()
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+
         }
     }
 }

@@ -20,7 +20,6 @@ namespace QuanLyTourDuLich.Controllers
         /// loại tin tức
         /// </summary>
         /// 
-        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public KindOfNewsController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -125,7 +124,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpPut("Adm_UpdateKindOfNews/{KindOfNewsId:int}")]
-        public async Task<IActionResult> Adm_UpdateKindOfNews([FromBody] KindOfNews kind, int KindOfNewsId)
+        public async Task<IActionResult> Adm_UpdateKindOfNews([FromBody] KindOfNews kind, Guid? KindOfNewsId)
         {
             if (kind.KindOfNewsId != KindOfNewsId)
             {
@@ -160,7 +159,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpPut("Adm_DeleteKindOfNews/{KindOfNewsId:int}/{empID:int}")]
-        public async Task<IActionResult> Adm_DeleteKindOfNews (  int KindOfNewsId, int? empID = null)
+        public async Task<IActionResult> Adm_DeleteKindOfNews (Guid? KindOfNewsId, Guid? empID = null)
         {
             try
             {

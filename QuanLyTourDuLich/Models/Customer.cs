@@ -11,7 +11,7 @@ namespace QuanLyTourDuLich.Models
             Comments = new HashSet<Comments>();
         }
 
-        public int CustomerId { get; set; }
+        public Guid CustomerId { get; set; }
         public string CustomerName { get; set; }
         public bool? Gender { get; set; }
         public string PhoneNumber { get; set; }

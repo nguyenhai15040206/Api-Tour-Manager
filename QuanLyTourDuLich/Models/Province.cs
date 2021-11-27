@@ -15,7 +15,7 @@ namespace QuanLyTourDuLich.Models
         public int ProvinceId { get; set; }
         public string ProvinceName { get; set; }
         public string DivisionType { get; set; }
-        public int? PhoneCode { get; set; }
+        public int? Regions { get; set; }
 
         public virtual ICollection<District> District { get; set; }
         public virtual ICollection<Tour> Tour { get; set; }

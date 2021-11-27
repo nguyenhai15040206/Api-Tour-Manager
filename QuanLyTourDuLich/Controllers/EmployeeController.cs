@@ -298,7 +298,6 @@ namespace QuanLyTourDuLich.Controllers
 
         //[Thai Tran Kieu Diem][11/06/2021]
         //Xóa nhân viên, tình trạng isDelete==true
-
         [HttpPut("Adm_DeleteEmployee")]
         public async Task<IActionResult> Adm_DeleteEmployee([FromBody]int []Ids)
         {

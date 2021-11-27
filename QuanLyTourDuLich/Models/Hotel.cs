@@ -10,7 +10,7 @@ namespace QuanLyTourDuLich.Models
             TourDetails = new HashSet<TourDetails>();
         }
 
-        public int HotelId { get; set; }
+        public Guid HotelId { get; set; }
         public string HotelName { get; set; }
         public int? Rating { get; set; }
         public string Introduce { get; set; }
@@ -21,10 +21,10 @@ namespace QuanLyTourDuLich.Models
         public string Address { get; set; }
         public string ImagesList { get; set; }
         public int? WardId { get; set; }
-        public int? HotelTypeId { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid? HotelTypeId { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public string Note { get; set; }
         public bool? Status { get; set; }

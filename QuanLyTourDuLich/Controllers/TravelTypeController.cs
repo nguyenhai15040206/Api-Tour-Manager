@@ -21,7 +21,6 @@ namespace QuanLyTourDuLich.Controllers
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
 
-        DateTime DateUpdate;
         public TravelTypeController(HUFI_09DHTH_TourManagerContext context)
         {
             _context = context;
@@ -62,7 +61,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpGet("Adm_GetTravelTypeById/{travelTypeId:int}")]
-        public async Task<IActionResult> Adm_GetTravelTypeById (int travelTypeId)
+        public async Task<IActionResult> Adm_GetTravelTypeById (Guid? travelTypeId)
         {
             try
             {
@@ -130,7 +129,7 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpPut("Adm_UpdateTravelType/{travelTypeId:int}")]
-        public async Task<IActionResult> Adm_UpdateTravelType ([FromBody] TravelType travel, int travelTypeId)
+        public async Task<IActionResult> Adm_UpdateTravelType ([FromBody] TravelType travel, Guid? travelTypeId)
         {
             if (travel.TravelTypeId != travelTypeId)
             {
@@ -175,7 +174,7 @@ namespace QuanLyTourDuLich.Controllers
         // cấp nhật tình trạng thôi, nên không cần đưa mết cái modal vào đâu
         [HttpPut("Adm_DeleteTravelType/{travelTypeId:int}/{empID:int}")]
 
-        public async Task<IActionResult> Adm_DeleteTravelType(int travelTypeId, int? empID = null)
+        public async Task<IActionResult> Adm_DeleteTravelType(Guid? travelTypeId, Guid? empID = null)
         {
             
             try

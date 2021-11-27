@@ -31,7 +31,7 @@ namespace QuanLyTourDuLich.Models
             UnitPriceEmpIdupdateNavigation = new HashSet<UnitPrice>();
         }
 
-        public int EmpId { get; set; }
+        public Guid EmpId { get; set; }
         public string EmpName { get; set; }
         public bool? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }

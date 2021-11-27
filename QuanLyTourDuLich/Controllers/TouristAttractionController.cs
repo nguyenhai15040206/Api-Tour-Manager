@@ -28,6 +28,33 @@ namespace QuanLyTourDuLich.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// [Nguyễn Tấn Hải][11/21/2021] - load danh sách các địa điểm theo vùng miền
+        /// </summary>
+        [Route("Adm_GetTouristAttByRegions")]
+        [HttpGet]
+        public async Task<IActionResult> Adm_GetTouristAttByRegions(int? regions=null)
+        {
+            try
+            {
+                var result = await (from t in _context.TouristAttraction
+                                        join p in _context.Province on t.ProvinceId equals p.ProvinceId
+                                        where (t.IsDelete == null || t.IsDelete == true)
+                                            && p.Regions== regions
+                                        orderby t.DateUpdate descending
+                                        select new
+                                        {
+                                            value= t.TouristAttrId,
+                                            label= t.TouristAttrName,
+                                        }).ToListAsync();
+                return Ok(result);
+            }
+            catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        } 
+
 
         /// [Get danh sách địa điểm du lịch]
         /// 
@@ -120,6 +147,7 @@ namespace QuanLyTourDuLich.Controllers
         ///Get thong tin dia diem
         ///chưa get được
         ///
+
         [HttpGet("Adm_GetTourAttrByID")]
         public async Task<IActionResult> Adm_GetTouristAttractionById(int? touristAttrId=null)
         {
@@ -157,7 +185,6 @@ namespace QuanLyTourDuLich.Controllers
 
         ///update theo mã
         ///
-
         [HttpPut("Adm_UpdateTouristAttraction")]
         public async Task<IActionResult> Adm_UpdateTouristAttraction([FromBody] TouristAttraction tour)
         {
