@@ -41,7 +41,11 @@ namespace QuanLyTourDuLich.Controllers
                 bool checkModelSearchIsNull = true;
                 bool istouristAttrID = int.TryParse(trsa.touristAttrID.ToString(), out int touristAttcID);
                 bool istouristAttrName = (!string.IsNullOrEmpty(trsa.touristAttrName));
-                bool isprovinceID = int.TryParse(trsa.provinceID.ToString(), out int provinceID);
+                bool isprovinceID = false;
+                if (trsa.provinceID.Length > 0)
+                {
+                    isprovinceID = true;
+                }
 
                 if (isprovinceID || istouristAttrID || istouristAttrName)
                 {
@@ -57,7 +61,7 @@ namespace QuanLyTourDuLich.Controllers
                                         :
                                         (
                                              (istouristAttrName && t.TouristAttrName.Contains(trsa.touristAttrName))
-                                            || (isprovinceID && t.ProvinceId == trsa.provinceID)
+                                            || (isprovinceID && trsa.provinceID.Contains(t.ProvinceId))
                                         )
                                         orderby t.DateUpdate descending
                                         select new

@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace QuanLyTourDuLich.SearchModels
 {
-    public class touristAttactionSearchModel
+    public class ProvinceSearchModel
     {
-        public int? touristAttrID { get; set; }
-        public string touristAttrName { get; set; }
         public int? []provinceID { get; set; }
+        public string provinceName { get; set; }
+        public string divisionType { get; set; }
     }
 }
