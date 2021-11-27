@@ -5,12 +5,12 @@ namespace QuanLyTourDuLich.Models
 {
     public partial class TourDetails
     {
-        public int TourId { get; set; }
-        public int TouristAttrId { get; set; }
-        public int? HotelId { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid TourId { get; set; }
+        public Guid TouristAttrId { get; set; }
+        public Guid? HotelId { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? IsDelete { get; set; }
 

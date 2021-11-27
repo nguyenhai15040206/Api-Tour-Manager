@@ -7,7 +7,7 @@ namespace QuanLyTourDuLich.SearchModels
 {
     public class touristAttactionSearchModel
     {
-        public int? touristAttrID { get; set; }
+        public Guid? touristAttrID { get; set; }
         public string touristAttrName { get; set; }
         public int? []provinceID { get; set; }
     }

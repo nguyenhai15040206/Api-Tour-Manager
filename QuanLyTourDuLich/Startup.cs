@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using QuanLyTourDuLich.Models;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace QuanLyTourDuLich
 {
@@ -56,7 +57,7 @@ namespace QuanLyTourDuLich
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseStaticFiles();
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
             app.UseRouting();
@@ -68,6 +69,11 @@ namespace QuanLyTourDuLich
             {
                 endpoints.MapControllers();
 
+            });
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto
             });
         }
     }

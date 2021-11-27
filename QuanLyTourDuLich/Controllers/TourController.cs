@@ -74,7 +74,7 @@ namespace QuanLyTourDuLich.Controllers
                 // nếu có dữ liệu => nhã tất cả
                 bool checkModelSearchIsNull = true;
                 // Ngược lại xử lý với luồng dữ liệu này
-                bool isTourID = int.TryParse(tourSearch.TourID.ToString(), out int tourID);
+                bool isTourID = Guid.TryParse(tourSearch.TourID.ToString(), out Guid tourID);
                 bool isTourName = (!string.IsNullOrEmpty(tourSearch.TourName));
                 bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
                 bool isDateEnd = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateEnd);
@@ -93,28 +93,31 @@ namespace QuanLyTourDuLich.Controllers
                                     join up in _context.UnitPrice on t.TourId equals up.TourId
                                     join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                     from a in ttg.DefaultIfEmpty()
-                                    where (t.IsDelete == null || t.IsDelete == true)  && 
+                                    where
                                     // Xử lý search 
                                     // nếu check == true => xuất tất cả => ngược lại
-                                    checkModelSearchIsNull == true? true :
+                                    checkModelSearchIsNull == true? ((t.IsDelete == null || t.IsDelete == true) &&
+                                    (up.IsDelete == null || up.IsDelete == true)) :
                                     // Start
                                     (
-                                            (isTourID && t.TourId == tourSearch.TourID)
+                                       (     (isTourID && t.TourId == tourSearch.TourID)
                                         || (isTourName && t.TourName.Contains(tourSearch.TourName))
                                         || (isDateStart && t.DateStart == tourSearch.DateStart)
                                         || (isDateEnd && t.DateEnd == tourSearch.DateEnd)
                                         || (isTravelTypeID && t.TravelTypeId == tourSearch.TravelTypeID)
                                         || (isDeparturePlace && t.DeparturePlace == tourSearch.DeparturePlace)
+                                        ) && ((t.IsDelete == null || t.IsDelete == true) &&
+                                                (up.IsDelete == null || up.IsDelete == true))
                                     )
                                     // End
-                                    orderby t.DateStart descending
+                                    orderby t.DateUpdate descending, t.DateStart
                                     select new
                                     {
                                         t.TourId,
                                         t.TourName,
                                         t.Description,
                                         t.TourImg,
-                                        t.PhuongTienXuatPhat,
+                                        t.Transport,
                                         dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         t.QuanityMax,
@@ -131,6 +134,7 @@ namespace QuanLyTourDuLich.Controllers
 
                                         tourGuideName = a.TourGuideName ?? null
                                     }).ToListAsync();
+                
                 return Ok(result);
             }
             catch (Exception)
@@ -141,7 +145,7 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Nguyễn Tấn Hải -] - Xử lý Lấy dữ liệu tourDetails
         [HttpGet("TourDetails/{tourID:int}")]
-        public async Task<ActionResult> Cli_TourDetails(int tourID)
+        public async Task<ActionResult> Cli_TourDetails(Guid? tourID)
         {
             try
             {
@@ -161,7 +165,7 @@ namespace QuanLyTourDuLich.Controllers
                                              t.TourImg,
                                              t.DateStart,
                                              totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,  // thời hạn của tour => 3 ngày 2 đêm
-                                             t.PhuongTienXuatPhat,
+                                             t.Transport,
                                              t.QuanityMax,  
                                              quanity = t.QuanityMax > t.CurrentQuanity? (t.QuanityMax-t.CurrentQuanity) : 0,
                                              t.Schedule,
@@ -226,7 +230,7 @@ namespace QuanLyTourDuLich.Controllers
         // Delete Multi row
         [HttpPost("Adm_DeleteTourByIds/{empID:int}")]
         //[Authorize]
-        public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] int[] Ids, int empID)
+        public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] Guid[] Ids, Guid empID)
         {
             try
             {

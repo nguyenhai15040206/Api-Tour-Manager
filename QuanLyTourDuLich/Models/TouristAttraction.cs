@@ -10,13 +10,13 @@ namespace QuanLyTourDuLich.Models
             TourDetails = new HashSet<TourDetails>();
         }
 
-        public int TouristAttrId { get; set; }
+        public Guid TouristAttrId { get; set; }
         public string TouristAttrName { get; set; }
         public string Description { get; set; }
         public string ImagesList { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public int? ProvinceId { get; set; }
         public bool? Status { get; set; }
