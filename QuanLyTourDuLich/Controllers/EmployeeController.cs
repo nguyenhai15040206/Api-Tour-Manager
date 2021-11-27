@@ -138,7 +138,7 @@ namespace QuanLyTourDuLich.Controllers
                                     {
                                         emp.EmpId,
                                         emp.EmpName,
-                                        emp.Gender,
+                                        Gender=emp.Gender==true?"Nam":"Nữ",
                                         DateOfBirth=DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
                                         WorkingDate=DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         emp.PhoneNumber,

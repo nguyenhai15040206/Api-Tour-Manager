@@ -20,11 +20,28 @@ namespace QuanLyTourDuLich.Controllers
             _context = context;
         }
 
-        [HttpGet("{maDistrict}")]
-        public async Task<ActionResult<IEnumerable<Wards>>> GET(int districtID)
+        [HttpGet("Adm_GetDataWardsByDistrict")]
+        public async Task<ActionResult<IEnumerable<Wards>>> Adm_GetDataWardsByDistrict(int? districtID)
         {
-            var rs = await _context.Wards.Where(m => m.DistrictId == districtID).ToListAsync();
-            return Ok(rs);
+            try
+            {
+                //var rs = await _context.District.Where(m => m.ProvinceId == provinceID).ToListAsync();
+                var rs = await (from w in _context.Wards
+                                join d in _context.District on w.DistrictId equals d.DistrictId
+                                where w.DistrictId == districtID
+                                select new
+                                {
+                                    w.WardId,
+                                    w.WardName,
+                                    w.DivisionType,
+                                    d.DistrictName
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
         }
     }
 }
