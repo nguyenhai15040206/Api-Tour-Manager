@@ -16,7 +16,6 @@ namespace QuanLyTourDuLich.Controllers
     [ApiController]
     public class NewsController : ControllerBase
     {
-        DateTime DateUpdate;
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public NewsController(HUFI_09DHTH_TourManagerContext context)
         {
@@ -78,7 +77,7 @@ namespace QuanLyTourDuLich.Controllers
         }
         
         [HttpGet("NewsDetails/{newsID:int}")] // chỉ chấp nhận nó là int
-        public async Task<IActionResult> News_GetDataDetails(int newsID )
+        public async Task<IActionResult> News_GetDataDetails(Guid? newsID )
         {
             try
             {
@@ -151,7 +150,7 @@ namespace QuanLyTourDuLich.Controllers
         // Update một tin tức
 
         [HttpPost("Adm_UpdateNews/{id:int}")]
-        public async Task<IActionResult> Adm_UpdateNews([FromBody] News news, int id)
+        public async Task<IActionResult> Adm_UpdateNews([FromBody] News news, Guid? id)
         {
             if (news.NewsId != id)
             {
@@ -190,7 +189,7 @@ namespace QuanLyTourDuLich.Controllers
         ///Xóa một tin tức
         ///
         [HttpPost("Adm_DeleteNews/{NewsID:int}/{empId:int}")]
-        public async Task<IActionResult> Adm_DeleteNews ( int NewsID, int? empId = null)
+        public async Task<IActionResult> Adm_DeleteNews ( Guid? NewsID, Guid? empId = null)
         {
             try
             {

@@ -165,7 +165,7 @@ namespace QuanLyTourDuLich.Controllers
         //get thông tin nhân viên theo mã nhân viên
 
         [HttpGet("Adm_getEmployeeById/{empId:int}")]  
-        public async Task<IActionResult> Adm_GetEmployeeById(int empId)
+        public async Task<IActionResult> Adm_GetEmployeeById(Guid? empId)
         {
             try
             {
@@ -238,7 +238,7 @@ namespace QuanLyTourDuLich.Controllers
         // [Thai Tran Kieu Diem][11/06/2021]
         // Sửa thông tin nhân viên
         [HttpPut("Adm_UpdateEmployee/{empID:int}")]
-        public async Task<IActionResult> Adm_UpdateEmployee([FromBody] Employee emp, int empID)
+        public async Task<IActionResult> Adm_UpdateEmployee([FromBody] Employee emp, Guid? empID)
         {
             if (empID != emp.EmpId)
             {
@@ -275,7 +275,7 @@ namespace QuanLyTourDuLich.Controllers
         //Xóa nhân viên, tình trạng isDelete==true
 
         [HttpPut("Adm_DeleteEmployee/{empId:int}")]
-        public async Task<IActionResult> Adm_DeleteEmployee(int empId)
+        public async Task<IActionResult> Adm_DeleteEmployee(Guid? empId)
         {
 
             try {

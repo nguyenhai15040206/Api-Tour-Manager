@@ -5,15 +5,16 @@ namespace QuanLyTourDuLich.Models
 {
     public partial class UnitPrice
     {
-        public int TourId { get; set; }
+        public Guid TourId { get; set; }
         public DateTime DateUpdate { get; set; }
         public decimal? AdultUnitPrice { get; set; }
         public decimal? ChildrenUnitPrice { get; set; }
         public decimal? BabyUnitPrice { get; set; }
         public decimal? Surcharge { get; set; }
         public double? Discount { get; set; }
-        public int? EmpIdinsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdinsert { get; set; }
+        public int? DateInsert { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public bool? IsDelete { get; set; }
 
         public virtual Employee EmpIdinsertNavigation { get; set; }

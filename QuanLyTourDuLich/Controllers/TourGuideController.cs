@@ -81,7 +81,7 @@ namespace QuanLyTourDuLich.Controllers
                 // status code 200
                 return Ok(list);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
@@ -90,7 +90,7 @@ namespace QuanLyTourDuLich.Controllers
 
         //get thông tin theo mã
         [HttpGet("Adm_GetTourGuideByID/{TourGuideId:int}")]
-        public async Task<IActionResult> Adm_GetTourGuideById (int TourGuideId)
+        public async Task<IActionResult> Adm_GetTourGuideById (Guid? TourGuideId)
         {
             try {
 
@@ -159,7 +159,7 @@ namespace QuanLyTourDuLich.Controllers
         //update thông tin của một hướng dẫn viên bằng mã
 
         [HttpPut("Adm_UpdateTourGuide/{TourGuideId:int}")]
-        public async Task<IActionResult> Adm_UpdateTourGuide(int TourGuideId, [FromBody] TourGuide gui)
+        public async Task<IActionResult> Adm_UpdateTourGuide(Guid? TourGuideId, [FromBody] TourGuide gui)
         {
             if (TourGuideId != gui.TourGuideId)
             {
@@ -198,7 +198,7 @@ namespace QuanLyTourDuLich.Controllers
 
         //xóa một nhân viên
         [HttpPut("Adm_DeleteTourGuide/{TourGuideId:int}/{empID:int}")]
-        public async Task<IActionResult> Adm_DeleteTourGuide(int TourGuideId, int? empID = null)
+        public async Task<IActionResult> Adm_DeleteTourGuide(Guid? TourGuideId, Guid? empID = null)
         {
 
             try

@@ -13,24 +13,24 @@ namespace QuanLyTourDuLich.Models
             UnitPrice = new HashSet<UnitPrice>();
         }
 
-        public int TourId { get; set; }
+        public Guid TourId { get; set; }
         public string TourName { get; set; }
         public string Description { get; set; }
         public string TourImg { get; set; }
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
-        public string PhuongTienXuatPhat { get; set; }
+        public string Transport { get; set; }
         public int? QuanityMax { get; set; }
         public int? QuanityMin { get; set; }
         public int? CurrentQuanity { get; set; }
         public string Schedule { get; set; }
         public int? Rating { get; set; }
         public int? DeparturePlace { get; set; }
-        public int? TourGuideId { get; set; }
-        public int? TravelTypeId { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid? TourGuideId { get; set; }
+        public Guid? TravelTypeId { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? Suggest { get; set; }
         public bool? Status { get; set; }

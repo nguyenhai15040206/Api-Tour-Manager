@@ -10,11 +10,11 @@ namespace QuanLyTourDuLich.Models
             News = new HashSet<News>();
         }
 
-        public int KindOfNewsId { get; set; }
+        public Guid KindOfNewsId { get; set; }
         public string KindOfNewsName { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? Status { get; set; }
         public bool? IsDelete { get; set; }

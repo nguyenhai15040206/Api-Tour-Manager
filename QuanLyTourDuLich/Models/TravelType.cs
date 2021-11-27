@@ -10,12 +10,12 @@ namespace QuanLyTourDuLich.Models
             Tour = new HashSet<Tour>();
         }
 
-        public int TravelTypeId { get; set; }
+        public Guid TravelTypeId { get; set; }
         public string TravelTypeName { get; set; }
         public string Note { get; set; }
-        public int? EmpIdinsert { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
-        public int? EmpIdupdate { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? Status { get; set; }
         public bool? IsDelete { get; set; }

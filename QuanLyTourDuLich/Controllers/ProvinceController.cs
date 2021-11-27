@@ -21,7 +21,7 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         [HttpGet("Adm_GetProvince")]
-        public async Task<ActionResult> Adm_GetProvince()
+        public async Task<ActionResult> Adm_GetProvince(int regions)
         {
             try {
                 var rs = await (from p in _context.Province
@@ -33,6 +33,26 @@ namespace QuanLyTourDuLich.Controllers
                 return Ok(rs);
             }
             catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet("Adm_GetProvinceByRigions/{regions:int}")]
+        public async Task<ActionResult> Adm_GetProvinceByRegions(int regions)
+        {
+            try
+            {
+                var rs = await (from p in _context.Province
+                                where p.Regions == regions
+                                select new
+                                {
+                                    value = p.ProvinceId,
+                                    label = p.ProvinceName,
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
