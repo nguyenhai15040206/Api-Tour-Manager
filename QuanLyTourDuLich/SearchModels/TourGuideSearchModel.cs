@@ -7,11 +7,11 @@ namespace QuanLyTourDuLich.SearchModels
 {
     public class TourGuideSearchModel
     {
-        public Guid? touGuideId { get; set; }
-        public bool? gender { get; set; }
-        public string tourGuideName { get; set; }
-        public string phoneNumber { get; set; }
-        public string email { get; set; }
+        public Guid? TouGuideId { get; set; }
+        public bool? Gender { get; set; }
+        public string TourGuideName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
 
     }
 }

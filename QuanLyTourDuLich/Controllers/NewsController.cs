@@ -34,9 +34,9 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isNewsId = Guid.TryParse(newSearch.newsId.ToString(), out Guid newsId);
-                bool isNewsName = (!string.IsNullOrEmpty(newSearch.newsName));
-                bool isKindOfNewsId = Guid.TryParse(newSearch.kindOfNewsId.ToString(), out Guid kindOfNews);
+                bool isNewsId = Guid.TryParse(newSearch.NewsId.ToString(), out Guid newsId);
+                bool isNewsName = (!string.IsNullOrEmpty(newSearch.NewsName));
+                bool isKindOfNewsId = Guid.TryParse(newSearch.KindOfNewsId.ToString(), out Guid kindOfNews);
 
                 if (isNewsId || isNewsName || isKindOfNewsId)
                 {
@@ -50,9 +50,9 @@ namespace QuanLyTourDuLich.Controllers
                                       where (n.IsDelete == null || n.IsDelete == true)
                                       && checkModelSearchIsNull == true ? true 
                                       :(
-                                        (isNewsId && n.NewsId==newSearch.newsId)
-                                        ||(isNewsName && n.NewsName.Contains(newSearch.newsName))
-                                        ||(isKindOfNewsId && n.KindOfNewsId==newSearch.kindOfNewsId)
+                                        (isNewsId && n.NewsId==newSearch.NewsId)
+                                        ||(isNewsName && n.NewsName.Contains(newSearch.NewsName))
+                                        ||(isKindOfNewsId && n.KindOfNewsId==newSearch.KindOfNewsId)
                                         )
                                       orderby n.DateUpdate descending
                                       select new

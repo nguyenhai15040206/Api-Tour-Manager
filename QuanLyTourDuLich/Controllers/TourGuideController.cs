@@ -36,13 +36,12 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isTourGuideId = Guid.TryParse(guiSearch.touGuideId.ToString(), out Guid tourGuideId);
-                bool isTourGuideName = (!string.IsNullOrEmpty(guiSearch.tourGuideName));
-                bool isGender = bool.TryParse(guiSearch.gender.ToString(), out bool gender);
-                bool isPhoneNumber = (!string.IsNullOrEmpty(guiSearch.phoneNumber));
-                bool isEmail = (!string.IsNullOrEmpty(guiSearch.email));
+                bool isTourGuideId = Guid.TryParse(guiSearch.TouGuideId.ToString(), out Guid tourGuideId);
+                bool isTourGuideName = (!string.IsNullOrEmpty(guiSearch.TourGuideName));
+                bool isPhoneNumber = (!string.IsNullOrEmpty(guiSearch.PhoneNumber));
+                bool isEmail = (!string.IsNullOrEmpty(guiSearch.Email));
 
-                if (isTourGuideId || isTourGuideName || isGender || isPhoneNumber || isEmail)
+                if (isTourGuideId || isTourGuideName || isPhoneNumber || isEmail)
                 {
                     checkModelSearchIsNull = false;
                 }
@@ -53,11 +52,10 @@ namespace QuanLyTourDuLich.Controllers
                                   
                                   && checkModelSearchIsNull == true ? true :
                                   (
-                                      (isTourGuideId && guide.TourGuideId == guiSearch.touGuideId)
-                                      || (isTourGuideName && guide.TourGuideName.Contains(guiSearch.tourGuideName))
-                                      || (isGender && guide.Gender == guiSearch.gender)
-                                      || (isPhoneNumber && guide.PhoneNumber.Contains(guiSearch.phoneNumber))
-                                      || (isEmail && guide.Email.Contains(guiSearch.email))
+                                      (isTourGuideId && guide.TourGuideId == guiSearch.TouGuideId)
+                                      || (isTourGuideName && guide.TourGuideName.Contains(guiSearch.TourGuideName))
+                                      || (isPhoneNumber && guide.PhoneNumber.Contains(guiSearch.PhoneNumber))
+                                      || (isEmail && guide.Email.Contains(guiSearch.Email))
                                   )
                                   orderby guide.DateUpdate descending
                                   select new
