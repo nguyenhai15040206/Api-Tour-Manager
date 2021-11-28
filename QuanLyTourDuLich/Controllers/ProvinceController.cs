@@ -47,25 +47,22 @@ namespace QuanLyTourDuLich.Controllers
                 bool checkModelSearchIsNull = true;
 
                 bool isProvinceID = false;
-                if (provinceSearch.provinceID.Length > 0)
+                if (provinceSearch.ProvinceID.Length > 0)
                 {
                     isProvinceID = true;
                 }
                 //bool isProvinceID = int.TryParse(provinceSearch.provinceID.ToString(), out int provinceID);
-                bool isProvinceName = (!string.IsNullOrEmpty(provinceSearch.provinceName));
-                bool isDivisionType = (!string.IsNullOrEmpty(provinceSearch.divisionType));
-
-                if (isDivisionType || isProvinceID || isProvinceName)
+                bool isProvinceName = (!string.IsNullOrEmpty(provinceSearch.ProvinceName));
+                if (isProvinceID || isProvinceName)
                 {
                     checkModelSearchIsNull = false;
                 }
                 var rs = await (from p in _context.Province
                                 where 
                                 checkModelSearchIsNull == true ? true
-                                : isProvinceID == true ? (provinceSearch.provinceID.Contains(p.ProvinceId))
+                                : isProvinceID == true ? (provinceSearch.ProvinceID.Contains(p.ProvinceId))
                                 : (
-                                    (isProvinceName && p.ProvinceName.Contains(provinceSearch.provinceName))
-                                    || (isDivisionType && p.DivisionType.Contains(provinceSearch.divisionType))
+                                    (isProvinceName && p.ProvinceName.Contains(provinceSearch.ProvinceName))
                                 )
                                 select new
                                 {

@@ -104,11 +104,11 @@ namespace QuanLyTourDuLich.Controllers
 
                 
 
-                bool isCustomerId = Guid.TryParse(customerSearch.customerId.ToString(), out Guid cusomerID);
-                bool isCustomerName = (!string.IsNullOrEmpty(customerSearch.customerName));
-                bool isGender = bool.TryParse(customerSearch.gender.ToString(), out bool gender);
-                bool isPhoneNumber = (!string.IsNullOrEmpty(customerSearch.phoneNumber));
-                bool isEmail = (!string.IsNullOrEmpty(customerSearch.email));
+                bool isCustomerId = Guid.TryParse(customerSearch.CustomerId.ToString(), out Guid cusomerID);
+                bool isCustomerName = (!string.IsNullOrEmpty(customerSearch.CustomerName));
+                bool isGender = bool.TryParse(customerSearch.Gender.ToString(), out bool gender);
+                bool isPhoneNumber = (!string.IsNullOrEmpty(customerSearch.PhoneNumber));
+                bool isEmail = (!string.IsNullOrEmpty(customerSearch.Email));
 
                 bool checkModelSearchIsNull = true;
 
@@ -121,11 +121,11 @@ namespace QuanLyTourDuLich.Controllers
                                   where (kh.IsDelete == null || kh.IsDelete == true) 
                                   && checkModelSearchIsNull == true ? true:
                                   (
-                                    (isCustomerId && kh.CustomerId==customerSearch.customerId)
-                                    ||(isCustomerName && kh.CustomerName.Contains(customerSearch.customerName))
-                                    ||(isGender && kh.Gender==customerSearch.gender)
-                                    ||(isPhoneNumber && kh.PhoneNumber.Contains(customerSearch.phoneNumber))
-                                    ||(isEmail && kh.Email.Contains(customerSearch.email))
+                                    (isCustomerId && kh.CustomerId==customerSearch.CustomerId)
+                                    ||(isCustomerName && kh.CustomerName.Contains(customerSearch.CustomerName))
+                                    ||(isGender && kh.Gender==customerSearch.Gender)
+                                    ||(isPhoneNumber && kh.PhoneNumber.Contains(customerSearch.PhoneNumber))
+                                    ||(isEmail && kh.Email.Contains(customerSearch.Email))
                                   )
                                   orderby kh.DateUpdate descending
                                   select new

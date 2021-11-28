@@ -111,11 +111,11 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isEmployeeId = Guid.TryParse(empSearch.empID.ToString(), out Guid empID);
-                bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.empName));
-                bool isWorkingDate = DateTime.TryParse(empSearch.workingDate.ToString(), out DateTime workingdate);
-                bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.phoneNumber));
-                bool isEmail = (!string.IsNullOrEmpty(empSearch.email));
+                bool isEmployeeId = Guid.TryParse(empSearch.EmpID.ToString(), out Guid empID);
+                bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.EmpName));
+                bool isWorkingDate = DateTime.TryParse(empSearch.WorkingDate.ToString(), out DateTime workingdate);
+                bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.PhoneNumber));
+                bool isEmail = (!string.IsNullOrEmpty(empSearch.Email));
 
                 if (isEmployeeId || isEmployeeName || isWorkingDate || isPhoneNumber || isEmail)
                 {
@@ -126,13 +126,13 @@ namespace QuanLyTourDuLich.Controllers
                                     where (emp.IsDelete == null || emp.IsDelete == true)
                                     && checkModelSearchIsNull==true? true
                                      : isEmployeeId==false? (
-                                        (isEmployeeName && emp.EmpName.Contains(empSearch.empName))
-                                        || (isWorkingDate && emp.WorkingDate == empSearch.workingDate)
-                                        || (isPhoneNumber && emp.PhoneNumber.Contains(empSearch.phoneNumber))
-                                        || (isEmail && emp.Email.Contains(empSearch.email))
+                                        (isEmployeeName && emp.EmpName.Contains(empSearch.EmpName))
+                                        || (isWorkingDate && emp.WorkingDate == empSearch.WorkingDate)
+                                        || (isPhoneNumber && emp.PhoneNumber.Contains(empSearch.PhoneNumber))
+                                        || (isEmail && emp.Email.Contains(empSearch.Email))
 
                                     ) :(
-                                    (emp.EmpId == empSearch.empID))
+                                    (emp.EmpId == empSearch.EmpID))
                                        orderby  emp.DateUpdate descending
                                     select new
                                     {
@@ -153,7 +153,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 return Ok(searchEmp);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }

@@ -66,10 +66,10 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 bool checkModelSearchIsNull = true;
-                bool istouristAttrID = Guid.TryParse(trsa.touristAttrID.ToString(), out Guid touristAttcID);
-                bool istouristAttrName = (!string.IsNullOrEmpty(trsa.touristAttrName));
+                bool istouristAttrID = Guid.TryParse(trsa.TouristAttrID.ToString(), out Guid touristAttcID);
+                bool istouristAttrName = (!string.IsNullOrEmpty(trsa.TouristAttrName));
                 bool isprovinceID = false;
-                if (trsa.provinceID.Length > 0)
+                if (trsa.ProvinceID.Length > 0)
                 {
                     isprovinceID = true;
                 }
@@ -84,11 +84,11 @@ namespace QuanLyTourDuLich.Controllers
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
                                         where (t.IsDelete == null || t.IsDelete == true)
                                         && checkModelSearchIsNull == true ?true: istouristAttrID==true?
-                                        ((istouristAttrID && t.TouristAttrId == trsa.touristAttrID))
+                                        ((istouristAttrID && t.TouristAttrId == trsa.TouristAttrID))
                                         :
                                         (
-                                             (istouristAttrName && t.TouristAttrName.Contains(trsa.touristAttrName))
-                                            || (isprovinceID && trsa.provinceID.Contains(t.ProvinceId))
+                                             (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName))
+                                            || (isprovinceID && trsa.ProvinceID.Contains(t.ProvinceId))
                                         )
                                         orderby t.DateUpdate descending
                                         select new
