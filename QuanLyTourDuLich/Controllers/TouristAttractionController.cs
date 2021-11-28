@@ -60,7 +60,7 @@ namespace QuanLyTourDuLich.Controllers
         /// 
         [HttpPost]
         [Route("Adm_GetTouristAttractionList")]
-        public async Task<IActionResult> Admin_GetTouristAttractionList([FromBody] touristAttactionSearchModel trsa)
+        public async Task<IActionResult> Admin_GetTouristAttractionList([FromBody] TouristAttactionSearchModel trsa)
         {
             
             try
