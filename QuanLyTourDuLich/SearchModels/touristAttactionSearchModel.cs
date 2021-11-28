@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace QuanLyTourDuLich.SearchModels
 {
-    public class touristAttactionSearchModel
+    public class TouristAttactionSearchModel
     {
         public Guid? TouristAttrID { get; set; }
         public string TouristAttrName { get; set; }
