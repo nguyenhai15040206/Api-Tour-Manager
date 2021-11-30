@@ -36,39 +36,36 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isTourGuideId = Guid.TryParse(guiSearch.TouGuideId.ToString(), out Guid tourGuideId);
                 bool isTourGuideName = (!string.IsNullOrEmpty(guiSearch.TourGuideName));
                 bool isPhoneNumber = (!string.IsNullOrEmpty(guiSearch.PhoneNumber));
                 bool isEmail = (!string.IsNullOrEmpty(guiSearch.Email));
 
-                if (isTourGuideId || isTourGuideName || isPhoneNumber || isEmail)
+                if (isTourGuideName || isPhoneNumber || isEmail)
                 {
                     checkModelSearchIsNull = false;
                 }
 
                 var list = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdinsert equals e.EmpId
-                                  where ( guide.IsDelete == null || guide.IsDelete == true)
-                                  
-                                  && checkModelSearchIsNull == true ? true :
+                                  where  checkModelSearchIsNull == true ? (guide.IsDelete == null || guide.IsDelete == true) :
                                   (
-                                      (isTourGuideId && guide.TourGuideId == guiSearch.TouGuideId)
-                                      || (isTourGuideName && guide.TourGuideName.Contains(guiSearch.TourGuideName))
+                                      (guide.IsDelete == null || guide.IsDelete == true)
+                                      &&((isTourGuideName && guide.TourGuideName.Contains(guiSearch.TourGuideName))
                                       || (isPhoneNumber && guide.PhoneNumber.Contains(guiSearch.PhoneNumber))
-                                      || (isEmail && guide.Email.Contains(guiSearch.Email))
+                                      || (isEmail && guide.Email.Contains(guiSearch.Email)))
                                   )
                                   orderby guide.DateUpdate descending
                                   select new
                                   {
                                       guide.TourGuideId,
                                       guide.TourGuideName,
-                                      guide.Gender,
+                                      gender = guide.Gender == true ? "Nam" : "Nữ",
                                       guide.DateOfBirth,
                                       guide.PhoneNumber,
                                       guide.Email,
                                       guide.Address,
                                       guide.Avatar,
-                                      //e.EmpName,
+                                      e.EmpName,
                                       DateUpdate=DateTime.Parse(guide.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
                                   }).ToListAsync();
 
@@ -100,7 +97,7 @@ namespace QuanLyTourDuLich.Controllers
                                   {
                                       guide.TourGuideId,
                                       guide.TourGuideName,
-                                      guide.Gender,
+                                      gender=guide.Gender==true?"Nam":"Nữ",
                                       guide.DateOfBirth,
                                       guide.PhoneNumber,
                                       guide.Email,
@@ -128,26 +125,14 @@ namespace QuanLyTourDuLich.Controllers
                 if (gui == null)
                     return BadRequest();
 
+                gui.DateInsert = DateTime.Now;
+                gui.DateUpdate = DateTime.Now;
+                gui.Status = gui.Status;
+                gui.IsDelete = null;
 
-                TourGuide newGui = new TourGuide();
-                newGui.TourGuideName = gui.TourGuideName;
-                newGui.Gender = gui.Gender;
-                newGui.DateOfBirth = gui.DateOfBirth;
-                newGui.PhoneNumber = gui.PhoneNumber;
-                newGui.Email = gui.Email;
-                newGui.Address = gui.Address;
-                newGui.Avatar = gui.Avatar;
-                newGui.EmpIdinsert = gui.EmpIdinsert;
-                newGui.EmpIdupdate = gui.EmpIdupdate; 
-                newGui.DateInsert = DateTime.Now;
-                newGui.DateUpdate = DateTime.Now;
-                newGui.Status = gui.Status;
-                newGui.IsDelete = null;
-
-
-                await _context.TourGuide.AddAsync(newGui);
+                await _context.TourGuide.AddAsync(gui);
                 await _context.SaveChangesAsync();
-                return Ok(newGui);
+                return Ok(gui);
             }
             catch {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
@@ -156,7 +141,7 @@ namespace QuanLyTourDuLich.Controllers
 
         //update thông tin của một hướng dẫn viên bằng mã
 
-        [HttpPut("Adm_UpdateTourGuide/{TourGuideId:int}")]
+        [HttpPut("Adm_UpdateTourGuide")]
         public async Task<IActionResult> Adm_UpdateTourGuide(Guid? TourGuideId, [FromBody] TourGuide gui)
         {
             if (TourGuideId != gui.TourGuideId)
@@ -179,7 +164,7 @@ namespace QuanLyTourDuLich.Controllers
                 guiUpdate.PhoneNumber = gui.PhoneNumber;
                 guiUpdate.Address = gui.Address;
                 guiUpdate.Avatar = gui.Avatar;
-                guiUpdate.EmpIdupdate = gui.EmpIdupdate;
+                guiUpdate.EmpIdupdate = TourGuideId;
                 guiUpdate.DateUpdate = DateTime.Now;
                 guiUpdate.Status = gui.Status;
 
@@ -195,25 +180,19 @@ namespace QuanLyTourDuLich.Controllers
 
 
         //xóa một nhân viên
-        [HttpPut("Adm_DeleteTourGuide/{TourGuideId:int}/{empID:int}")]
-        public async Task<IActionResult> Adm_DeleteTourGuide(Guid? TourGuideId, Guid? empID = null)
+        [HttpPut("Adm_DeleteTourGuide")]
+        public async Task<IActionResult> Adm_DeleteTourGuide(Guid? TourGuideId, [FromBody]Guid? []Ids)
         {
 
             try
             {
-                var guiDelete = await (from nv in _context.TourGuide
-                                       where (nv.IsDelete == null || nv.IsDelete == true)
-                                       && nv.TourGuideId == TourGuideId
-                                       select nv).FirstOrDefaultAsync();
-                if (guiDelete == null)
-                    return NotFound();
-
-
-                guiDelete.EmpIdupdate = empID;
-                guiDelete.DateUpdate = DateTime.Now;
-                guiDelete.IsDelete = false;
-
-
+                var guiDelete = await _context.TourGuide.Where(m => Ids.Contains(m.TourGuideId)).ToListAsync();
+                guiDelete.ForEach(m =>
+                {
+                    m.EmpIdupdate = TourGuideId;
+                    m.DateUpdate = DateTime.Now;
+                    m.IsDelete = false;
+                });
                 await _context.SaveChangesAsync();
                 return Ok(guiDelete);
             }

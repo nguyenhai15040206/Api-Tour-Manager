@@ -59,5 +59,28 @@ namespace QuanLyTourDuLich.Controllers
             }
             
         }
+
+        [HttpGet("Adm_GetDistrictByProvinceCBB")]
+        public async Task<ActionResult<IEnumerable<District>>> Adm_GetDistrictByProvinceCBB(int provinceID)
+        // xu ly lai 
+        {
+            try
+            {
+                //var rs = await _context.District.Where(m => m.ProvinceId == provinceID).ToListAsync();
+                var rs = await (from d in _context.District
+                                where d.ProvinceId==provinceID
+                                select new
+                                {
+                                    value=d.DistrictId,
+                                    label=d.DistrictName
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+
+        }
     }
 }

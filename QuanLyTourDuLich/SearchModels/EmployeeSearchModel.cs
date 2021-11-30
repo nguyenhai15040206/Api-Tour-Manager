@@ -7,7 +7,6 @@ namespace QuanLyTourDuLich.SearchModels
 {
     public class EmployeeSearchModel
     {
-        public Guid? EmpID { get; set; }
         public string EmpName { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }

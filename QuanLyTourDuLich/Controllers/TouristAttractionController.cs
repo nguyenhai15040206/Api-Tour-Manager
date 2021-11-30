@@ -66,7 +66,6 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 bool checkModelSearchIsNull = true;
-                bool istouristAttrID = Guid.TryParse(trsa.TouristAttrID.ToString(), out Guid touristAttcID);
                 bool istouristAttrName = (!string.IsNullOrEmpty(trsa.TouristAttrName));
                 bool isprovinceID = false;
                 if (trsa.ProvinceID.Length > 0)
@@ -74,7 +73,7 @@ namespace QuanLyTourDuLich.Controllers
                     isprovinceID = true;
                 }
 
-                if (isprovinceID || istouristAttrID || istouristAttrName)
+                if (isprovinceID || istouristAttrName)
                 {
                     checkModelSearchIsNull = false;
                 }
@@ -82,12 +81,10 @@ namespace QuanLyTourDuLich.Controllers
                 var tourAttrac = await (from t in _context.TouristAttraction
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                        where (t.IsDelete == null || t.IsDelete == true)
-                                        && checkModelSearchIsNull == true ?true: istouristAttrID==true?
-                                        ((istouristAttrID && t.TouristAttrId == trsa.TouristAttrID))
-                                        :
-                                        (
-                                             (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName))
+                                        where checkModelSearchIsNull == true ? (t.IsDelete == null || t.IsDelete == true)
+                                         : (
+                                            (t.IsDelete == null || t.IsDelete == true)
+                                             && (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName))
                                             || (isprovinceID && trsa.ProvinceID.Contains(t.ProvinceId))
                                         )
                                         orderby t.DateUpdate descending
@@ -233,6 +230,7 @@ namespace QuanLyTourDuLich.Controllers
                 var rs = await _context.TouristAttraction.Where(m => Ids.Contains(m.TouristAttrId)).ToListAsync();
                 rs.ForEach(m =>
                 {
+                    
                     m.DateUpdate = DateTime.Now.Date;
                     m.IsDelete = false;
                 });

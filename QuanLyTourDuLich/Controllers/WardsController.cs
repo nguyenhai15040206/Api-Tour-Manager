@@ -43,5 +43,26 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
+
+        [HttpGet("Adm_GetDataWardsByDistrictCbb")]
+        public async Task<ActionResult<IEnumerable<Wards>>> Adm_GetDataWardsByDistrictCbb(int? districtID)
+        {
+            try
+            {
+                //var rs = await _context.District.Where(m => m.ProvinceId == provinceID).ToListAsync();
+                var rs = await (from w in _context.Wards
+                                where w.DistrictId == districtID
+                                select new
+                                {
+                                    value=w.WardId,
+                                    label=w.WardName
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
     }
 }
