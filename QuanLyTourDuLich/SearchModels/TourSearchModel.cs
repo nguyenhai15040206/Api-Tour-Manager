@@ -10,7 +10,6 @@ namespace QuanLyTourDuLich.SearchModels
     {
 
         // Nguyễn Tấn Hải - 20011108
-        public Guid? TourID { get; set; }
         public string TourName { get; set; }
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
@@ -19,7 +18,9 @@ namespace QuanLyTourDuLich.SearchModels
         public Guid? TravelTypeID { get; set; }
 
         // địa điểm xuất phát
-        public int? DeparturePlace { get; set; }
+        public int?[] DeparturePlace { get; set; }
+
+        public bool? Suggest { get; set; }
 
     }
 

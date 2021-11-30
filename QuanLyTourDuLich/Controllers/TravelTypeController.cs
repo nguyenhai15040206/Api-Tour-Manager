@@ -26,6 +26,31 @@ namespace QuanLyTourDuLich.Controllers
             _context = context;
         }
 
+        [HttpGet("Adm_GetTravelTypeCbo")]
+        public async Task<IActionResult> Adm_GetTravelTypeCbo()
+        {
+            try
+            {
+                var rs = await (from t in _context.TravelType
+                                join e in _context.Employee on t.EmpIdupdate equals e.EmpId
+                                where (t.IsDelete == null || t.IsDelete == true)
+                                select new
+                                {
+                                    value = t.TravelTypeId,
+                                    label = t.TravelTypeName,
+                                }).ToListAsync();
+                if (rs == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, "Không có dữ liệu vui lòng kiểm tra lại");
+                }
+                return Ok(rs);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
         ///get tất cả các loại tour
         ///
 
