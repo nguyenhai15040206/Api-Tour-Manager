@@ -111,28 +111,26 @@ namespace QuanLyTourDuLich.Controllers
             {
                 bool checkModelSearchIsNull = true;
 
-                bool isEmployeeId = Guid.TryParse(empSearch.EmpID.ToString(), out Guid empID);
                 bool isEmployeeName = (!string.IsNullOrEmpty(empSearch.EmpName));
                 bool isWorkingDate = DateTime.TryParse(empSearch.WorkingDate.ToString(), out DateTime workingdate);
                 bool isPhoneNumber = (!string.IsNullOrEmpty(empSearch.PhoneNumber));
                 bool isEmail = (!string.IsNullOrEmpty(empSearch.Email));
 
-                if (isEmployeeId || isEmployeeName || isWorkingDate || isPhoneNumber || isEmail)
+                if ( isEmployeeName || isWorkingDate || isPhoneNumber || isEmail)
                 {
                     checkModelSearchIsNull = false;
                 }
 
                 var searchEmp = await (from emp in _context.Employee
-                                    where (emp.IsDelete == null || emp.IsDelete == true)
-                                    && checkModelSearchIsNull==true? true
-                                     : isEmployeeId==false? (
-                                        (isEmployeeName && emp.EmpName.Contains(empSearch.EmpName))
+                                    where  checkModelSearchIsNull==true? (emp.IsDelete == null || emp.IsDelete == true)
+                                     :  (
+                                     (emp.IsDelete == null || emp.IsDelete == true)&&
+                                        ((isEmployeeName && emp.EmpName.Contains(empSearch.EmpName))
                                         || (isWorkingDate && emp.WorkingDate == empSearch.WorkingDate)
                                         || (isPhoneNumber && emp.PhoneNumber.Contains(empSearch.PhoneNumber))
-                                        || (isEmail && emp.Email.Contains(empSearch.Email))
+                                        || (isEmail && emp.Email.Contains(empSearch.Email)))
 
-                                    ) :(
-                                    (emp.EmpId == empSearch.EmpID))
+                                    ) 
                                        orderby  emp.DateUpdate descending
                                     select new
                                     {
