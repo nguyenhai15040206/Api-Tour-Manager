@@ -6,14 +6,14 @@ namespace QuanLyTourDuLich.Models
     public partial class UnitPrice
     {
         public Guid TourId { get; set; }
-        public DateTime DateUpdate { get; set; }
+        public DateTime? DateInsert { get; set; }
         public decimal? AdultUnitPrice { get; set; }
         public decimal? ChildrenUnitPrice { get; set; }
         public decimal? BabyUnitPrice { get; set; }
         public decimal? Surcharge { get; set; }
         public double? Discount { get; set; }
         public Guid? EmpIdinsert { get; set; }
-        public int? DateInsert { get; set; }
+        public DateTime DateUpdate { get; set; }
         public Guid? EmpIdupdate { get; set; }
         public bool? IsDelete { get; set; }
 

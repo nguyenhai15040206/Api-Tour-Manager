@@ -787,13 +787,13 @@ namespace QuanLyTourDuLich.Models
 
             modelBuilder.Entity<UnitPrice>(entity =>
             {
-                entity.HasKey(e => new { e.TourId, e.DateUpdate })
+                entity.HasKey(e => new { e.TourId, e.DateInsert })
                     .HasName("PK__UnitPric__470A97E44F431611");
 
                 entity.Property(e => e.TourId).HasColumnName("tourID");
 
                 entity.Property(e => e.DateUpdate)
-                    .HasColumnName("dateUpdate")
+                    .HasColumnName("dateInsert")
                     .HasColumnType("date");
 
                 entity.Property(e => e.AdultUnitPrice)
@@ -808,7 +808,9 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("childrenUnitPrice")
                     .HasColumnType("money");
 
-                entity.Property(e => e.DateInsert).HasColumnName("dateInsert");
+                entity.Property(e => e.DateUpdate)
+                    .HasColumnName("dateUpdate")
+                    .HasColumnType("date");
 
                 entity.Property(e => e.Discount).HasColumnName("discount");
 

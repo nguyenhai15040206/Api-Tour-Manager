@@ -53,28 +53,19 @@ namespace QuanLyTourDuLich.Controllers
 
 
 
-        // Delete Multi row
-        [HttpPost("Adm_DeleteTourDetailsByIds/{empID:int}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<TourDetails>>> DeleteTourDetails([FromBody] Guid[] Ids, Guid? empID)
+        // Delete  Multi row Tour Details By TourIDs 
+        [HttpPut("Adm_DeleteTourDetailsByTourID")]
+        //[Authorize]
+        public async Task<ActionResult<IEnumerable<TourDetails>>> DeleteTourDetailsByTourID([FromBody] DeleteModels deleteModels)
         {
             try
             {
-                // cách 1, nếu cần kết nhiều bảng
-                //var rs = (from t in _context.Tour
-                //          join .....
-                //          where Ids.Contains(t.TourId)
-                //          select ....
-                //          ).ToListAsync();
-
-                //chỉ cần có 1 bảng 
-                // Nếu listObj = null, thì client call lại dữ liệu, nên không cần check lại listObj == null
-                var listObj = await _context.Tour.Where(m => Ids.Contains(m.TourId)).ToListAsync();
+                var listObj = await _context.TourDetails.Where(m => deleteModels.SelectByIds.Contains(m.TourId)).ToListAsync();
                 listObj.ForEach(m =>
                 {
                     m.IsDelete = false;
                     m.DateUpdate = DateTime.Now.Date;
-                    m.EmpIdupdate = empID;
+                    m.EmpIdupdate = deleteModels.EmpId;
                 });
                 await _context.SaveChangesAsync();
                 return StatusCode(StatusCodes.Status200OK, "Delete tour success!");

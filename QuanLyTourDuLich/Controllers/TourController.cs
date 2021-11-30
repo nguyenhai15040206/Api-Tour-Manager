@@ -74,18 +74,26 @@ namespace QuanLyTourDuLich.Controllers
                 // nếu có dữ liệu => nhã tất cả
                 bool checkModelSearchIsNull = true;
                 // Ngược lại xử lý với luồng dữ liệu này
-                bool isTourID = Guid.TryParse(tourSearch.TourID.ToString(), out Guid tourID);
+                bool isDeparturePlace = true;
+                bool isDateFromTo = false;
                 bool isTourName = (!string.IsNullOrEmpty(tourSearch.TourName));
-                bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
-                bool isDateEnd = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateEnd);
                 bool isTravelTypeID = Guid.TryParse(tourSearch.TravelTypeID.ToString(), out Guid tourTypeID);
-                bool isDeparturePlace = int.TryParse(tourSearch.DeparturePlace.ToString(), out int departurePlace);
+                if (tourSearch.DeparturePlace == null || tourSearch.DeparturePlace.Length==0)
+                {
+                    isDeparturePlace = false;
+                }    
+                bool isDateStart = DateTime.TryParse(tourSearch.DateStart.ToString(), out DateTime dateStart);
+                bool isDateEnd = DateTime.TryParse(tourSearch.DateEnd.ToString(), out DateTime dateEnd);
                 // -- end
-
-                if(isDateEnd || isTourID || isTourName || isDateStart || isTravelTypeID || isDeparturePlace)
+                if(isDateEnd== true && isDateStart== true)
+                {
+                    isDateFromTo = true;
+                }
+                if (isTourName || isDateFromTo || isTravelTypeID || isDeparturePlace)
                 {
                     checkModelSearchIsNull = false;
-                }    
+                }
+                #region truy vấn dữ liệu
                 var result = await (from t in _context.Tour
                                     join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
                                     join p in _context.Province on t.DeparturePlace equals p.ProvinceId
@@ -93,24 +101,23 @@ namespace QuanLyTourDuLich.Controllers
                                     join up in _context.UnitPrice on t.TourId equals up.TourId
                                     join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                     from a in ttg.DefaultIfEmpty()
-                                    where
                                     // Xử lý search 
-                                    // nếu check == true => xuất tất cả => ngược lại
-                                    checkModelSearchIsNull == true? ((t.IsDelete == null || t.IsDelete == true) &&
-                                    (up.IsDelete == null || up.IsDelete == true)) :
-                                    // Start
-                                    (
-                                       (     (isTourID && t.TourId == tourSearch.TourID)
-                                        || (isTourName && t.TourName.Contains(tourSearch.TourName))
-                                        || (isDateStart && t.DateStart == tourSearch.DateStart)
-                                        || (isDateEnd && t.DateEnd == tourSearch.DateEnd)
-                                        || (isTravelTypeID && t.TravelTypeId == tourSearch.TravelTypeID)
-                                        || (isDeparturePlace && t.DeparturePlace == tourSearch.DeparturePlace)
-                                        ) && ((t.IsDelete == null || t.IsDelete == true) &&
-                                                (up.IsDelete == null || up.IsDelete == true))
+                                    // nếu check == true => xuất tất cả => ngược lại (với trạng thái isDelete là Null)
+                                    where tourSearch.Suggest== true? 
+                                    ((up.IsDelete == null || up.IsDelete == true) && (t.IsDelete == null || t.IsDelete == true) && t.Suggest==true)
+                                    : (checkModelSearchIsNull == true? 
+                                        ((up.IsDelete == null || up.IsDelete == true) && (t.IsDelete == null || t.IsDelete == true)) :
+                                        (
+                                            (
+                                                (isTourName && t.TourName.Contains(tourSearch.TourName))
+                                                || (isTravelTypeID && t.TravelTypeId == tourSearch.TravelTypeID)
+                                                || (isDeparturePlace && tourSearch.DeparturePlace.Contains(t.DeparturePlace))
+                                                || (isDateFromTo  && (t.DateStart >= tourSearch.DateStart && t.DateEnd <= tourSearch.DateEnd))
+                                            )
+                                            && ((t.IsDelete == null || t.IsDelete == true) && (up.IsDelete == null || up.IsDelete == true))
+                                        )
                                     )
-                                    // End
-                                    orderby t.DateUpdate descending, t.DateStart
+                                    orderby t.DateUpdate descending
                                     select new
                                     {
                                         t.TourId,
@@ -134,12 +141,82 @@ namespace QuanLyTourDuLich.Controllers
 
                                         tourGuideName = a.TourGuideName ?? null
                                     }).ToListAsync();
-                
+                #endregion
+
                 return Ok(result);
             }
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        // [Nguyễn Tấn Hải -] - Xử lý Lấy dữ liệu tourDetails
+        [HttpGet]
+        [Route("Adm_GetTourDetails")]
+        public async Task<IActionResult> Adm_GetTourDetails(Guid? tourID = null)
+        {
+            try
+            {
+                #region truy vấn dữ liệu
+                var tourDetails = await (from t in _context.Tour
+                                         join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
+                                         join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                         join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
+                                         join up in _context.UnitPrice on t.TourId equals up.TourId
+                                         join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                         from a in ttg.DefaultIfEmpty()
+                                         where t.TourId == tourID 
+                                            && (t.IsDelete == null || t.IsDelete == true) 
+                                            && (up.IsDelete == null || up.IsDelete == true)
+                                         orderby up.DateUpdate descending
+                                         select new
+                                         {
+                                             t.TourId,
+                                             t.TourName,
+                                             t.Rating,
+                                             t.Description,
+                                             t.TourImg,
+                                             t.DateStart,
+                                             t.DeparturePlace,
+                                             t.DateEnd,
+                                             //totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,  // thời hạn của tour => 3 ngày 2 đêm
+                                             t.Transport,
+                                             t.QuanityMax,
+                                             t.QuanityMin,
+                                             t.CurrentQuanity,
+                                             quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
+                                             t.Schedule,
+                                             t.TravelTypeId,
+                                             t.TravelType.TravelTypeName,
+                                             touGuideName = a.TourGuideName ?? "Chưa cập nhật",
+                                             up.AdultUnitPrice,
+                                             up.ChildrenUnitPrice,
+                                             up.BabyUnitPrice,
+                                             p.ProvinceId,
+                                             p.ProvinceName,
+                                             tourDetails = (from td in _context.TourDetails
+                                                            join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
+                                                            where td.TourId == tourID
+                                                                && (tatt.IsDelete == null || tatt.IsDelete == true)
+                                                                && (td.IsDelete == null || tatt.IsDelete == true)
+                                                            select new
+                                                            {
+                                                                tatt.TouristAttrId,
+                                                                tatt.TouristAttrName,
+                                                                tatt.ImagesList,
+                                                            }).ToList(),
+                                         }).FirstOrDefaultAsync();
+                #endregion
+                if (tourDetails==null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, $"Không tìm thấy dữ liệu vui lòng thử lại!");
+                }
+                return Ok(tourDetails);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
             }
         }
 
@@ -228,30 +305,21 @@ namespace QuanLyTourDuLich.Controllers
 
 
         // Delete Multi row
-        [HttpPost("Adm_DeleteTourByIds/{empID:int}")]
+        [HttpPut("Adm_DeleteTourByIds")]
         //[Authorize]
-        public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] Guid[] Ids, Guid empID)
+        public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] DeleteModels deleteModels)
         {
             try
             {
-                // cách 1, nếu cần kết nhiều bảng
-                //var rs = (from t in _context.Tour
-                //          join .....
-                //          where Ids.Contains(t.TourId)
-                //          select ....
-                //          ).ToListAsync();
-
-                //chỉ cần có 1 bảng 
-                // Nếu listObj = null, thì client call lại dữ liệu, nên không cần check lại listObj == null
-                var listObj = await _context.Tour.Where(m => Ids.Contains(m.TourId)).ToListAsync();
+                var listObj = await _context.Tour.Where(m => deleteModels.SelectByIds.Contains(m.TourId)).ToListAsync();
                 listObj.ForEach(m =>
                 {
                     m.IsDelete = false;
                     m.DateUpdate = DateTime.Now.Date;
-                    m.EmpIdupdate = empID;
+                    m.EmpIdupdate = deleteModels.EmpId;
                 });
                 await _context.SaveChangesAsync();
-                return StatusCode(StatusCodes.Status200OK, "Delete tour success!");
+                return StatusCode(StatusCodes.Status200OK, "Xóa thành công!");
             }
             catch(Exception)
             {

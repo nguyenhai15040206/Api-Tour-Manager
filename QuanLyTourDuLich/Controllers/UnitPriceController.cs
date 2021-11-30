@@ -46,6 +46,7 @@ namespace QuanLyTourDuLich.Controllers
                     {
                         rs.AdultUnitPrice = unitPrice.AdultUnitPrice;
                         rs.BabyUnitPrice = unitPrice.BabyUnitPrice;
+                        rs.DateUpdate = DateTime.Now.Date;
                         rs.ChildrenUnitPrice = unitPrice.ChildrenUnitPrice;
                         rs.EmpIdupdate = unitPrice.EmpIdupdate;
                         await _context.SaveChangesAsync();
@@ -56,7 +57,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 // nếu không tìm thấy tiến hành thêm
-                //unitPrice.DateInsert = DateTime.Now.Date;
+                unitPrice.DateInsert = DateTime.Now.Date;
                 unitPrice.DateUpdate = DateTime.Now.Date;
                 unitPrice.IsDelete = null;
                 await _context.UnitPrice.AddAsync(unitPrice);
@@ -67,6 +68,29 @@ namespace QuanLyTourDuLich.Controllers
             catch (Exception)
             {
                 // 500
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        // Delete Multi row
+        [HttpPut("Adm_DeleteUnitPriceByTourID")]
+        //[Authorize]
+        public async Task<ActionResult<IEnumerable<TourDetails>>> DeleteUnitPriceByTourID([FromBody] DeleteModels deleteModels)
+        {
+            try
+            {
+                var listObj = await _context.UnitPrice.Where(m => deleteModels.SelectByIds.Contains(m.TourId)).ToListAsync();
+                listObj.ForEach(m =>
+                {
+                    m.IsDelete = false;
+                    m.DateUpdate = DateTime.Now.Date;
+                    m.EmpIdupdate = deleteModels.EmpId;
+                });
+                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status200OK, "Xóa thành công!");
+            }
+            catch (Exception)
+            {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
