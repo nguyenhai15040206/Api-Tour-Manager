@@ -39,13 +39,20 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        public string getRegions(int? regions)
+        {
+            if (regions == 1) return "Miền Bắc";
+            if (regions == 2) return "Miền Trung";
+            if (regions == 3) return "Miền Nam";
+            return "";
+        }
+
         [HttpPost("Adm_GetProvinceAndSearch")]
         public async Task<IActionResult> Adm_GetProvinceAndSearch([FromBody] ProvinceSearchModel provinceSearch)
         {
             try
             {
                 bool checkModelSearchIsNull = true;
-
                 bool isProvinceID = false;
                 if (provinceSearch.ProvinceID.Length > 0)
                 {
@@ -66,10 +73,11 @@ namespace QuanLyTourDuLich.Controllers
                                 )
                                 select new
                                 {
-                                    value = p.ProvinceId,
-                                    label = p.ProvinceName,
+                                    
+                                    provinceId = p.ProvinceId,
+                                    provinceName = p.ProvinceName,
                                     p.DivisionType,
-                                    p.Regions,
+                                    regions = p.Regions==1? "Miền bắc": (p.Regions==2? "Miền Trung": "Miền Nam"),
                                     count = _context.TouristAttraction.Where(m => m.ProvinceId == p.ProvinceId).Count()
                                 }).ToListAsync();
                 if (rs == null)
@@ -78,7 +86,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 return Ok(rs);
             }
-            catch
+            catch(Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }

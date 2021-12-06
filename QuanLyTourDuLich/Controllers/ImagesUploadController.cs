@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyTourDuLich.SearchModels;
@@ -27,6 +28,7 @@ namespace QuanLyTourDuLich.Controllers
         // Nguyễn Tấn Hải - 20211126 Upload Image Tour
         [HttpPost]
         [Route("Adm_UploadImageTour")]
+        [Authorize]
         public async Task<IActionResult> UploadImageTour([FromForm] IFormFile file)
         {
             try
