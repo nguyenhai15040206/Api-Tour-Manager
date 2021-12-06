@@ -28,7 +28,7 @@ namespace QuanLyTourDuLich.Controllers
         // [Nguyễn Tấn Hải - 20211118]: Thực hiện Post Data
         [HttpPost("Adm_InsertUnitPirce")]
         //[Authorize]
-        public async Task<ActionResult<IEnumerable<UnitPrice>>> InsertTourDetails([FromBody] UnitPrice unitPrice)
+        public async Task<ActionResult<IEnumerable<UnitPrice>>> Adm_CreateUnitPrice([FromBody] UnitPrice unitPrice)
         {
             try
             {
@@ -71,6 +71,57 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
+
+        /// <summary>
+        /// [Nguyễn Tấn hải - 20211203] Hàm cập nhật đơn giá khi có sự thay đổi về giá cả
+        /// </summary>
+        /// <param name="tourID"></param>
+        /// <param name="adultUnitPrice"></param>
+        /// <param name="babyUnitPrice"></param>
+        /// <param name="childrenUnitPrice"></param>
+        /// <returns>true or false</returns>
+        [HttpPut("Adm_UpdateUnitPrice")]
+        public async Task<ActionResult<IEnumerable<UnitPrice>>> Adm_UpdateUnitPrice([FromBody] UnitPrice unitPrice)
+        {
+            try
+            {
+                #region truy vấn dữ liệu
+                var rs = await (from up in _context.UnitPrice
+                                join t in _context.Tour on up.TourId equals t.TourId
+                                where up.TourId == unitPrice.TourId &&
+                                        (up.IsDelete == null || up.IsDelete == true)
+                                        && (t.IsDelete == null || up.IsDelete == true)
+                                        orderby up.DateUpdate descending
+                                select up
+                                ).FirstOrDefaultAsync();
+                #endregion
+                if (rs == null)
+                    return BadRequest() ;
+                else
+                {
+                    // check xem có sự thay đổi về đơn giá không => có => update
+                    if(rs.AdultUnitPrice != unitPrice.AdultUnitPrice || rs.BabyUnitPrice != unitPrice.BabyUnitPrice
+                        || rs.ChildrenUnitPrice != unitPrice.ChildrenUnitPrice)
+                    {
+                        rs.AdultUnitPrice = unitPrice.AdultUnitPrice;
+                        rs.BabyUnitPrice = unitPrice.BabyUnitPrice;
+                        rs.ChildrenUnitPrice = unitPrice.ChildrenUnitPrice;
+                        rs.EmpIdupdate = unitPrice.EmpIdupdate;
+                        rs.DateUpdate = DateTime.Now.Date;
+                        await _context.SaveChangesAsync();
+                    }
+
+                    return Ok(rs);
+                }
+               
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
+
+
 
         // Delete Multi row
         [HttpPut("Adm_DeleteUnitPriceByTourID")]

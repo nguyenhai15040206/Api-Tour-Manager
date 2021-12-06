@@ -180,7 +180,6 @@ namespace QuanLyTourDuLich.Controllers
                                              t.DateStart,
                                              t.DeparturePlace,
                                              t.DateEnd,
-                                             //totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,  // thời hạn của tour => 3 ngày 2 đêm
                                              t.Transport,
                                              t.QuanityMax,
                                              t.QuanityMin,
@@ -195,17 +194,19 @@ namespace QuanLyTourDuLich.Controllers
                                              up.BabyUnitPrice,
                                              p.ProvinceId,
                                              p.ProvinceName,
+                                             regions = (from td in _context.TourDetails
+                                                        join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
+                                                        join pv in _context.Province on tatt.ProvinceId equals pv.ProvinceId
+                                                        where td.TourId == tourID
+                                                            && (tatt.IsDelete == null || tatt.IsDelete == true)
+                                                            && (td.IsDelete == null || tatt.IsDelete == true)
+                                                        select pv.Regions).FirstOrDefault(),
                                              tourDetails = (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
                                                             where td.TourId == tourID
                                                                 && (tatt.IsDelete == null || tatt.IsDelete == true)
                                                                 && (td.IsDelete == null || tatt.IsDelete == true)
-                                                            select new
-                                                            {
-                                                                tatt.TouristAttrId,
-                                                                tatt.TouristAttrName,
-                                                                tatt.ImagesList,
-                                                            }).ToList(),
+                                                            select tatt.TouristAttrId).ToList(),
                                          }).FirstOrDefaultAsync();
                 #endregion
                 if (tourDetails==null)
@@ -221,8 +222,8 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         // [Nguyễn Tấn Hải -] - Xử lý Lấy dữ liệu tourDetails
-        [HttpGet("TourDetails/{tourID:int}")]
-        public async Task<ActionResult> Cli_TourDetails(Guid? tourID)
+        [HttpGet("TourDetails")]
+        public async Task<ActionResult> Cli_TourDetails(Guid? tourID=null)
         {
             try
             {
@@ -245,12 +246,12 @@ namespace QuanLyTourDuLich.Controllers
                                              t.Transport,
                                              t.QuanityMax,  
                                              quanity = t.QuanityMax > t.CurrentQuanity? (t.QuanityMax-t.CurrentQuanity) : 0,
-                                             t.Schedule,
+                                             schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n",""),
                                              t.TravelType.TravelTypeName,
                                              touGuideName = a.TourGuideName ?? null,
                                              up.AdultUnitPrice,
                                              p.ProvinceName,
-                                             tourDetails = (from td in _context.TourDetails
+                                             tourDetails =  (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
                                                             where td.TourId == tourID
                                                                 && (tatt.IsDelete == null || tatt.IsDelete== true)
@@ -302,7 +303,43 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        [HttpPut("Adm_UpdateTourById")]
+        [Authorize]
+        public async Task<ActionResult> Adm_UpdateTour([FromBody] Tour tour)
+        {
+            try
+            {
+                if(tour.TourId == Guid.Empty) return StatusCode(StatusCodes.Status400BadRequest, $"Vui lòng kiểm tra dữ liệu cập nhật");
+                var rs = await _context.Tour.Where(m => m.TourId == tour.TourId).FirstOrDefaultAsync();
+                if(rs == null) return StatusCode(StatusCodes.Status404NotFound, $"Không tìm thấy dữ liệu");
 
+                if (tour.TourImg != string.Empty)
+                {
+                    rs.TourImg = tour.TourImg;
+                }
+                rs.TourName = tour.TourName.Trim();
+                rs.Description = tour.Description.Trim();
+                rs.DateStart = tour.DateStart;
+                rs.DateEnd = tour.DateEnd;
+                rs.Transport = tour.Transport;
+                rs.QuanityMax = tour.QuanityMax;
+                rs.QuanityMin = tour.QuanityMin;
+                rs.Schedule = tour.Schedule.Trim();
+                rs.Rating = tour.Rating;
+                rs.TourGuide = tour.TourGuide;
+                rs.TravelTypeId = tour.TravelTypeId;
+                rs.EmpIdupdate = tour.EmpIdupdate;
+                rs.DateUpdate = DateTime.Now.Date;
+                rs.Suggest = tour.Suggest;
+                rs.Status = tour.Status;
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
 
         // Delete Multi row
         [HttpPut("Adm_DeleteTourByIds")]

@@ -38,14 +38,16 @@ namespace QuanLyTourDuLich.Controllers
         {
             // Ý nghĩa: khi login sẽ gửi token lại cho user để duy trì đăng nhập
             //
-            if (empData != null && empData.UserName != null && empData.Password != null)
+            try
             {
-                var emp = await GetEmployee(empData.UserName, empData.Password);
-                if (emp != null)
+                if (empData != null && empData.UserName != null && empData.Password != null)
                 {
-                    // Jwt 
-                    var claims = new[]
+                    var emp = await GetEmployee(empData.UserName, empData.Password);
+                    if (emp != null)
                     {
+                        // Jwt 
+                        var claims = new[]
+                        {
                         new Claim(JwtRegisteredClaimNames.Sub, _config["Jwt:Subject"]),
                         new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
@@ -55,38 +57,43 @@ namespace QuanLyTourDuLich.Controllers
                         new Claim("Email",emp.Email)
                     };
 
-                    // mã hóa => set thời gian tồn tại cho token
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:key"]));
-                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                    var token = new JwtSecurityToken(_config["Jwt:Issuer"], _config["Jwt:Audience"],
-                            claims, expires: DateTime.UtcNow.AddHours(2), signingCredentials: signIn);
+                        // mã hóa => set thời gian tồn tại cho token
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:key"]));
+                        var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                        var token = new JwtSecurityToken(_config["Jwt:Issuer"], _config["Jwt:Audience"],
+                                claims, expires: DateTime.UtcNow.AddHours(2), signingCredentials: signIn);
 
-                    // trả dữ liệu cần thiết về cho client (giấu các thông tin như password)
-                    return Ok(new
-                    {
-                        data = new
+                        // trả dữ liệu cần thiết về cho client (giấu các thông tin như password)
+                        return Ok(new
                         {
-                            emp.EmpId,
-                            emp.EmpName,
-                            emp.Gender,
-                            emp.DateOfBirth,
-                            emp.WorkingDate,
-                            emp.PhoneNumber,
-                            emp.Email,
-                            emp.Avatar,
-                        },
-                        accessTokenEmp = new JwtSecurityTokenHandler().WriteToken(token)
-                    });
+                            data = new
+                            {
+                                emp.EmpId,
+                                emp.EmpName,
+                                emp.Gender,
+                                emp.DateOfBirth,
+                                emp.PhoneNumber,
+                                emp.Email,
+                                emp.Avatar,
+                            },
+                            accessTokenEmp = new JwtSecurityTokenHandler().WriteToken(token)
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
                 }
                 else
                 {
                     return BadRequest();
                 }
             }
-            else
+            catch(Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
             }
+            
         }
 
         // Login với username và mật khẩu
