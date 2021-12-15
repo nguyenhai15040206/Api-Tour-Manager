@@ -31,8 +31,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var tourList = await (from t in _context.Tour
-                                      join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                      join up in _context.UnitPrice on t.TourId equals up.TourId
+                                      join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                       from a in ttg.DefaultIfEmpty()
@@ -45,7 +44,7 @@ namespace QuanLyTourDuLich.Controllers
                                           t.TourImg,
                                           t.DateStart,
                                           t.Rating,
-                                          up.AdultUnitPrice,
+                                          t.AdultUnitPrice,
                                           p.ProvinceName,
                                           //tourGuideName = a.TourGuideName?? null,
                                       }).Take(6).ToListAsync();
@@ -95,26 +94,27 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 #region truy vấn dữ liệu
                 var result = await (from t in _context.Tour
-                                    join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
-                                    join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                    join type in _context.CatEnumeration on t.TravelTypeId equals type.EnumerationId
+                                    join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                    join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                    join td in _context.TourDetails on t.TourId equals td.TourId
                                     join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                    join up in _context.UnitPrice on t.TourId equals up.TourId
                                     join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                     from a in ttg.DefaultIfEmpty()
                                     // Xử lý search 
                                     // nếu check == true => xuất tất cả => ngược lại (với trạng thái isDelete là Null)
                                     where tourSearch.Suggest== true? 
-                                    ((up.IsDelete == null || up.IsDelete == true) && (t.IsDelete == null || t.IsDelete == true) && t.Suggest==true)
+                                    ((t.IsDelete == null || t.IsDelete == true) && (td.IsDelete == null || td.IsDelete == true) && t.Suggest==true)
                                     : (checkModelSearchIsNull == true? 
-                                        ((up.IsDelete == null || up.IsDelete == true) && (t.IsDelete == null || t.IsDelete == true)) :
+                                        ((t.IsDelete == null || t.IsDelete == true) && (td.IsDelete == null || td.IsDelete == true)) :
                                         (
                                             (
                                                 (isTourName && t.TourName.Contains(tourSearch.TourName))
                                                 || (isTravelTypeID && t.TravelTypeId == tourSearch.TravelTypeID)
-                                                || (isDeparturePlace && tourSearch.DeparturePlace.Contains(t.DeparturePlace))
+                                                || (isDeparturePlace && tourSearch.DeparturePlace.Contains(t.DeparturePlaceFrom))
                                                 || (isDateFromTo  && (t.DateStart >= tourSearch.DateStart && t.DateEnd <= tourSearch.DateEnd))
                                             )
-                                            && ((t.IsDelete == null || t.IsDelete == true) && (up.IsDelete == null || up.IsDelete == true))
+                                            && ((t.IsDelete == null || t.IsDelete == true) && (td.IsDelete==null || td.IsDelete==true))
                                         )
                                     )
                                     orderby t.DateUpdate descending
@@ -124,23 +124,27 @@ namespace QuanLyTourDuLich.Controllers
                                         t.TourName,
                                         t.Description,
                                         t.TourImg,
-                                        t.Transport,
                                         dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                        t.Rating,
                                         t.QuanityMax,
                                         t.QuanityMin,
                                         t.CurrentQuanity,
                                         t.Schedule,
-                                        t.Rating,
+                                        departurePlaceFrom = p.ProvinceName,
+                                        departurePlaceTo = pt.ProvinceName,
                                         t.Suggest,
                                         emp.EmpName,
                                         dateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                        up.AdultUnitPrice,
-                                        p.ProvinceName,
-                                        type.TravelTypeName,
+                                        adultUnitPrice = string.Format("{0:0,0đ}", t.AdultUnitPrice),
+                                        childrenUnitPrice = string.Format("{0:0,0đ}", t.ChildrenUnitPrice),
+                                        babyUnitPrice = string.Format("{0:0,0đ}", t.BabyUnitPrice),
+                                        surcharge = string.Format("{0:0,0đ}", t.Surcharge),
+                                        travelTypeName= type.EnumerationTranslate,
+                                        //type.TravelTypeName,
 
-                                        tourGuideName = a.TourGuideName ?? null
-                                    }).ToListAsync();
+                                        tourGuideName = t.TourGuideId==null?"Chưa cập nhật": a.TourGuideName
+                                    }).Distinct().ToListAsync();
                 #endregion
 
                 return Ok(result);
@@ -160,16 +164,15 @@ namespace QuanLyTourDuLich.Controllers
             {
                 #region truy vấn dữ liệu
                 var tourDetails = await (from t in _context.Tour
-                                         join type in _context.TravelType on t.TravelTypeId equals type.TravelTypeId
-                                         join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                         join type in _context.CatEnumeration on t.TravelTypeId equals type.EnumerationId
+                                         join td in _context.TourDetails on t.TourId equals td.TourId
+                                         join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                          join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                         join up in _context.UnitPrice on t.TourId equals up.TourId
                                          join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                          from a in ttg.DefaultIfEmpty()
                                          where t.TourId == tourID 
                                             && (t.IsDelete == null || t.IsDelete == true) 
-                                            && (up.IsDelete == null || up.IsDelete == true)
-                                         orderby up.DateUpdate descending
+                                         orderby t.DateUpdate descending
                                          select new
                                          {
                                              t.TourId,
@@ -178,20 +181,21 @@ namespace QuanLyTourDuLich.Controllers
                                              t.Description,
                                              t.TourImg,
                                              t.DateStart,
-                                             t.DeparturePlace,
+                                             t.DeparturePlaceFrom,
+                                             t.DeparturePlaceTo,
                                              t.DateEnd,
-                                             t.Transport,
                                              t.QuanityMax,
                                              t.QuanityMin,
                                              t.CurrentQuanity,
                                              quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
                                              t.Schedule,
                                              t.TravelTypeId,
-                                             t.TravelType.TravelTypeName,
-                                             touGuideName = a.TourGuideName ?? "Chưa cập nhật",
-                                             up.AdultUnitPrice,
-                                             up.ChildrenUnitPrice,
-                                             up.BabyUnitPrice,
+                                             t.TourGuideId,
+                                             t.AdultUnitPrice,
+                                             t.ChildrenUnitPrice,
+                                             t.BabyUnitPrice,
+                                             t.Surcharge,
+                                             t.Suggest,
                                              p.ProvinceId,
                                              p.ProvinceName,
                                              regions = (from td in _context.TourDetails
@@ -228,12 +232,12 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var tourDetails = await (from t in _context.Tour
-                                         join up in _context.UnitPrice on t.TourId equals up.TourId
-                                         join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                         join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                         join td in _context.TourDetails on t.TourId equals td.TourId
                                          join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                          from a in ttg.DefaultIfEmpty()
                                          where t.TourId == tourID && (t.IsDelete == null || t.IsDelete == true)
-                                         orderby up.DateUpdate descending
+                                         orderby t.DateUpdate descending
                                          select new
                                          {
                                              t.TourId,
@@ -241,15 +245,17 @@ namespace QuanLyTourDuLich.Controllers
                                              t.Rating,
                                              t.Description,
                                              t.TourImg,
-                                             t.DateStart,
+                                             dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                             dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                              totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,  // thời hạn của tour => 3 ngày 2 đêm
-                                             t.Transport,
                                              t.QuanityMax,  
                                              quanity = t.QuanityMax > t.CurrentQuanity? (t.QuanityMax-t.CurrentQuanity) : 0,
                                              schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n",""),
-                                             t.TravelType.TravelTypeName,
                                              touGuideName = a.TourGuideName ?? null,
-                                             up.AdultUnitPrice,
+                                             adultUnitPrice = string.Format("{0:0,0đ}", t.AdultUnitPrice),
+                                             childrenUnitPrice = string.Format("{0:0,0đ}", t.ChildrenUnitPrice),
+                                             babyUnitPrice = string.Format("{0:0,0đ}", t.BabyUnitPrice),
+                                             surcharge = string.Format("{0:0,0đ}", t.Surcharge),
                                              p.ProvinceName,
                                              tourDetails =  (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
@@ -278,7 +284,7 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Nguyễn Tấn Hải - 20211105]: Thực hiện Post Data
         [HttpPost("Adm_InsertTour")]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Tour>>> InsertTour([FromBody] Tour tour)
         {
             try
@@ -290,6 +296,9 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 tour.DateInsert = DateTime.Now.Date;
                 tour.DateUpdate = DateTime.Now.Date;
+                tour.EmpIdinsert = tour.EmpIdinsert;
+                tour.EmpIdupdate = tour.EmpIdupdate;
+                tour.CurrentQuanity = tour.CurrentQuanity == null ? 0 : tour.CurrentQuanity;
                 tour.IsDelete = null;
                 await _context.Tour.AddAsync(tour);
                 await _context.SaveChangesAsync();
@@ -313,25 +322,38 @@ namespace QuanLyTourDuLich.Controllers
                 var rs = await _context.Tour.Where(m => m.TourId == tour.TourId).FirstOrDefaultAsync();
                 if(rs == null) return StatusCode(StatusCodes.Status404NotFound, $"Không tìm thấy dữ liệu");
 
+                
+                rs.TourName = tour.TourName.Trim();
+                rs.Description = tour.Description.Trim();
                 if (tour.TourImg != string.Empty)
                 {
                     rs.TourImg = tour.TourImg;
                 }
-                rs.TourName = tour.TourName.Trim();
-                rs.Description = tour.Description.Trim();
                 rs.DateStart = tour.DateStart;
                 rs.DateEnd = tour.DateEnd;
-                rs.Transport = tour.Transport;
+                rs.Rating = tour.Rating;
                 rs.QuanityMax = tour.QuanityMax;
                 rs.QuanityMin = tour.QuanityMin;
+                rs.AdultUnitPrice = tour.AdultUnitPrice;
+                rs.ChildrenUnitPrice = tour.ChildrenUnitPrice;
+                rs.BabyUnitPrice = tour.BabyUnitPrice;
+                rs.Surcharge = tour.Surcharge;
                 rs.Schedule = tour.Schedule.Trim();
-                rs.Rating = tour.Rating;
+                rs.DeparturePlaceFrom = tour.DeparturePlaceFrom;
+                rs.UpTransportIdstart = tour.UpTransportIdstart;
+                rs.UpTransportIdstart = tour.UpTransportIdend;
+                rs.CompanyTransportId = tour.CompanyTransportId;
+               //=========
                 rs.TourGuide = tour.TourGuide;
                 rs.TravelTypeId = tour.TravelTypeId;
+                rs.Suggest = tour.Suggest;
+                rs.NoteByTour = tour.NoteByTour;
+                rs.ConditionByTour = tour.ConditionByTour;
+                rs.NoteByMyTour = tour.NoteByMyTour;
+                //===
                 rs.EmpIdupdate = tour.EmpIdupdate;
                 rs.DateUpdate = DateTime.Now.Date;
-                rs.Suggest = tour.Suggest;
-                rs.Status = tour.Status;
+                
                 await _context.SaveChangesAsync();
                 return Ok(rs);
             }
@@ -341,9 +363,10 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
         // Delete Multi row
         [HttpPut("Adm_DeleteTourByIds")]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Tour>>> DeleteTour([FromBody] DeleteModels deleteModels)
         {
             try

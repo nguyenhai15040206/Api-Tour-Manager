@@ -21,7 +21,7 @@ namespace QuanLyTourDuLich.Models
         public string Address { get; set; }
         public string ImagesList { get; set; }
         public int? WardId { get; set; }
-        public Guid? HotelTypeId { get; set; }
+        public Guid? EnumerationId { get; set; }
         public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
         public Guid? EmpIdupdate { get; set; }
@@ -32,7 +32,7 @@ namespace QuanLyTourDuLich.Models
 
         public virtual Employee EmpIdinsertNavigation { get; set; }
         public virtual Employee EmpIdupdateNavigation { get; set; }
-        public virtual HotelType HotelType { get; set; }
+        public virtual CatEnumeration Enumeration { get; set; }
         public virtual Wards Ward { get; set; }
         public virtual ICollection<TourDetails> TourDetails { get; set; }
     }

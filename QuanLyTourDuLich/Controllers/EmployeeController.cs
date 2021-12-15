@@ -61,7 +61,7 @@ namespace QuanLyTourDuLich.Controllers
                         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:key"]));
                         var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                         var token = new JwtSecurityToken(_config["Jwt:Issuer"], _config["Jwt:Audience"],
-                                claims, expires: DateTime.UtcNow.AddHours(2), signingCredentials: signIn);
+                                claims, expires: DateTime.UtcNow.AddHours(6), signingCredentials: signIn);
 
                         // trả dữ liệu cần thiết về cho client (giấu các thông tin như password)
                         return Ok(new
