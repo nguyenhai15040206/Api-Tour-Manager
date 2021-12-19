@@ -40,11 +40,27 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("bookingTourID")
                     .HasDefaultValueSql("(newid())");
 
+                entity.Property(e => e.AdultUnitPrice)
+                    .HasColumnName("adultUnitPrice")
+                    .HasColumnType("money");
+
+                entity.Property(e => e.BabyUnitPrice)
+                    .HasColumnName("babyUnitPrice")
+                    .HasColumnType("money");
+
                 entity.Property(e => e.BookingDate)
                     .HasColumnName("bookingDate")
                     .HasColumnType("date");
 
+                entity.Property(e => e.ChildrenUnitPrice)
+                    .HasColumnName("childrenUnitPrice")
+                    .HasColumnType("money");
+
                 entity.Property(e => e.CustomerId).HasColumnName("customerID");
+
+                entity.Property(e => e.DateConfirm)
+                    .HasColumnName("dateConfirm")
+                    .HasColumnType("date");
 
                 entity.Property(e => e.Discount).HasColumnName("discount");
 
@@ -56,11 +72,19 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("note")
                     .HasMaxLength(500);
 
+                entity.Property(e => e.OptionsNote)
+                    .HasColumnName("optionsNote")
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.Qrcode).HasColumnName("QRCode");
+
                 entity.Property(e => e.QuanityAdult).HasColumnName("quanityAdult");
 
                 entity.Property(e => e.QuanityBaby).HasColumnName("quanityBaby");
 
                 entity.Property(e => e.QuanityChildren).HasColumnName("quanityChildren");
+
+                entity.Property(e => e.QuanityInfant).HasColumnName("quanityInfant");
 
                 entity.Property(e => e.Status).HasColumnName("status");
 

@@ -252,10 +252,10 @@ namespace QuanLyTourDuLich.Controllers
                                              quanity = t.QuanityMax > t.CurrentQuanity? (t.QuanityMax-t.CurrentQuanity) : 0,
                                              schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n",""),
                                              touGuideName = a.TourGuideName ?? null,
-                                             adultUnitPrice = string.Format("{0:0,0đ}", t.AdultUnitPrice),
-                                             childrenUnitPrice = string.Format("{0:0,0đ}", t.ChildrenUnitPrice),
-                                             babyUnitPrice = string.Format("{0:0,0đ}", t.BabyUnitPrice),
-                                             surcharge = string.Format("{0:0,0đ}", t.Surcharge),
+                                             adultUnitPrice = t.AdultUnitPrice,
+                                             childrenUnitPrice = t.ChildrenUnitPrice,
+                                             babyUnitPrice =  t.BabyUnitPrice,
+                                             surcharge =  t.Surcharge,
                                              p.ProvinceName,
                                              tourDetails =  (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
