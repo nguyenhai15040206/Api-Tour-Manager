@@ -27,6 +27,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.12.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="QRCoder" Version="1.4.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
   </ItemGroup>
@@ -35,6 +36,7 @@
     <Folder Include="wwwroot\ImagesEmployee\" />
     <Folder Include="wwwroot\ImagesTouristAttractions\" />
     <Folder Include="wwwroot\ImagesTour\" />
+    <Folder Include="wwwroot\ImagesCompanyTravel\" />
   </ItemGroup>
 
 

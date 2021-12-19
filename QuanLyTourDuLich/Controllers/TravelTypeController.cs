@@ -31,13 +31,13 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
-                var rs = await (from t in _context.TravelType
+                var rs = await (from t in _context.CatEnumeration
                                 join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                where (t.IsDelete == null || t.IsDelete == true)
+                                where (t.IsDelete == null || t.IsDelete == true) && t.EnumerationType== "TravelType"
                                 select new
                                 {
-                                    value = t.TravelTypeId,
-                                    label = t.TravelTypeName,
+                                    value = t.EnumerationId,
+                                    label = t.EnumerationTranslate,
                                 }).ToListAsync();
                 if (rs == null)
                 {
@@ -54,137 +54,110 @@ namespace QuanLyTourDuLich.Controllers
         ///get tất cả các loại tour
         ///
 
-        [HttpGet("Adm_GetDataTravelType")]
-        public async Task<IActionResult> Adm_GetDataTravelType()
-        {
-            try
-            {
-                var rs = await (from t in _context.TravelType
-                                join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                where (t.IsDelete == null || t.IsDelete == true)
-                                select new
-                                {
-                                    t.TravelTypeId,
-                                    t.TravelTypeName,
-                                    t.Note,
-                                    e.EmpName,
-                                    DateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
-                                }).ToListAsync();
-                if (rs == null)
-                {
-                    return NotFound();
-                }
-                return Ok(rs);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
+        //[HttpGet("Adm_GetDataTravelType")]
+        //public async Task<IActionResult> Adm_GetDataTravelType()
+        //{
+        //    try
+        //    {
+        //        var rs = await (from t in _context.TravelType
+        //                        join e in _context.Employee on t.EmpIdupdate equals e.EmpId
+        //                        where (t.IsDelete == null || t.IsDelete == true)
+        //                        select new
+        //                        {
+        //                            t.TravelTypeId,
+        //                            t.TravelTypeName,
+        //                            t.Note,
+        //                            e.EmpName,
+        //                            DateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
+        //                        }).ToListAsync();
+        //        if (rs == null)
+        //        {
+        //            return NotFound();
+        //        }
+        //        return Ok(rs);
+        //    }
+        //    catch
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+        //    }
+        //}
 
         ///get một loại tour
         ///
 
-        [HttpGet("Adm_GetTravelTypeById/{travelTypeId:int}")]
-        public async Task<IActionResult> Adm_GetTravelTypeById (Guid? travelTypeId)
-        {
-            try
-            {
-                var rs = await (from t in _context.TravelType
-                                join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                where (t.IsDelete == null || t.IsDelete == true)
-                                && t.TravelTypeId == travelTypeId
-                                select new
-                                {
-                                    t.TravelTypeId,
-                                    t.TravelTypeName,
-                                    t.Note,
-                                    e.EmpName,
-                                    t.DateUpdate
-                                }).FirstOrDefaultAsync();
-                if (rs == null)
-                {
-                    return NotFound();
-                }
-                return Ok(rs);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
+        
 
 
 
         ///Thêm một loại tour
         ///
 
-       [HttpPost("Adm_CreateTravelType")]
-        public async Task<ActionResult> Adm_CreateTravelType ([FromBody] TravelType travel)
-        {
-            try
-            {
-                if (travel == null)
-                {
-                    return NotFound();
-                }
+       //[HttpPost("Adm_CreateTravelType")]
+       // public async Task<ActionResult> Adm_CreateTravelType ([FromBody] TravelType travel)
+       // {
+       //     try
+       //     {
+       //         if (travel == null)
+       //         {
+       //             return NotFound();
+       //         }
 
-                TravelType t = new TravelType();
-                t.TravelTypeName = travel.TravelTypeName;
-                t.Note = travel.Note;
-                t.EmpIdinsert = travel.EmpIdinsert;
-                t.DateInsert = DateTime.Now;
-                t.EmpIdupdate = travel.EmpIdupdate;
-                t.DateUpdate = DateTime.Now;
-                t.Status = travel.Status;
-                t.IsDelete = null;
+       //         TravelType t = new TravelType();
+       //         t.TravelTypeName = travel.TravelTypeName;
+       //         t.Note = travel.Note;
+       //         t.EmpIdinsert = travel.EmpIdinsert;
+       //         t.DateInsert = DateTime.Now;
+       //         t.EmpIdupdate = travel.EmpIdupdate;
+       //         t.DateUpdate = DateTime.Now;
+       //         t.Status = travel.Status;
+       //         t.IsDelete = null;
 
-                await _context.TravelType.AddAsync(t);
-                await _context.SaveChangesAsync();
+       //         await _context.TravelType.AddAsync(t);
+       //         await _context.SaveChangesAsync();
 
-                return Ok(t);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
+       //         return Ok(t);
+       //     }
+       //     catch
+       //     {
+       //         return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+       //     }
+       // }
 
         ///Update thông tin một loại tour
         ///
 
-        [HttpPut("Adm_UpdateTravelType/{travelTypeId:int}")]
-        public async Task<IActionResult> Adm_UpdateTravelType ([FromBody] TravelType travel, Guid? travelTypeId)
-        {
-            if (travel.TravelTypeId != travelTypeId)
-            {
-                return BadRequest();
-            }
-            try
-            {
-                var rs = await (from t in _context.TravelType
-                                where (t.IsDelete == null || t.IsDelete == true)
-                                && t.TravelTypeId == travelTypeId
-                                select t).FirstOrDefaultAsync();
-                if (rs == null)
-                {
-                    return NotFound();
-                }
+        //[HttpPut("Adm_UpdateTravelType/{travelTypeId:int}")]
+        //public async Task<IActionResult> Adm_UpdateTravelType ([FromBody] TravelType travel, Guid? travelTypeId)
+        //{
+        //    if (travel.TravelTypeId != travelTypeId)
+        //    {
+        //        return BadRequest();
+        //    }
+        //    try
+        //    {
+        //        var rs = await (from t in _context.TravelType
+        //                        where (t.IsDelete == null || t.IsDelete == true)
+        //                        && t.TravelTypeId == travelTypeId
+        //                        select t).FirstOrDefaultAsync();
+        //        if (rs == null)
+        //        {
+        //            return NotFound();
+        //        }
 
-                rs.TravelTypeName = travel.TravelTypeName;
-                rs.Note = travel.Note;
-                rs.EmpIdupdate = travel.EmpIdupdate;
-                rs.Status = travel.Status;
-                rs.DateUpdate = DateTime.Now;
+        //        rs.TravelTypeName = travel.TravelTypeName;
+        //        rs.Note = travel.Note;
+        //        rs.EmpIdupdate = travel.EmpIdupdate;
+        //        rs.Status = travel.Status;
+        //        rs.DateUpdate = DateTime.Now;
 
-                await _context.SaveChangesAsync();
-                return Ok(rs);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
+        //        await _context.SaveChangesAsync();
+        //        return Ok(rs);
+        //    }
+        //    catch
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+        //    }
+        //}
 
 
 
@@ -197,29 +170,29 @@ namespace QuanLyTourDuLich.Controllers
 
 
         // cấp nhật tình trạng thôi, nên không cần đưa mết cái modal vào đâu
-        [HttpPut("Adm_DeleteTravelType/{travelTypeId:int}/{empID:int}")]
+        //[HttpPut("Adm_DeleteTravelType/{travelTypeId:int}/{empID:int}")]
 
-        public async Task<IActionResult> Adm_DeleteTravelType(Guid? travelTypeId, Guid? empID = null)
-        {
+        //public async Task<IActionResult> Adm_DeleteTravelType(Guid? travelTypeId, Guid? empID = null)
+        //{
             
-            try
-            {
-                var rs = await (from t in _context.TravelType
-                                where (t.IsDelete == null || t.IsDelete == true)
-                                && t.TravelTypeId == travelTypeId
-                                select t).FirstOrDefaultAsync();
-                if (rs == null)
-                    return NotFound();
-                rs.DateUpdate = DateTime.Now.Date;
-                rs.EmpIdupdate = empID; // ?
-                rs.IsDelete = false;
-                await _context.SaveChangesAsync();
-                return Ok(rs);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
+        //    try
+        //    {
+        //        var rs = await (from t in _context.TravelType
+        //                        where (t.IsDelete == null || t.IsDelete == true)
+        //                        && t.TravelTypeId == travelTypeId
+        //                        select t).FirstOrDefaultAsync();
+        //        if (rs == null)
+        //            return NotFound();
+        //        rs.DateUpdate = DateTime.Now.Date;
+        //        rs.EmpIdupdate = empID; // ?
+        //        rs.IsDelete = false;
+        //        await _context.SaveChangesAsync();
+        //        return Ok(rs);
+        //    }
+        //    catch
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+        //    }
+        //}
     }
 }

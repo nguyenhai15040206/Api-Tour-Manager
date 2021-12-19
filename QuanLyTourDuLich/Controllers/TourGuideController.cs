@@ -82,6 +82,38 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        // get thông tin tour guide check điều kiện thỏa nếu đã có trong tour khác
+        [HttpGet("Adm_GetDataTourGuidCondition")]
+        public async Task<IActionResult> Adm_GetTourGuidCbo(DateTime? pDateStart=null , DateTime? pDateEnd = null)
+        {
+            try
+            {
+                var listObj = await (from tg in _context.TourGuide
+                               where (tg.IsDelete==null || tg.IsDelete==true)
+                               select tg).ToListAsync();
+                var listExist = await (from tg in _context.TourGuide
+                                       join t in _context.Tour on tg.TourGuideId equals t.TourGuideId
+                                       where (tg.IsDelete == null || tg.IsDelete == true) && (tg.IsDelete == null || tg.IsDelete == true)
+                                        && ((t.DateStart <= pDateStart && t.DateEnd >= pDateStart) || (t.DateStart <= pDateEnd && t.DateEnd >= pDateEnd && t.DateStart > pDateStart) ||
+                                  t.DateStart >= pDateStart && t.DateEnd <= pDateEnd)
+                                       select tg).Distinct().ToListAsync();
+                if(listExist.Count != 0)
+                {
+                    listObj = listObj.Except(listExist).ToList();
+                }
+                var rs = (from a in listObj
+                          select new
+                          {
+                              value = a.TourGuideId,
+                              label = a.TourGuideName + " - " + a.PhoneNumber
+                          }).ToList();
+                return Ok(rs);
+            }
+            catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
 
         //get thông tin theo mã
         [HttpGet("Adm_GetTourGuideByID/{TourGuideId:int}")]

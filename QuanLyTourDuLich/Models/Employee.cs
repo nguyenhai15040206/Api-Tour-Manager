@@ -8,15 +8,19 @@ namespace QuanLyTourDuLich.Models
         public Employee()
         {
             BookingTour = new HashSet<BookingTour>();
+            CatEnumerationEmpIdinsertNavigation = new HashSet<CatEnumeration>();
+            CatEnumerationEmpIdupdateNavigation = new HashSet<CatEnumeration>();
             Comments = new HashSet<Comments>();
+            CustomerEmpIdinsertNavigation = new HashSet<Customer>();
+            CustomerEmpIdupdateNavigation = new HashSet<Customer>();
             HotelEmpIdinsertNavigation = new HashSet<Hotel>();
             HotelEmpIdupdateNavigation = new HashSet<Hotel>();
-            HotelTypeEmpIdinsertNavigation = new HashSet<HotelType>();
-            HotelTypeEmpIdupdateNavigation = new HashSet<HotelType>();
-            KindOfNewsEmpIdinsertNavigation = new HashSet<KindOfNews>();
-            KindOfNewsEmpIdupdateNavigation = new HashSet<KindOfNews>();
             NewsEmpIdinsertNavigation = new HashSet<News>();
             NewsEmpIdupdateNavigation = new HashSet<News>();
+            PromotionEmpIdinsertNavigation = new HashSet<Promotion>();
+            PromotionEmpIdupdateNavigation = new HashSet<Promotion>();
+            PromotionalTourEmpIdinsertNavigation = new HashSet<PromotionalTour>();
+            PromotionalTourEmpIdupdateNavigation = new HashSet<PromotionalTour>();
             TourDetailsEmpIdinsertNavigation = new HashSet<TourDetails>();
             TourDetailsEmpIdupdateNavigation = new HashSet<TourDetails>();
             TourEmpIdinsertNavigation = new HashSet<Tour>();
@@ -25,10 +29,10 @@ namespace QuanLyTourDuLich.Models
             TourGuideEmpIdupdateNavigation = new HashSet<TourGuide>();
             TouristAttractionEmpIdinsertNavigation = new HashSet<TouristAttraction>();
             TouristAttractionEmpIdupdateNavigation = new HashSet<TouristAttraction>();
-            TravelTypeEmpIdinsertNavigation = new HashSet<TravelType>();
-            TravelTypeEmpIdupdateNavigation = new HashSet<TravelType>();
-            UnitPriceEmpIdinsertNavigation = new HashSet<UnitPrice>();
-            UnitPriceEmpIdupdateNavigation = new HashSet<UnitPrice>();
+            TravelCompanyTransportEmpIdinsertNavigation = new HashSet<TravelCompanyTransport>();
+            TravelCompanyTransportEmpIdupdateNavigation = new HashSet<TravelCompanyTransport>();
+            UnitPriceTransportEmpIdinsertNavigation = new HashSet<UnitPriceTransport>();
+            UnitPriceTransportEmpIdupdateNavigation = new HashSet<UnitPriceTransport>();
         }
 
         public Guid EmpId { get; set; }
@@ -41,21 +45,26 @@ namespace QuanLyTourDuLich.Models
         public string UserName { get; set; }
         public string Password { get; set; }
         public string Avatar { get; set; }
+        public string Address { get; set; }
         public DateTime? DateInsert { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? Status { get; set; }
         public bool? IsDelete { get; set; }
 
         public virtual ICollection<BookingTour> BookingTour { get; set; }
+        public virtual ICollection<CatEnumeration> CatEnumerationEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<CatEnumeration> CatEnumerationEmpIdupdateNavigation { get; set; }
         public virtual ICollection<Comments> Comments { get; set; }
+        public virtual ICollection<Customer> CustomerEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<Customer> CustomerEmpIdupdateNavigation { get; set; }
         public virtual ICollection<Hotel> HotelEmpIdinsertNavigation { get; set; }
         public virtual ICollection<Hotel> HotelEmpIdupdateNavigation { get; set; }
-        public virtual ICollection<HotelType> HotelTypeEmpIdinsertNavigation { get; set; }
-        public virtual ICollection<HotelType> HotelTypeEmpIdupdateNavigation { get; set; }
-        public virtual ICollection<KindOfNews> KindOfNewsEmpIdinsertNavigation { get; set; }
-        public virtual ICollection<KindOfNews> KindOfNewsEmpIdupdateNavigation { get; set; }
         public virtual ICollection<News> NewsEmpIdinsertNavigation { get; set; }
         public virtual ICollection<News> NewsEmpIdupdateNavigation { get; set; }
+        public virtual ICollection<Promotion> PromotionEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<Promotion> PromotionEmpIdupdateNavigation { get; set; }
+        public virtual ICollection<PromotionalTour> PromotionalTourEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<PromotionalTour> PromotionalTourEmpIdupdateNavigation { get; set; }
         public virtual ICollection<TourDetails> TourDetailsEmpIdinsertNavigation { get; set; }
         public virtual ICollection<TourDetails> TourDetailsEmpIdupdateNavigation { get; set; }
         public virtual ICollection<Tour> TourEmpIdinsertNavigation { get; set; }
@@ -64,9 +73,9 @@ namespace QuanLyTourDuLich.Models
         public virtual ICollection<TourGuide> TourGuideEmpIdupdateNavigation { get; set; }
         public virtual ICollection<TouristAttraction> TouristAttractionEmpIdinsertNavigation { get; set; }
         public virtual ICollection<TouristAttraction> TouristAttractionEmpIdupdateNavigation { get; set; }
-        public virtual ICollection<TravelType> TravelTypeEmpIdinsertNavigation { get; set; }
-        public virtual ICollection<TravelType> TravelTypeEmpIdupdateNavigation { get; set; }
-        public virtual ICollection<UnitPrice> UnitPriceEmpIdinsertNavigation { get; set; }
-        public virtual ICollection<UnitPrice> UnitPriceEmpIdupdateNavigation { get; set; }
+        public virtual ICollection<TravelCompanyTransport> TravelCompanyTransportEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<TravelCompanyTransport> TravelCompanyTransportEmpIdupdateNavigation { get; set; }
+        public virtual ICollection<UnitPriceTransport> UnitPriceTransportEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<UnitPriceTransport> UnitPriceTransportEmpIdupdateNavigation { get; set; }
     }
 }

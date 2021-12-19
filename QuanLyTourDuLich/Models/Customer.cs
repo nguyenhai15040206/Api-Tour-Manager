@@ -18,10 +18,14 @@ namespace QuanLyTourDuLich.Models
         public string Email { get; set; }
         public string Address { get; set; }
         public string Password { get; set; }
+        public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
+        public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? IsDelete { get; set; }
 
+        public virtual Employee EmpIdinsertNavigation { get; set; }
+        public virtual Employee EmpIdupdateNavigation { get; set; }
         public virtual ICollection<BookingTour> BookingTour { get; set; }
         public virtual ICollection<Comments> Comments { get; set; }
     }

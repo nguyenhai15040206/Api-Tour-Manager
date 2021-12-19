@@ -45,14 +45,12 @@ namespace QuanLyTourDuLich.Controllers
    
                 // truy van thong tin lay nhung j can thiet
                 var newsList = await (from n in _context.News
-                                      join k in _context.KindOfNews on n.KindOfNewsId equals k.KindOfNewsId
                                       join e in _context.Employee on n.EmpIdupdate equals e.EmpId
                                       where (n.IsDelete == null || n.IsDelete == true)
                                       && checkModelSearchIsNull == true ? true 
                                       :(
                                         (isNewsId && n.NewsId==newSearch.NewsId)
                                         ||(isNewsName && n.NewsName.Contains(newSearch.NewsName))
-                                        ||(isKindOfNewsId && n.KindOfNewsId==newSearch.KindOfNewsId)
                                         )
                                       orderby n.DateUpdate descending
                                       select new
@@ -62,7 +60,6 @@ namespace QuanLyTourDuLich.Controllers
                                           n.Content,
                                           n.NewsImg,
                                           n.Active,
-                                          k.KindOfNewsName,
                                           e.EmpName,
                                           DateUpdate=DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
 
@@ -91,7 +88,6 @@ namespace QuanLyTourDuLich.Controllers
                            n.Content,
                            n.NewsImg,
                            n.Active,
-                           n.KindOfNewsId,
                            DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                            n.EmpIdinsertNavigation.EmpId,
                            n.EmpIdinsertNavigation.EmpName,
@@ -132,7 +128,6 @@ namespace QuanLyTourDuLich.Controllers
                 n.DateInsert = DateTime.Now;
                 n.EmpIdupdate = news.EmpIdupdate;
                 n.DateUpdate = DateTime.Now;
-                n.KindOfNewsId = news.KindOfNewsId;
                 n.Active = news.Active;
                 n.IsDelete = null;
 
@@ -171,7 +166,6 @@ namespace QuanLyTourDuLich.Controllers
                 update.ImagesList = news.ImagesList;
                 update.EmpIdupdate = news.EmpIdupdate;
                 update.DateUpdate = DateTime.Now;
-                update.KindOfNewsId = news.KindOfNewsId;
                 update.Active = news.Active;
 
 

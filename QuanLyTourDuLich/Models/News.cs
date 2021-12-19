@@ -14,12 +14,12 @@ namespace QuanLyTourDuLich.Models
         public DateTime? DateInsert { get; set; }
         public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
-        public Guid? KindOfNewsId { get; set; }
+        public Guid? EnumerationId { get; set; }
         public bool? Active { get; set; }
         public bool? IsDelete { get; set; }
 
         public virtual Employee EmpIdinsertNavigation { get; set; }
         public virtual Employee EmpIdupdateNavigation { get; set; }
-        public virtual KindOfNews KindOfNews { get; set; }
+        public virtual CatEnumeration Enumeration { get; set; }
     }
 }

@@ -53,7 +53,36 @@ namespace QuanLyTourDuLich.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
-        } 
+        }
+
+        /// <summary>
+        /// [Nguyễn Tấn Hải][11/21/2021] - load danh sách các địa điểm theo vùng miền
+        /// </summary>
+        [Route("Adm_GetTouristAttByProvince")]
+        [HttpGet]
+        public async Task<IActionResult> Adm_GetTouristAttByProvince(string provinceIDs)
+        {
+            try
+            {
+                string[] arr = provinceIDs.Split(',').ToArray();
+                int[] arrProvince = Array.ConvertAll(arr, s => int.Parse(s));
+                var result = await (from t in _context.TouristAttraction
+                                    join p in _context.Province on t.ProvinceId equals p.ProvinceId
+                                    where (t.IsDelete == null || t.IsDelete == true)
+                                        && arrProvince.Contains(p.ProvinceId)
+                                    orderby t.DateUpdate descending
+                                    select new
+                                    {
+                                        value = t.TouristAttrId,
+                                        label = t.TouristAttrName,
+                                    }).ToListAsync();
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
 
 
         /// [Get danh sách địa điểm du lịch]
@@ -65,6 +94,7 @@ namespace QuanLyTourDuLich.Controllers
             
             try
             {
+                string[] separator = { "||" };
                 bool checkModelSearchIsNull = true;
                 bool istouristAttrName = (!string.IsNullOrEmpty(trsa.TouristAttrName));
                 bool isprovinceID = false;
@@ -84,7 +114,7 @@ namespace QuanLyTourDuLich.Controllers
                                         where checkModelSearchIsNull == true ? (t.IsDelete == null || t.IsDelete == true)
                                          : (
                                             (t.IsDelete == null || t.IsDelete == true)
-                                             && (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName))
+                                             && (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName.Trim()))
                                             || (isprovinceID && trsa.ProvinceID.Contains(t.ProvinceId))
                                         )
                                         orderby t.DateUpdate descending
@@ -92,8 +122,8 @@ namespace QuanLyTourDuLich.Controllers
                                         {
                                             t.TouristAttrId,
                                             t.TouristAttrName,
-                                            Description=t.Description!="null"?t.Description:"Chưa cập nhật",
-                                            t.ImagesList,
+                                            Description=t.Description!="null"? t.Description:"Chưa cập nhật",
+                                            imagesList= t.ImagesList==null? null :t.ImagesList.Split(separator, System.StringSplitOptions.RemoveEmptyEntries),
                                             DateUpdate=t.DateUpdate!=null? DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture):null,
                                             p.ProvinceName,
                                             e.EmpName,
@@ -129,9 +159,9 @@ namespace QuanLyTourDuLich.Controllers
 
                 tourAttrac.DateInsert = DateTime.Now.Date;
                 tourAttrac.DateUpdate = DateTime.Now.Date;
+                tourAttrac.EmpIdinsert = tourAttrac.EmpIdinsert;
+                tourAttrac.EmpIdupdate = tourAttrac.EmpIdupdate;
                 tourAttrac.IsDelete = null;
-                tourAttrac.EmpIdinsert = null;
-                tourAttrac.EmpIdupdate = null;
 
                 await _context.TouristAttraction.AddAsync(tourAttrac);
                 await _context.SaveChangesAsync();
@@ -154,6 +184,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                string[] separator = { "||" };
                 var tourAttrac = await (from t in _context.TouristAttraction
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         join e in _context.Employee on t.EmpIdupdate equals e.EmpId
@@ -164,7 +195,7 @@ namespace QuanLyTourDuLich.Controllers
                                             t.TouristAttrId,
                                             t.TouristAttrName,
                                             Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            t.ImagesList,
+                                            imagesList = t.ImagesList == null ? null : t.ImagesList.Split(separator, System.StringSplitOptions.RemoveEmptyEntries),
                                             DateUpdate = DateTime.Parse(t.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                             p.ProvinceName,
                                             t.ProvinceId,
@@ -200,12 +231,15 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return NotFound();
                 }
-
+                if(tour.ImagesList != "")
+                {
+                    rs.ImagesList = tour.ImagesList;
+                }
                 rs.TouristAttrName = tour.TouristAttrName;
                 rs.Description = tour.Description;
-                rs.ImagesList = tour.ImagesList;
+                
                 rs.ProvinceId = tour.ProvinceId;
-                rs.EmpIdupdate = null;
+                rs.EmpIdupdate = tour.EmpIdupdate;
                 rs.Status = tour.Status;
                 rs.DateUpdate = DateTime.Now.Date;
 
@@ -223,16 +257,16 @@ namespace QuanLyTourDuLich.Controllers
         ///
 
         [HttpPut("Adm_deleteTouristAttraction")]
-        public async Task<IActionResult> Adm_deleteTouristAttraction( [FromBody] Guid[] Ids)
+        public async Task<IActionResult> Adm_deleteTouristAttraction([FromBody] DeleteModels deleteModels)
         {
            try
             {
-                var rs = await _context.TouristAttraction.Where(m => Ids.Contains(m.TouristAttrId)).ToListAsync();
+                var rs = await _context.TouristAttraction.Where(m => deleteModels.SelectByIds.Contains(m.TouristAttrId)).ToListAsync();
                 rs.ForEach(m =>
                 {
-                    
                     m.DateUpdate = DateTime.Now.Date;
                     m.IsDelete = false;
+                    m.EmpIdupdate = deleteModels.EmpId;
                 });
                 await _context.SaveChangesAsync();
                 return Ok(rs);

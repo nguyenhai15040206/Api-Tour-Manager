@@ -13,4 +13,10 @@ namespace QuanLyTourDuLich.SearchModels
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
     }
+
+    public class TransportSearchModel
+    {
+        public Guid? TransportTypeID { get; set; }
+        public string CompanyName { get; set; }
+    }
 }
