@@ -18,6 +18,7 @@ namespace QuanLyTourDuLich.Controllers
     public class TourController : ControllerBase
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
+        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public TourController (HUFI_09DHTH_TourManagerContext context)
         {
@@ -41,7 +42,7 @@ namespace QuanLyTourDuLich.Controllers
                                       {
                                           t.TourId,
                                           t.TourName,
-                                          t.TourImg,
+                                          tourImg = BaseUrlServer + t.TourImg.Trim(),
                                           t.DateStart,
                                           t.Rating,
                                           t.AdultUnitPrice,
@@ -123,7 +124,7 @@ namespace QuanLyTourDuLich.Controllers
                                         t.TourId,
                                         t.TourName,
                                         t.Description,
-                                        t.TourImg,
+                                        tourImg = BaseUrlServer + t.TourImg.Trim(),
                                         dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         t.Rating,
@@ -179,7 +180,7 @@ namespace QuanLyTourDuLich.Controllers
                                              t.TourName,
                                              t.Rating,
                                              t.Description,
-                                             t.TourImg,
+                                             tourImg = BaseUrlServer + t.TourImg.Trim(),
                                              t.DateStart,
                                              t.DeparturePlaceFrom,
                                              t.DeparturePlaceTo,
@@ -244,23 +245,23 @@ namespace QuanLyTourDuLich.Controllers
                                              t.TourName,
                                              t.Rating,
                                              t.Description,
-                                             t.TourImg,
+                                             tourImg = BaseUrlServer + t.TourImg.Trim(),
                                              dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                              dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                              totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,  // thời hạn của tour => 3 ngày 2 đêm
                                              t.QuanityMax,  
                                              quanity = t.QuanityMax > t.CurrentQuanity? (t.QuanityMax-t.CurrentQuanity) : 0,
                                              schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n",""),
-                                             touGuideName = a.TourGuideName ?? null,
+                                             //touGuideName = a.TourGuideName ?? null,
                                              adultUnitPrice = t.AdultUnitPrice,
                                              childrenUnitPrice = t.ChildrenUnitPrice,
                                              babyUnitPrice =  t.BabyUnitPrice,
                                              surcharge =  t.Surcharge,
                                              p.ProvinceName,
-                                             tourDetails =  (from td in _context.TourDetails
+                                             tourDetails = (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
                                                             where td.TourId == tourID
-                                                                && (tatt.IsDelete == null || tatt.IsDelete== true)
+                                                                && (tatt.IsDelete == null || tatt.IsDelete == true)
                                                                 && (td.IsDelete == null || tatt.IsDelete == true)
                                                             select new
                                                             {
