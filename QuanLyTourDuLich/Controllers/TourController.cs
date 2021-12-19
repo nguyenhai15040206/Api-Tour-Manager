@@ -387,5 +387,91 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
+
+
+        ///get tất cả các tour
+        ///
+        [HttpGet("Cli_GetTourListPagination")]
+        public async Task<IActionResult> Cli_GetTourListPagination(int page = 1, int limit = 10)
+        {
+            try
+            {
+                var tourList = await (from t in _context.Tour
+                                      join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                      join up in _context.UnitPrice on t.TourId equals up.TourId
+                                      join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
+                                      join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                      from a in ttg.DefaultIfEmpty()
+                                      where t.Suggest == true && (t.IsDelete == null || t.IsDelete == true)
+                                      orderby t.DateStart descending
+                                      select new
+                                      {
+                                          t.TourId,
+                                          t.TourName,
+                                          t.TourImg,
+                                          DateStart= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                          Time= (t.DateEnd - t.DateStart).Value.Days,
+                                          t.Rating,
+                                          up.AdultUnitPrice,
+                                          p.ProvinceName,
+                                      }).Skip((page - 1) * limit).Take(limit).ToListAsync();
+                int totalRecord = _context.Tour.Where(m => m.Suggest == true && (m.IsDelete == null || m.IsDelete == true)).Count();
+                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
+                var pagination = new Pagination
+                {
+                    count = totalRecord,
+                    currentPage = page,
+                    pagsize = limit,
+                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
+                    indexOne = ((page - 1) * limit + 1),
+                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
+                };
+                // status code 200
+                return Ok(new
+                {
+                    data = tourList,
+                    pagination = pagination
+
+                });
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpGet("Cli_GetTourDescriptionById")]
+        public async Task<IActionResult> Cli_GetTourDescriptionById(Guid TourId)
+        {
+            try
+            {
+                var tour = await (from t in _context.Tour
+                                  join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                  join up in _context.UnitPrice on t.TourId equals up.TourId
+                                  join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
+                                  join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                  from a in ttg.DefaultIfEmpty()
+                                  where t.TourId == TourId
+                                  select new
+                                  {
+                                      t.TourId,
+                                      t.TourName,
+                                      t.TourImg,
+                                      t.Description,
+                                      DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                      Time = (t.DateEnd - t.DateStart).Value.Days,
+                                      t.Transport,
+                                      t.Schedule,
+                                      t.Rating,
+                                      up.AdultUnitPrice,
+                                      p.ProvinceName,
+                                  }).FirstOrDefaultAsync();
+                return Ok(tour);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
     }
 }
