@@ -156,6 +156,170 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        [HttpPost("Cli_GetDataTourSearch")]
+        public async Task<ActionResult> Cli_GetDataTourSearch([FromBody] TourSearchModelClient tourSearch =null)
+        {
+            try
+            {
+                // lấy danh sách tất cả các tour thỏa
+                var rs = await (from t in _context.Tour
+                                join tt in _context.CatEnumeration on t.TravelTypeId equals tt.EnumerationId
+                                join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                where (t.IsDelete ==null || t.IsDelete == true)
+                                orderby t.DateUpdate descending
+                                select new TourModel { 
+                                    TourId = t.TourId,
+                                    TourName = t.TourName,
+                                    TourImg = BaseUrlServer + t.TourImg.Trim(),
+                                    DateStart = t.DateStart,
+                                    DateStartFormat= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    DateEnd = t.DateEnd,
+                                    TotalDays= (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,
+                                    Rating = t.Rating,
+                                    AdultUnitPrice = t.AdultUnitPrice,
+                                    ChildrenUnitPrice = t.ChildrenUnitPrice,
+                                    BabyUnitPrice = t.BabyUnitPrice,
+                                    DeparturePlaceFromName = pf.ProvinceName,
+                                    DeparturePlaceToName = pt.ProvinceName,
+                                    DeparturePlaceFrom = pf.ProvinceId,
+                                    DeparturePlaceTo = pt.ProvinceId,
+                                    QuanityMax = t.QuanityMax,
+                                    QuanityMin = t.QuanityMin,
+                                    TotalCurrentQuanity= t.QuanityMax - t.CurrentQuanity,
+                                    CurrentQuanity = t.CurrentQuanity,
+                                    TravelTypeId = t.TravelTypeId,
+                                    TravelTypeName = tt.EnumerationTranslate
+                                    
+                                }).ToListAsync();
+
+                // lấy loại phương tiên => để lọc theo phương tiện
+                var cat_Enum = await _context.CatEnumeration.Where(m => (m.IsDelete == null || m.IsDelete == true)
+                                        && m.EnumerationType== "TransportType").ToListAsync();
+
+                #region lọc bởi các điều kiện cơ bản
+                if (tourSearch.TravelTypeID != null)
+                {
+                    rs = rs.Where(m => m.TravelTypeId == tourSearch.TravelTypeID).ToList();
+                }
+                if (tourSearch.DeparturePlaceFrom != null)
+                {
+                    rs = rs.Where(m => m.DeparturePlaceFrom == tourSearch.DeparturePlaceFrom).ToList();
+                }
+                if (tourSearch.DeparturePlaceTo != null)
+                {
+                    rs = rs.Where(m => m.DeparturePlaceTo == tourSearch.DeparturePlaceTo).ToList();
+                }
+                if (tourSearch.DateStart != null)
+                {
+                    rs = rs.Where(m => m.DateStart >= tourSearch.DateStart).ToList();
+                }
+                #endregion
+                
+                #region kiểm tra số lượng search nếu có checked
+
+                // check số lượng nếu có lọc
+                if (tourSearch.QuantityPeople1 == true || tourSearch.QuantityPeople2 == true ||
+                            tourSearch.QuantityPeople3 == true || tourSearch.QuantityPeople4 == true)
+                {
+                    int checkCount = 0;
+                    if (tourSearch.QuantityPeople1 == true) checkCount = 1;
+                    if (tourSearch.QuantityPeople2 == true) checkCount = 2;
+                    if (tourSearch.QuantityPeople3 == true) checkCount = 3;
+                    if (tourSearch.QuantityPeople4 == true) checkCount = 5;
+                    List<TourModel> listObjNew = new List<TourModel>();
+                    for (int i = 0; i < rs.Count; i++)
+                    {
+                        if ((rs[i].QuanityMax - rs[i].CurrentQuanity) >= checkCount)
+                        {
+                            listObjNew.Add(rs[i]);
+                        }
+                    }
+                    rs = listObjNew;
+                }
+
+                #endregion
+
+                #region kiểm ngày số ngày đi có thỏa không?
+                if (tourSearch.QuantityDate1 == true || tourSearch.QuantityDate2 == true 
+                    || tourSearch.QuantityDate3 == true || tourSearch.QuantityDate4 == true)
+                {
+                    int totalDaysStart = 0;
+                    int totalDaysEnd = 0;
+                    if (tourSearch.QuantityDate1 == true)
+                    {
+                        totalDaysStart = 1;
+                        totalDaysEnd = 3;
+                    }
+                    if (tourSearch.QuantityDate2 == true)
+                    {
+                        totalDaysStart = 4;
+                        totalDaysEnd = 7;
+                    }
+                    if (tourSearch.QuantityDate3 == true)
+                    {
+                        totalDaysStart = 8;
+                        totalDaysEnd = 14;
+                    }
+                    if (tourSearch.QuantityDate4 == true)
+                    {
+                        totalDaysStart = 14;
+                        totalDaysEnd = Int32.MaxValue-1;
+                    }
+                    List<TourModel> listObjNew = new List<TourModel>();
+                    for (int i = 0; i < rs.Count; i++)
+                    {
+                        DateTime datStart = DateTime.Parse(rs[i].DateStart.ToString());
+                        DateTime dateEnd = DateTime.Parse(rs[i].DateEnd.ToString());
+                        TimeSpan time = dateEnd - datStart;
+                        int totalDayOfMyTour = time.Days;
+                        if (totalDayOfMyTour >= totalDaysStart && totalDayOfMyTour <=totalDaysEnd)
+                        {
+                            listObjNew.Add(rs[i]);
+                        }
+                    }
+                    rs = listObjNew;
+                }
+
+                #endregion
+
+                #region lọc bởi trainsport
+
+                if (tourSearch.TransportType1 == true)
+                {
+
+                }
+                if (tourSearch.TransportType2 == true)
+                {
+
+                }
+                #endregion
+
+                #region phân trang
+
+                int totalRecord  = rs.Count();
+                var pagination = new Pagination
+                {
+                    count = totalRecord,
+                    currentPage = tourSearch.Page,
+                    pagsize = tourSearch.Limit,
+                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, tourSearch.Limit)),
+                    indexOne = ((tourSearch.Page - 1) * tourSearch.Limit + 1),
+                    indexTwo = (((tourSearch.Page - 1) * tourSearch.Limit + tourSearch.Limit) <= totalRecord ? ((tourSearch.Page - 1) * tourSearch.Limit * tourSearch.Limit) : totalRecord)
+                };
+
+                var listObj = rs.Skip((tourSearch.Page - 1) * tourSearch.Limit).Take(tourSearch.Limit).ToList();
+                #endregion
+                return Ok(new { 
+                    data= listObj,
+                    pagination = pagination
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
         // [Nguyễn Tấn Hải -] - Xử lý Lấy dữ liệu tourDetails
         [HttpGet]
         [Route("Adm_GetTourDetails")]
@@ -234,6 +398,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var tourDetails = await (from t in _context.Tour
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                         
                                          join td in _context.TourDetails on t.TourId equals td.TourId
                                          join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                          from a in ttg.DefaultIfEmpty()
@@ -341,9 +506,8 @@ namespace QuanLyTourDuLich.Controllers
                 rs.Surcharge = tour.Surcharge;
                 rs.Schedule = tour.Schedule.Trim();
                 rs.DeparturePlaceFrom = tour.DeparturePlaceFrom;
-                rs.UpTransportIdstart = tour.UpTransportIdstart;
-                rs.UpTransportIdstart = tour.UpTransportIdend;
-                rs.CompanyTransportId = tour.CompanyTransportId;
+                rs.CompanyTransportStartId = tour.CompanyTransportStartId;
+                rs.CompanyTransportInTour = tour.CompanyTransportInTour;
                //=========
                 rs.TourGuide = tour.TourGuide;
                 rs.TravelTypeId = tour.TravelTypeId;
@@ -387,5 +551,9 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
+
+
+        
+
     }
 }

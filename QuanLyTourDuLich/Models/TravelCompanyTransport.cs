@@ -7,8 +7,8 @@ namespace QuanLyTourDuLich.Models
     {
         public TravelCompanyTransport()
         {
-            Tour = new HashSet<Tour>();
-            UnitPriceTransport = new HashSet<UnitPriceTransport>();
+            TourCompanyTransportInTour = new HashSet<Tour>();
+            TourCompanyTransportStart = new HashSet<Tour>();
         }
 
         public Guid CompanyId { get; set; }
@@ -28,7 +28,7 @@ namespace QuanLyTourDuLich.Models
         public virtual Employee EmpIdupdateNavigation { get; set; }
         public virtual CatEnumeration Enumeration { get; set; }
         public virtual Province Province { get; set; }
-        public virtual ICollection<Tour> Tour { get; set; }
-        public virtual ICollection<UnitPriceTransport> UnitPriceTransport { get; set; }
+        public virtual ICollection<Tour> TourCompanyTransportInTour { get; set; }
+        public virtual ICollection<Tour> TourCompanyTransportStart { get; set; }
     }
 }

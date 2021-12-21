@@ -30,8 +30,8 @@ namespace QuanLyTourDuLich.Models
         public string Schedule { get; set; }
         public int? DeparturePlaceFrom { get; set; }
         public int? DeparturePlaceTo { get; set; }
-        public Guid? UpTransportIdstart { get; set; }
-        public Guid? CompanyTransportId { get; set; }
+        public Guid? CompanyTransportStartId { get; set; }
+        public Guid? CompanyTransportInTourId { get; set; }
         public Guid? TourGuideId { get; set; }
         public Guid? TravelTypeId { get; set; }
         public bool? Suggest { get; set; }
@@ -43,17 +43,15 @@ namespace QuanLyTourDuLich.Models
         public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? IsDelete { get; set; }
-        public Guid? UpTransportIdend { get; set; }
 
-        public virtual TravelCompanyTransport CompanyTransport { get; set; }
+        public virtual TravelCompanyTransport CompanyTransportInTour { get; set; }
+        public virtual TravelCompanyTransport CompanyTransportStart { get; set; }
         public virtual Province DeparturePlaceFromNavigation { get; set; }
         public virtual Province DeparturePlaceToNavigation { get; set; }
         public virtual Employee EmpIdinsertNavigation { get; set; }
         public virtual Employee EmpIdupdateNavigation { get; set; }
         public virtual TourGuide TourGuide { get; set; }
         public virtual CatEnumeration TravelType { get; set; }
-        public virtual UnitPriceTransport UpTransportIdendNavigation { get; set; }
-        public virtual UnitPriceTransport UpTransportIdstartNavigation { get; set; }
         public virtual ICollection<BookingTour> BookingTour { get; set; }
         public virtual ICollection<Comments> Comments { get; set; }
         public virtual ICollection<PromotionalTour> PromotionalTour { get; set; }
