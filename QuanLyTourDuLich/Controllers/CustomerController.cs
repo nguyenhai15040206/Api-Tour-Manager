@@ -87,9 +87,16 @@ namespace QuanLyTourDuLich.Controllers
         // Login với email và mật khẩu
         public async Task<Customer> GetCustomer(string email, string password)
         {
+            // check email đó là số điện thoại => where sđt
+            bool isPhone = ValidateInput.IsPhoneNumber(email);
+
             return await (from c in _context.Customer
-                          where c.Email == email && c.Password == password
-                            && (c.IsDelete == null || c.IsDelete == true)
+                          where isPhone == true?
+                              (c.PhoneNumber == email && c.Password == password
+                                && (c.IsDelete == null || c.IsDelete == true))
+                            :
+                              (c.Email == email && c.Password == password
+                                && (c.IsDelete == null || c.IsDelete == true))
                           select c
                           ).FirstOrDefaultAsync();
         }
@@ -282,8 +289,66 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
-        
 
+        //kiểm tra số điện thoại có tồn tại
+        [HttpGet("Cli_CheckPhoneCustomer")]
 
+        public async Task<IActionResult> Cli_CheckPhoneCustomer(string phoneNumber)
+        {
+            try
+            {
+                var phone =  _context.Customer.Where(m => m.PhoneNumber == phoneNumber).Count();
+                if (phone > 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Số điện thoại đã tồn tại");
+                }
+                return Ok();
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+
+        }
+
+        //regíster
+
+        [HttpPost("Cli_RegisterCustomer")]
+
+        public async Task<IActionResult> Cli_RegisterCustomer([FromBody] Customer cus)
+        {
+            try
+            {
+                var phone = _context.Customer.Where(m => m.PhoneNumber == cus.PhoneNumber).Count();
+                if (phone > 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Số điện thoại đã tồn tại");
+                }
+
+                var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
+                if (phone > 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Tài khoản email đã tồn tại");
+                }
+                cus.DateInsert = DateTime.Now.Date;
+                cus.DateUpdate = DateTime.Now.Date;
+
+                await _context.Customer.AddAsync(cus);
+                await _context.SaveChangesAsync();
+                return Ok(cus);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+
+        }
+
+        //Cập nhật thông tin khách hàng
+        //[HttpPut("Cli_UpdateCustomer")]
+        //public async Task<IActionResult> Cli_UpdateCustomer([FromBody]Customer cus)
+        //{
+
+        //}
     }
 }
