@@ -101,6 +101,30 @@ namespace QuanLyTourDuLich.Controllers
 
         }
 
+        [HttpGet("Adm_GetCompanyTransportInTourCbo")]
+        public async Task<IActionResult> Adm_GetCompanyTransportInTourCbo()
+        {
+            try
+            {
+                var rs = await (from c in _context.TravelCompanyTransport
+                                join e in _context.CatEnumeration on c.EnumerationId equals e.EnumerationId
+                                where (c.IsDelete == null || c.IsDelete == true)
+                                && (e.IsDelete == null || e.IsDelete == true)
+                                && e.EnumerationName != "E_TransportType_Plane"
+                                select new
+                                {
+                                    value = c.CompanyId,
+                                    label = e.EnumerationTranslate+" - "+  c.CompanyName
+                                }
+                          ).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
         [HttpGet("Adm_GetCompanyDetails")]
         public async Task<IActionResult> Adm_GetCompanyDetails(Guid? companyID)
         {

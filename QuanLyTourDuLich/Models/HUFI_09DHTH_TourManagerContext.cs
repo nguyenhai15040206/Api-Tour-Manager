@@ -28,7 +28,6 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<TourGuide> TourGuide { get; set; }
         public virtual DbSet<TouristAttraction> TouristAttraction { get; set; }
         public virtual DbSet<TravelCompanyTransport> TravelCompanyTransport { get; set; }
-        public virtual DbSet<UnitPriceTransport> UnitPriceTransport { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
 
 
@@ -76,7 +75,9 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("optionsNote")
                     .HasMaxLength(500);
 
-                entity.Property(e => e.Qrcode).HasColumnName("QRCode");
+                entity.Property(e => e.Qrcode)
+                    .HasColumnName("QRCode")
+                    .HasColumnType("image");
 
                 entity.Property(e => e.QuanityAdult).HasColumnName("quanityAdult");
 
@@ -617,7 +618,9 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("childrenUnitPrice")
                     .HasColumnType("money");
 
-                entity.Property(e => e.CompanyTransportId).HasColumnName("companyTransportID");
+                entity.Property(e => e.CompanyTransportInTourId).HasColumnName("companyTransportInTourID");
+
+                entity.Property(e => e.CompanyTransportStartId).HasColumnName("companyTransportStartID");
 
                 entity.Property(e => e.ConditionByTour).HasColumnName("conditionByTour");
 
@@ -677,13 +680,14 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.TravelTypeId).HasColumnName("travelTypeID");
 
-                entity.Property(e => e.UpTransportIdend).HasColumnName("upTransportIDEnd");
+                entity.HasOne(d => d.CompanyTransportInTour)
+                    .WithMany(p => p.TourCompanyTransportInTour)
+                    .HasForeignKey(d => d.CompanyTransportInTourId)
+                    .HasConstraintName("fk_Tour_TransportV02");
 
-                entity.Property(e => e.UpTransportIdstart).HasColumnName("upTransportIDStart");
-
-                entity.HasOne(d => d.CompanyTransport)
-                    .WithMany(p => p.Tour)
-                    .HasForeignKey(d => d.CompanyTransportId)
+                entity.HasOne(d => d.CompanyTransportStart)
+                    .WithMany(p => p.TourCompanyTransportStart)
+                    .HasForeignKey(d => d.CompanyTransportStartId)
                     .HasConstraintName("fk_Tour_TransportV01");
 
                 entity.HasOne(d => d.DeparturePlaceFromNavigation)
@@ -715,16 +719,6 @@ namespace QuanLyTourDuLich.Models
                     .WithMany(p => p.Tour)
                     .HasForeignKey(d => d.TravelTypeId)
                     .HasConstraintName("fk_Tour_TravelType");
-
-                entity.HasOne(d => d.UpTransportIdendNavigation)
-                    .WithMany(p => p.TourUpTransportIdendNavigation)
-                    .HasForeignKey(d => d.UpTransportIdend)
-                    .HasConstraintName("fk_Tour_UnitPriceTransportEnd");
-
-                entity.HasOne(d => d.UpTransportIdstartNavigation)
-                    .WithMany(p => p.TourUpTransportIdstartNavigation)
-                    .HasForeignKey(d => d.UpTransportIdstart)
-                    .HasConstraintName("fk_Tour_UnitPriceTransportStart");
             });
 
             modelBuilder.Entity<TourDetails>(entity =>
@@ -955,77 +949,6 @@ namespace QuanLyTourDuLich.Models
                     .WithMany(p => p.TravelCompanyTransport)
                     .HasForeignKey(d => d.ProvinceId)
                     .HasConstraintName("fk_TravelCompanyTransport_Province");
-            });
-
-            modelBuilder.Entity<UnitPriceTransport>(entity =>
-            {
-                entity.HasKey(e => e.UpTransportId)
-                    .HasName("PK__UnitPric__FE18581F1DE46D00");
-
-                entity.Property(e => e.UpTransportId)
-                    .HasColumnName("upTransportID")
-                    .HasDefaultValueSql("(newid())");
-
-                entity.Property(e => e.AdultUnitPrice)
-                    .HasColumnName("adultUnitPrice")
-                    .HasColumnType("money");
-
-                entity.Property(e => e.BabyUnitPrice)
-                    .HasColumnName("babyUnitPrice")
-                    .HasColumnType("money");
-
-                entity.Property(e => e.ChildrenUnitPrice)
-                    .HasColumnName("childrenUnitPrice")
-                    .HasColumnType("money");
-
-                entity.Property(e => e.CompanyId).HasColumnName("companyID");
-
-                entity.Property(e => e.DateInsert)
-                    .HasColumnName("dateInsert")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.DateUpdate)
-                    .HasColumnName("dateUpdate")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.EmpIdinsert).HasColumnName("empIDInsert");
-
-                entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
-
-                entity.Property(e => e.IsDelete).HasColumnName("isDelete");
-
-                entity.Property(e => e.ProvinceFrom).HasColumnName("provinceFrom");
-
-                entity.Property(e => e.ProvinceTo).HasColumnName("provinceTo");
-
-                entity.Property(e => e.TimeEnd).HasColumnName("timeEnd");
-
-                entity.Property(e => e.TimeStart).HasColumnName("timeStart");
-
-                entity.HasOne(d => d.Company)
-                    .WithMany(p => p.UnitPriceTransport)
-                    .HasForeignKey(d => d.CompanyId)
-                    .HasConstraintName("fk_TranSport_TravelCompanyTransport");
-
-                entity.HasOne(d => d.EmpIdinsertNavigation)
-                    .WithMany(p => p.UnitPriceTransportEmpIdinsertNavigation)
-                    .HasForeignKey(d => d.EmpIdinsert)
-                    .HasConstraintName("fk_TranSport_Employee_Insert");
-
-                entity.HasOne(d => d.EmpIdupdateNavigation)
-                    .WithMany(p => p.UnitPriceTransportEmpIdupdateNavigation)
-                    .HasForeignKey(d => d.EmpIdupdate)
-                    .HasConstraintName("fk_TranSport_Employee_Update");
-
-                entity.HasOne(d => d.ProvinceFromNavigation)
-                    .WithMany(p => p.UnitPriceTransportProvinceFromNavigation)
-                    .HasForeignKey(d => d.ProvinceFrom)
-                    .HasConstraintName("fk_TranSport_ProvinceFrom");
-
-                entity.HasOne(d => d.ProvinceToNavigation)
-                    .WithMany(p => p.UnitPriceTransportProvinceToNavigation)
-                    .HasForeignKey(d => d.ProvinceTo)
-                    .HasConstraintName("fk_TranSport_ProvinceTo");
             });
 
             modelBuilder.Entity<Wards>(entity =>
