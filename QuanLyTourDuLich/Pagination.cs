@@ -20,4 +20,28 @@ namespace QuanLyTourDuLich
         public bool showLast => currentPage != totalPage;
     }
     // Thái Trần Kiều Diêmx
+    public static class ValidateInput
+    {
+        public static bool Regex(string input)
+        {
+            foreach (char c in input)
+            {
+                if (c < '0' || c > '9')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // kiểm tra số điện thoại
+        public static bool IsPhoneNumber(string input)
+        {
+            if (Regex(input) && input.Length == 10 && input[0] == '0')
+            {
+                return true;
+            }
+            return false;
+        }
+    }
 }
