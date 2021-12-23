@@ -652,6 +652,8 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
 
+                entity.Property(e => e.GroupNumber).HasColumnName("groupNumber");
+
                 entity.Property(e => e.IsDelete).HasColumnName("isDelete");
 
                 entity.Property(e => e.NoteByMyTour).HasColumnName("noteByMyTour");

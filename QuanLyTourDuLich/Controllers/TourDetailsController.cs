@@ -57,7 +57,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 if (tourDetails.TourID == Guid.Empty) return BadRequest();
-                #region nếu update tour details
+                #region nếu update tour details check xem có sự thay đổi không
                 var rs = await _context.TourDetails.Where(m => m.TourId == tourDetails.TourID && (m.IsDelete==null || m.IsDelete ==true)).ToListAsync();
                 if(rs.Count != 0)
                 {
@@ -69,6 +69,22 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 #endregion
+
+                foreach(var item in tourDetails.TourAttrIds)
+                {
+                    TourDetails tourInsert = new TourDetails();
+                    tourInsert.TourId = tourDetails.TourID;
+                    tourInsert.TouristAttrId = item;
+                    tourInsert.HotelId = null;
+                    tourInsert.EmpIdinsert = tourDetails.EmpId;
+                    tourInsert.DateInsert = DateTime.Now.Date;
+                    tourInsert.EmpIdupdate = tourDetails.EmpId;
+                    tourInsert.DateUpdate = DateTime.Now.Date;
+                    tourInsert.IsDelete = null;
+                    await _context.TourDetails.AddAsync(tourInsert);
+                }
+                await _context.SaveChangesAsync();
+                return Ok();
             }
             catch (Exception ex)
             {

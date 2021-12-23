@@ -22,6 +22,7 @@ namespace QuanLyTourDuLich.SearchModels
         public int?[] DeparturePlace { get; set; }
 
         public bool? Suggest { get; set; }
+        public bool? TourIsExpired { get; set; }
 
     }
 
