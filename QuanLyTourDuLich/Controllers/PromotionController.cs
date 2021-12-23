@@ -108,6 +108,13 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return BadRequest();
                 }
+                var checkConflit = await _context.Promotion.Where(m => m.PromotionName.Trim().Equals(promotion.PromotionName.Trim())
+                        && (m.IsDelete==true || m.IsDelete==null) && m.DateStart == promotion.DateStart && m.DateEnd==promotion.DateEnd).FirstOrDefaultAsync();
+
+                if (checkConflit != null)
+                {
+                    return StatusCode(StatusCodes.Status409Conflict, "Khyến mãi đã tồn tại trong hệ thống!");
+                }
                 promotion.DateInsert = DateTime.Now.Date;
                 promotion.DateUpdate = DateTime.Now.Date;
                 promotion.EmpIdinsert = promotion.EmpIdinsert;
@@ -118,7 +125,7 @@ namespace QuanLyTourDuLich.Controllers
                 await _context.SaveChangesAsync();
                 if (promotion.IsApplyAll == true)
                 {
-                    var rs = await _context.Tour.Where(m => m.IsDelete == null || m.IsDelete == true).ToListAsync(); 
+                    var rs = await _context.Tour.Where(m => (m.IsDelete == null || m.IsDelete == true)).ToListAsync(); 
                     foreach(var item in rs)
                     {
                         var obj = await _context.PromotionalTour.Where(m => m.TourId == item.TourId 
@@ -179,7 +186,7 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         [HttpPut("Adm_DeletePromotionExpired")]
-        //Authorize]
+        [Authorize]
         public async Task<IActionResult> Adm_DeletePromotionExpired()
         {
             try
@@ -214,6 +221,13 @@ namespace QuanLyTourDuLich.Controllers
                     m.DateUpdate = DateTime.Now.Date;
                     m.EmpIdupdate = deleteModels.EmpId;
                 });
+
+                foreach(var item in listObj)
+                {
+                    var rs = await _context.PromotionalTour.Where(m => m.PromotionId == item.PromotionId).ToListAsync();
+                    rs.ForEach(m => m.IsDelete = false);
+                    await _context.SaveChangesAsync();
+                }
                 await _context.SaveChangesAsync();
                 return StatusCode(StatusCodes.Status200OK, "Xóa thành công!");
             }
