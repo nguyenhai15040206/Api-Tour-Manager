@@ -113,9 +113,30 @@ namespace QuanLyTourDuLich.Controllers
                 promotion.EmpIdinsert = promotion.EmpIdinsert;
                 promotion.EmpIdupdate = promotion.EmpIdupdate;
                 promotion.IsDelete = null;
-
+                
                 await _context.Promotion.AddAsync(promotion);
                 await _context.SaveChangesAsync();
+                if (promotion.IsApplyAll == true)
+                {
+                    var rs = await _context.Tour.Where(m => m.IsDelete == null || m.IsDelete == true).ToListAsync(); 
+                    foreach(var item in rs)
+                    {
+                        var obj = await _context.PromotionalTour.Where(m => m.TourId == item.TourId 
+                        && (m.IsDelete==null || m.IsDelete==true)).FirstOrDefaultAsync();
+                        if(obj !=null) obj.IsDelete = false;
+                        PromotionalTour pt = new PromotionalTour();
+                        
+                        pt.PromotionId = promotion.PromotionId;
+                        pt.TourId = item.TourId;
+                        pt.DateInsert = DateTime.Now.Date;
+                        pt.DateUpdate = DateTime.Now.Date;
+                        pt.EmpIdinsert = promotion.EmpIdinsert;
+                        pt.EmpIdupdate = promotion.EmpIdupdate;
+                        pt.IsDelete = null;
+                        await _context.PromotionalTour.AddAsync(pt);
+                    }
+                    await _context.SaveChangesAsync();
+                }
                 return Ok(promotion);
             }
             catch
@@ -124,8 +145,6 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        //[Thái Trần Kiều Diễm 20211109]
-        // Update một tin tức
 
         [HttpPut("Adm_UpdatePromotion")]
         [Authorize]
@@ -159,6 +178,27 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        [HttpPut("Adm_DeletePromotionExpired")]
+        //Authorize]
+        public async Task<IActionResult> Adm_DeletePromotionExpired()
+        {
+            try
+            {
+                var rs = await _context.Promotion.Where(m => (m.IsDelete == null || m.IsDelete == true) 
+                        && m.DateEnd < DateTime.Now.Date).ToListAsync();
+                if (rs.Count == 0)
+                {
+                    return NotFound();
+                }
+                rs.ForEach(m => m.IsDelete = false);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
 
         // Delete Multi row
         [HttpPut("Adm_DeletePromotionByIds")]
