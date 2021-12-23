@@ -28,18 +28,24 @@ namespace QuanLyTourDuLich.Controllers
 
         // Lấy những tour nào được đề xuất max 6 tour
         [HttpGet("TourIsSuggest")]
-        public async Task<IActionResult> TourIsSuggest()
+        public async Task<IActionResult> TourIsSuggest(Guid? tourFamily)
         {
             try
             {
+                Guid travelType = new Guid();
+                bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
                 var tourList = await (from t in _context.Tour
                                       join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                      join type in _context.CatEnumeration on t.TravelTypeId equals type.EnumerationId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                      join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                      from a in ttg.DefaultIfEmpty()
-                                      where t.Suggest == true && (t.IsDelete == null || t.IsDelete == true) 
+                                      join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
+                                      from a in tpt.DefaultIfEmpty()
+                                      join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
+                                      from b in kma.DefaultIfEmpty()
+                                      where t.Suggest == true && (t.IsDelete == null || t.IsDelete == true)
+                                            && (a.IsDelete==null || a.IsDelete ==true)
                                                 && t.DateStart >= DateTime.Now.Date.AddDays(1)
-                                      orderby t.DateUpdate descending
+                                      orderby t.DateUpdate descending, t.DateStart ascending
                                       select new
                                       {
                                           t.TourId,
@@ -49,10 +55,23 @@ namespace QuanLyTourDuLich.Controllers
                                           t.Rating,
                                           t.AdultUnitPrice,
                                           p.ProvinceName,
+                                          t.TravelTypeId,
+                                          type.EnumerationTranslate,
+                                          t.GroupNumber,
+                                          promotion = a ==null? null: b.Discount,
                                           //tourGuideName = a.TourGuideName?? null,
-                                      }).ToListAsync();
+                                      }).Distinct().ToListAsync();
                 var listObj = tourList.GroupBy(x => x.TourName.Trim()).Select(m => m.FirstOrDefault());
-                return Ok(listObj.Take(6));
+                if (isGuid)
+                {
+                    listObj = listObj.Where(m => m.TravelTypeId == travelType).ToList();
+                    return Ok(listObj.Take(3));
+                }
+                else
+                {
+                    listObj = listObj.Where(m => m.TravelTypeId != new Guid("8F64FB01-91FE-4850-A004-35CF26A1C1EF")).ToList();
+                    return Ok(listObj.Take(6));
+                }
             }
             catch (Exception)
             {
@@ -327,6 +346,7 @@ namespace QuanLyTourDuLich.Controllers
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                          join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                          join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+
                                          from a in ttg.DefaultIfEmpty()
                                          where t.TourId == tourID
                                             && (t.IsDelete == null || t.IsDelete == true)
@@ -401,8 +421,10 @@ namespace QuanLyTourDuLich.Controllers
                 var tourDetails = await (from t in _context.Tour
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                          join td in _context.TourDetails on t.TourId equals td.TourId
-                                         join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                         from a in ttg.DefaultIfEmpty()
+                                         join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
+                                         from a in tpt.DefaultIfEmpty()
+                                         join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
+                                         from b in kma.DefaultIfEmpty()
                                          where t.TourId == tourID && (t.IsDelete == null || t.IsDelete == true)
                                          orderby t.DateUpdate descending
                                          select new
@@ -418,7 +440,7 @@ namespace QuanLyTourDuLich.Controllers
                                              t.QuanityMax,
                                              quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
                                              schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n", ""),
-                                             touGuideName = t.TourGuideId ==null? null: a.TourGuideName,
+                                             touGuideName = t.TourGuideId ==null? null: t.TourGuide.TourGuideName,
                                              transportStart = t.CompanyTransportStartId ==null? null: t.CompanyTransportStart.Enumeration.EnumerationTranslate,
                                              transportInTour = t.CompanyTransportInTourId ==null? null: t.CompanyTransportInTour.Enumeration.EnumerationTranslate,
                                              adultUnitPrice = t.AdultUnitPrice,
@@ -426,6 +448,10 @@ namespace QuanLyTourDuLich.Controllers
                                              babyUnitPrice = t.BabyUnitPrice,
                                              surcharge = t.Surcharge,
                                              p.ProvinceName,
+                                             t.GroupNumber,
+                                             promotion = b.Discount,
+                                             t.TravelTypeId,
+                                             t.TravelType.EnumerationTranslate,
                                              tourDetails = (from td in _context.TourDetails
                                                             join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
                                                             where td.TourId == tourID
@@ -470,9 +496,16 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return StatusCode(StatusCodes.Status409Conflict, "Tour đã tồn tại trong hệ thống");
                 }
-                tour.GroupNumber = tour.GroupNumber == null ? 0 : tour.GroupNumber;
-                tour.ChildrenUnitPrice = tour.ChildrenUnitPrice == null ? 0 : tour.ChildrenUnitPrice;
-                tour.BabyUnitPrice = tour.BabyUnitPrice == null ? 0 : tour.BabyUnitPrice;
+                if (tour.TravelTypeId == new Guid("8f64fb01-91fe-4850-a004-35cf26a1c1ef"))
+                {
+                    tour.GroupNumber = tour.GroupNumber;
+                    
+                }
+                else
+                {
+                    tour.ChildrenUnitPrice =  tour.ChildrenUnitPrice;
+                    tour.BabyUnitPrice = tour.BabyUnitPrice;
+                }
                 tour.DateInsert = DateTime.Now.Date;
                 tour.DateUpdate = DateTime.Now.Date;
                 tour.EmpIdinsert = tour.EmpIdinsert;
@@ -513,9 +546,19 @@ namespace QuanLyTourDuLich.Controllers
                 rs.Rating = tour.Rating;
                 rs.QuanityMax = tour.QuanityMax;
                 rs.QuanityMin = tour.QuanityMin;
+                if (tour.TravelTypeId == new Guid("8f64fb01-91fe-4850-a004-35cf26a1c1ef"))
+                {
+                    rs.GroupNumber = tour.GroupNumber;
+                    rs.ChildrenUnitPrice = 0;
+                    rs.BabyUnitPrice = 0;
+                }
+                else
+                {
+                    rs.GroupNumber = 0;
+                    rs.ChildrenUnitPrice = tour.ChildrenUnitPrice;
+                    rs.BabyUnitPrice = tour.BabyUnitPrice;
+                }
                 rs.AdultUnitPrice = tour.AdultUnitPrice;
-                rs.ChildrenUnitPrice = tour.ChildrenUnitPrice;
-                rs.BabyUnitPrice = tour.BabyUnitPrice;
                 rs.Surcharge = tour.Surcharge;
                 rs.Schedule = tour.Schedule.Trim();
                 rs.DeparturePlaceFrom = tour.DeparturePlaceFrom;
@@ -619,8 +662,8 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var tourList = await (from t in _context.Tour
-                                      join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                      join up in _context.UnitPrice on t.TourId equals up.TourId
+                                      //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                      //join up in _context.UnitPrice on t.TourId equals up.TourId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                       from a in ttg.DefaultIfEmpty()
@@ -634,8 +677,8 @@ namespace QuanLyTourDuLich.Controllers
                                           DateStart= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                           Time= (t.DateEnd - t.DateStart).Value.Days,
                                           t.Rating,
-                                          up.AdultUnitPrice,
-                                          p.ProvinceName,
+                                          //up.AdultUnitPrice,
+                                          //p.ProvinceName,
                                       }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = _context.Tour.Where(m => m.Suggest == true && (m.IsDelete == null || m.IsDelete == true)).Count();
                 // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
@@ -668,8 +711,8 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var tour = await (from t in _context.Tour
-                                  join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                  join up in _context.UnitPrice on t.TourId equals up.TourId
+                                  //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                  //join up in _context.UnitPrice on t.TourId equals up.TourId
                                   join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                   join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                   from a in ttg.DefaultIfEmpty()
@@ -682,11 +725,11 @@ namespace QuanLyTourDuLich.Controllers
                                       t.Description,
                                       DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                       Time = (t.DateEnd - t.DateStart).Value.Days,
-                                      t.Transport,
+                                      //t.Transport,
                                       t.Schedule,
                                       t.Rating,
-                                      up.AdultUnitPrice,
-                                      p.ProvinceName,
+                                      //up.AdultUnitPrice,
+                                      //p.ProvinceName,
                                   }).FirstOrDefaultAsync();
                 return Ok(tour);
             }
