@@ -12,8 +12,6 @@ namespace QuanLyTourDuLich.Models
             TourDeparturePlaceToNavigation = new HashSet<Tour>();
             TouristAttraction = new HashSet<TouristAttraction>();
             TravelCompanyTransport = new HashSet<TravelCompanyTransport>();
-            UnitPriceTransportProvinceFromNavigation = new HashSet<UnitPriceTransport>();
-            UnitPriceTransportProvinceToNavigation = new HashSet<UnitPriceTransport>();
         }
 
         public int ProvinceId { get; set; }
@@ -26,7 +24,5 @@ namespace QuanLyTourDuLich.Models
         public virtual ICollection<Tour> TourDeparturePlaceToNavigation { get; set; }
         public virtual ICollection<TouristAttraction> TouristAttraction { get; set; }
         public virtual ICollection<TravelCompanyTransport> TravelCompanyTransport { get; set; }
-        public virtual ICollection<UnitPriceTransport> UnitPriceTransportProvinceFromNavigation { get; set; }
-        public virtual ICollection<UnitPriceTransport> UnitPriceTransportProvinceToNavigation { get; set; }
     }
 }

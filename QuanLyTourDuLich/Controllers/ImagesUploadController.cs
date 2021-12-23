@@ -47,7 +47,7 @@ namespace QuanLyTourDuLich.Controllers
                         await image.SaveAsync(fullPath);
                     }
                 }
-                return Ok(new { FileName = _baseUrl + "ImagesTour/"+ fileName });
+                return Ok(new { FileName =  fileName });
             }
             catch (Exception)
             {
@@ -76,7 +76,7 @@ namespace QuanLyTourDuLich.Controllers
                         await image.SaveAsync(fullPath);
                     }
                 }
-                return Ok(new { FileName = _baseUrl + "ImagesCompanyTravel/" + fileName });
+                return Ok(new { FileName = fileName });
             }
             catch (Exception)
             {
@@ -121,6 +121,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                //
                 var result = new List<FileUploadResult>();
                 string fileName = string.Empty;
                 string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesTouristAttractions";
@@ -139,8 +140,7 @@ namespace QuanLyTourDuLich.Controllers
                         image.Mutate(m => m.Resize(810, 540));
                         await image.SaveAsync(fullPath);
                     }
-                    result.Add(new FileUploadResult() { FileName = _baseUrl + "ImagesTouristAttractions/" +
-                        fileName, Length = file.Length });
+                    result.Add(new FileUploadResult() { FileName = fileName, Length = file.Length });
                     continue;
                 }
                 return Ok(result);
