@@ -20,7 +20,7 @@ namespace QuanLyTourDuLich.Controllers
         /// <summary>
         /// [Thái Trần Kiều Diễm 20211109- xử lý danh sách địa điểm du lịch]
         /// </summary>
-
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
 
         public TouristAttractionController(HUFI_09DHTH_TourManagerContext context)
@@ -284,7 +284,7 @@ namespace QuanLyTourDuLich.Controllers
         /// <param name="page"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        [HttpGet("Cli_GetTourAttractByProAndId")]
+        [HttpGet("MB_Cli_GetTourAttractByProAndId")]
         public async Task<IActionResult> Cli_GetTourAttractByProAndId(string TouristAttrName=null, int page=1, int limit=10)
         {
             try
@@ -304,7 +304,6 @@ namespace QuanLyTourDuLich.Controllers
 
                 var tourAttrac = await (from t in _context.TouristAttraction
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
-                                        join e in _context.Employee on t.EmpIdupdate equals e.EmpId
                                         where checkModelSearchIsNull == true ? (t.IsDelete == null || t.IsDelete == true)
                                          : (
                                             (t.IsDelete == null || t.IsDelete == true)
@@ -316,7 +315,7 @@ namespace QuanLyTourDuLich.Controllers
                                             t.TouristAttrId,
                                             t.TouristAttrName,
                                             Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            t.ImagesList,
+                                            ImagesList = BaseUrlServer + t.ImagesList.Trim(),
                                             p.ProvinceName
                                         }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = _context.TouristAttraction.Where(m => (m.IsDelete == null || m.IsDelete == true)&&m.TouristAttrName.Contains(TouristAttrName)).Count();
@@ -352,7 +351,7 @@ namespace QuanLyTourDuLich.Controllers
         /// <param name="page"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        [HttpGet("Cli_GetTourAttractByProvinceName")]
+        [HttpGet("MB_Cli_GetTourAttractByProvinceName")]
         public async Task<IActionResult> Cli_GetTourAttractByProvinceName(string ProvinceName = null, int page = 1, int limit = 10)
         {
             try
@@ -384,7 +383,7 @@ namespace QuanLyTourDuLich.Controllers
                                             t.TouristAttrId,
                                             t.TouristAttrName,
                                             Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            t.ImagesList,
+                                            ImagesList = BaseUrlServer + t.ImagesList.Trim(),
                                             p.ProvinceName
                                         }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = (from t in _context.TouristAttraction
@@ -420,20 +419,24 @@ namespace QuanLyTourDuLich.Controllers
 
         ///get touristAttractionDetails
         ///
-        [HttpGet("Cli_GetTouristAttrDetails")]
-        public async Task<IActionResult>Cli_GetTouristAttrDetails(Guid touristAttrId )
+        [HttpGet("MB_Cli_GetTouristAttrDetails")]
+        public async Task<IActionResult>Cli_GetTouristAttrDetails(string touristAttrId )
         {
+            //
+            Guid pID = new Guid();
+            bool check = Guid.TryParse(touristAttrId, out pID);
+
             try
             {
                 var rs = await (from t in _context.TouristAttraction
                                 join p in _context.Province on t.ProvinceId equals p.ProvinceId
-                                where t.TouristAttrId == touristAttrId
+                                where (t.IsDelete==null || t.IsDelete == true) && (check==false? t.TouristAttrName.Trim().Contains(touristAttrId): t.TouristAttrId == pID)
                                 select new
                                 {
                                     t.TouristAttrId,
                                     t.TouristAttrName,
-                                    Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                    t.ImagesList,
+                                    Description = t.Description != "null" ? t.Description : "Chưa cập nhật",//
+                                    ImagesList = BaseUrlServer + t.ImagesList.Trim(),
                                     p.ProvinceName
                                 }).FirstOrDefaultAsync();
                 return Ok(rs);
