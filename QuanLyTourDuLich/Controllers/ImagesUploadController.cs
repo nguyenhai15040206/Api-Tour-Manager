@@ -121,6 +121,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                //
                 var result = new List<FileUploadResult>();
                 string fileName = string.Empty;
                 string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesTouristAttractions";
