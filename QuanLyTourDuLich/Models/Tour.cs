@@ -23,6 +23,7 @@ namespace QuanLyTourDuLich.Models
         public int? QuanityMax { get; set; }
         public int? QuanityMin { get; set; }
         public int? CurrentQuanity { get; set; }
+        public int? GroupNumber { get; set; }
         public decimal? AdultUnitPrice { get; set; }
         public decimal? ChildrenUnitPrice { get; set; }
         public decimal? BabyUnitPrice { get; set; }
@@ -43,7 +44,6 @@ namespace QuanLyTourDuLich.Models
         public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public bool? IsDelete { get; set; }
-        public int? GroupNumber { get; set; }
 
         public virtual TravelCompanyTransport CompanyTransportInTour { get; set; }
         public virtual TravelCompanyTransport CompanyTransportStart { get; set; }

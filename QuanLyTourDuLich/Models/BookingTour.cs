@@ -16,7 +16,7 @@ namespace QuanLyTourDuLich.Models
         public decimal? AdultUnitPrice { get; set; }
         public decimal? ChildrenUnitPrice { get; set; }
         public decimal? BabyUnitPrice { get; set; }
-        public double? Discount { get; set; }
+        public decimal? Discount { get; set; }
         public decimal? Surcharge { get; set; }
         public decimal? TotalMoneyBooking { get; set; }
         public decimal? TotalMoney { get; set; }
@@ -25,6 +25,7 @@ namespace QuanLyTourDuLich.Models
         public string OptionsNote { get; set; }
         public string Note { get; set; }
         public byte[] Qrcode { get; set; }
+        public int? TypePayment { get; set; }
         public bool? Status { get; set; }
         public bool? IsDelete { get; set; }
 

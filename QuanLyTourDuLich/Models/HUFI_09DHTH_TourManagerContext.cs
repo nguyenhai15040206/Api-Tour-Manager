@@ -61,7 +61,9 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnName("dateConfirm")
                     .HasColumnType("date");
 
-                entity.Property(e => e.Discount).HasColumnName("discount");
+                entity.Property(e => e.Discount)
+                    .HasColumnName("discount")
+                    .HasColumnType("money");
 
                 entity.Property(e => e.EmpIdconfirm).HasColumnName("empIDConfirm");
 
@@ -102,6 +104,8 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnType("money");
 
                 entity.Property(e => e.TourId).HasColumnName("tourID");
+
+                entity.Property(e => e.TypePayment).HasColumnName("typePayment");
 
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.BookingTour)
