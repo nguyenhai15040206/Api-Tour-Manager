@@ -1,21 +1,13 @@
-﻿    using Microsoft.AspNetCore.Authorization;
+﻿
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using QuanLyTourDuLich.Models;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using QuanLyTourDuLich.SearchModels;
-using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
 using QRCoder;
@@ -29,6 +21,7 @@ namespace QuanLyTourDuLich.Controllers
     public class BookingTourController : ControllerBase
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
+        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
         public BookingTourController(HUFI_09DHTH_TourManagerContext context)
         {
             _context = context;
@@ -83,6 +76,7 @@ namespace QuanLyTourDuLich.Controllers
                 bookingTour.TotalMoney = bookingTourModels.TotalMoney;
                 bookingTour.OptionsNote = bookingTourModels.OptionsNote;
                 bookingTour.Note = bookingTourModels.Note;
+                bookingTour.TypePayment = bookingTourModels.TypePayment;
                 bookingTour.Status = false;
                 bookingTour.BookingDate = DateTime.Now.Date;
                 bookingTour.IsDelete = null;
@@ -129,15 +123,21 @@ namespace QuanLyTourDuLich.Controllers
                                 select new
                                 {
                                     bt.BookingTourId,
+                                    bt.Discount,
+                                    bt.TotalMoneyBooking,
+                                    bt.IsDelete,
+                                    bt.TotalMoney,
+                                    bt.Surcharge,
+                                    bt.TypePayment,
                                     t.TourId,
                                     c.CustomerName,
                                     c.Email,
                                     c.Address,
                                     c.PhoneNumber,
                                     bookingDate = DateTime.Parse(bt.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                    status = bt.Status==false? "Chưa thanh toán":"Đã thanh toán",
+                                    bt.Status,
                                     duration = DateTime.Parse(bt.BookingDate.ToString()).AddDays(2).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
-                                    t.TourImg,
+                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
                                     t.TourName,
                                     bt.QuanityAdult,
                                     bt.QuanityChildren,
