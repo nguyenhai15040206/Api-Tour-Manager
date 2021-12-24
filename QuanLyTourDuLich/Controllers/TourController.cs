@@ -10,6 +10,7 @@ using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -19,31 +20,35 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
         public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
-        public const string BaseUrlServer1 = "http://localhost:8000/ImagesTouristAttractions/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
-        public TourController(HUFI_09DHTH_TourManagerContext context)
+        public IConfiguration _config;
+        public TourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         // Lấy những tour nào được đề xuất max 6 tour
         [HttpGet("TourIsSuggest")]
-        public async Task<IActionResult> TourIsSuggest(Guid? tourFamily)
+        public async Task<IActionResult> TourIsSuggest(Guid? tourFamily, int? regions)
+        
         {
             try
             {
+                //EmailService.Send("nguyenhai15040206@gmail.com", "nguyenhai15040206@gmail.com", "Noi dung", "<p>This test</p>");
+                //bool kq = EmailService.Send("nguyenhai15040206@gmail.com", "Tanhai123", "smtp.gmail.com", 25, "thaikieudiem2801@gmail.com", "Alo alo", "Bạn vừa nhận được liên hê từ: <b>{0}</b><br/>Email: {1}<br/>Nội dung: </br>");
                 Guid travelType = new Guid();
                 bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
                 var tourList = await (from t in _context.Tour
                                       join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                      join ptt in _context.Province on t.DeparturePlaceTo equals ptt.ProvinceId
                                       join type in _context.CatEnumeration on t.TravelTypeId equals type.EnumerationId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
                                       from a in tpt.DefaultIfEmpty()
                                       join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
                                       from b in kma.DefaultIfEmpty()
-                                      where t.Suggest == true && (t.IsDelete == null || t.IsDelete == true)
-                                            && (a.IsDelete==null || a.IsDelete ==true)
+                                      where (t.IsDelete == null || t.IsDelete == true)
                                                 && t.DateStart >= DateTime.Now.Date.AddDays(1)
                                       orderby t.DateUpdate descending, t.DateStart ascending
                                       select new
@@ -52,24 +57,34 @@ namespace QuanLyTourDuLich.Controllers
                                           t.TourName,
                                           tourImg = BaseUrlServer + t.TourImg.Trim(),
                                           t.DateStart,
+                                          dateStartFormat= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                          TotalDays = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,
+                                          TotalCurrentQuanity = t.QuanityMax - t.CurrentQuanity,
                                           t.Rating,
                                           t.AdultUnitPrice,
                                           p.ProvinceName,
                                           t.TravelTypeId,
                                           type.EnumerationTranslate,
                                           t.GroupNumber,
-                                          promotion = a ==null? null: b.Discount,
+                                          promotion = a.IsDelete ==false? null: b.Discount,
+                                          ptt.Regions,
+                                          t.Suggest,
                                           //tourGuideName = a.TourGuideName?? null,
                                       }).Distinct().ToListAsync();
                 var listObj = tourList.GroupBy(x => x.TourName.Trim()).Select(m => m.FirstOrDefault());
+                if(regions != null)
+                {
+                    listObj = listObj.Where(m => m.Regions == regions).ToList();
+                    return Ok(listObj.Take(4));
+                }
                 if (isGuid)
                 {
-                    listObj = listObj.Where(m => m.TravelTypeId == travelType).ToList();
+                    listObj = listObj.Where(m => m.TravelTypeId == travelType && m.Suggest == true).ToList();
                     return Ok(listObj.Take(3));
                 }
                 else
                 {
-                    listObj = listObj.Where(m => m.TravelTypeId != new Guid("8F64FB01-91FE-4850-A004-35CF26A1C1EF")).ToList();
+                    listObj = listObj.Where(m => m.TravelTypeId != new Guid("8F64FB01-91FE-4850-A004-35CF26A1C1EF") && m.Suggest == true).ToList();
                     return Ok(listObj.Take(6));
                 }
             }
@@ -420,6 +435,7 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var tourDetails = await (from t in _context.Tour
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
+                                         join ptt in _context.Province on t.DeparturePlaceTo equals ptt.ProvinceId
                                          join td in _context.TourDetails on t.TourId equals td.TourId
                                          join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
                                          from a in tpt.DefaultIfEmpty()
@@ -463,6 +479,7 @@ namespace QuanLyTourDuLich.Controllers
                                                                 imagesList = tatt.ImagesList.Trim(),
                                                                 tatt.Description
                                                             }).ToList(),
+                                             ptt.Regions,
                                          }).FirstOrDefaultAsync();
                 if (tourDetails == null)
                 {
@@ -491,7 +508,9 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 var rs = await _context.Tour.Where(m => m.TourName.Trim().Equals(tour.TourName.Trim())
                         && m.DateStart == tour.DateStart && m.TravelTypeId == tour.TravelTypeId
-                         && m.DeparturePlaceFrom == tour.DeparturePlaceFrom && (m.IsDelete==null || m.IsDelete==true)).FirstOrDefaultAsync();
+                         && m.DeparturePlaceFrom == tour.DeparturePlaceFrom
+                         && m.DeparturePlaceTo ==tour.DeparturePlaceTo
+                         && (m.IsDelete==null || m.IsDelete==true)).FirstOrDefaultAsync();
                 if (rs != null)
                 {
                     return StatusCode(StatusCodes.Status409Conflict, "Tour đã tồn tại trong hệ thống");
