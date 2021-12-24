@@ -291,7 +291,7 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         //kiểm tra số điện thoại có tồn tại
-        [HttpGet("Cli_CheckPhoneCustomer")]
+        [HttpGet("MB_Cli_CheckPhoneCustomer")]
 
         public async Task<IActionResult> Cli_CheckPhoneCustomer(string phoneNumber)
         {
@@ -313,7 +313,7 @@ namespace QuanLyTourDuLich.Controllers
 
         //regíster
 
-        [HttpPost("Cli_RegisterCustomer")]
+        [HttpPost("MB_Cli_RegisterCustomer")]
 
         public async Task<IActionResult> Cli_RegisterCustomer([FromBody] Customer cus)
         {
@@ -344,11 +344,80 @@ namespace QuanLyTourDuLich.Controllers
 
         }
 
-        //Cập nhật thông tin khách hàng
-        //[HttpPut("Cli_UpdateCustomer")]
-        //public async Task<IActionResult> Cli_UpdateCustomer([FromBody]Customer cus)
-        //{
+        //get thông tin khashc hàng theo mã
+        [HttpGet("MB_Cli_GetInforCustumer")]
+        public async Task<IActionResult> MB_Cli_GetInforCustumer(Guid? CustomerId)
+        {
+            try
+            {
+                var rs = await (from c in _context.Customer
+                                where c.CustomerId == CustomerId
+                                select new
+                                {
+                                    c.CustomerId,
+                                    c.CustomerName,
+                                    c.Email,
+                                    c.PhoneNumber,
+                                    c.Password,
+                                    c.Address,
+                                }).FirstOrDefaultAsync();
+                return Ok(rs);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+            }
+        }
 
-        //}
+        //Cập nhật thông tin khách hàng
+        [HttpPut("MB_Cli_UpdateCustomer")]
+        public async Task<IActionResult> Cli_UpdateCustomer([FromBody] Customer cus)
+        {
+            try
+            {
+                var rs = await (from c in _context.Customer
+                                where c.CustomerId == cus.CustomerId
+                                select c).FirstOrDefaultAsync();
+                if (rs.Email != cus.Email)
+                {
+                    var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
+                    if (email > 0)
+                    {
+                        return StatusCode(StatusCodes.Status400BadRequest, "Email đã tồn tại");
+                    }
+                }
+                rs.CustomerName = cus.CustomerName;
+                rs.DateUpdate = DateTime.Now.Date;
+                rs.Email = cus.Email;
+                rs.Address = cus.Address;
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+            }
+        }
+
+        //đổi mật khẩu
+
+        [HttpPut("MB_Cli_ChangePassword")]
+        public async Task<IActionResult> MB_Cli_ChangePassword([FromBody] Customer cus)
+        {
+            try
+            {
+                var rs = await (from c in _context.Customer
+                                where c.CustomerId == cus.CustomerId
+                                select c).FirstOrDefaultAsync();
+                rs.Password = cus.Password;
+                rs.DateUpdate = DateTime.Now.Date;
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new Employee record");
+            }
+        }
     }
 }

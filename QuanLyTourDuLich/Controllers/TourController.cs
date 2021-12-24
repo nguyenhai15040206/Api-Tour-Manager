@@ -19,6 +19,7 @@ namespace QuanLyTourDuLich.Controllers
     public class TourController : ControllerBase
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
+
         public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
@@ -675,29 +676,31 @@ namespace QuanLyTourDuLich.Controllers
 
         ///get tất cả các tour
         ///
-        [HttpGet("Cli_GetTourListPagination")]
+        [HttpGet("MB_Cli_GetTourListPagination")]
         public async Task<IActionResult> Cli_GetTourListPagination(int page = 1, int limit = 10)
         {
             try
             {
                 var tourList = await (from t in _context.Tour
-                                      //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
+                                      join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId // ty em check lai cho nay nha
                                       //join up in _context.UnitPrice on t.TourId equals up.TourId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                       from a in ttg.DefaultIfEmpty()
-                                      where t.Suggest == true && (t.IsDelete == null || t.IsDelete == true)
+                                      where (t.IsDelete == null || t.IsDelete == true)
                                       orderby t.DateStart descending
                                       select new
                                       {
                                           t.TourId,
                                           t.TourName,
-                                          t.TourImg,
-                                          DateStart= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                          tourImg = BaseUrlServer + t.TourImg.Trim(),
+                                          DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                           Time= (t.DateEnd - t.DateStart).Value.Days,
                                           t.Rating,
-                                          //up.AdultUnitPrice,
-                                          //p.ProvinceName,
+                                          t.QuanityMax,
+                                          t.QuanityMin,
+                                          t.AdultUnitPrice,
+                                          pf.ProvinceName, //dau
                                       }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = _context.Tour.Where(m => m.Suggest == true && (m.IsDelete == null || m.IsDelete == true)).Count();
                 // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
@@ -724,14 +727,14 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        [HttpGet("Cli_GetTourDescriptionById")]
+        [HttpGet("MB_Cli_GetTourDescriptionById")]
         public async Task<IActionResult> Cli_GetTourDescriptionById(Guid TourId)
         {
             try
             {
                 var tour = await (from t in _context.Tour
-                                  //join p in _context.Province on t.DeparturePlace equals p.ProvinceId
-                                  //join up in _context.UnitPrice on t.TourId equals up.TourId
+                                  join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                  join td in _context.TourDetails on t.TourId equals td.TourId
                                   join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                   join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                   from a in ttg.DefaultIfEmpty()
@@ -740,15 +743,32 @@ namespace QuanLyTourDuLich.Controllers
                                   {
                                       t.TourId,
                                       t.TourName,
-                                      t.TourImg,
+                                      tourImg = BaseUrlServer + t.TourImg.Trim(),
                                       t.Description,
                                       DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                       Time = (t.DateEnd - t.DateStart).Value.Days,
-                                      //t.Transport,
                                       t.Schedule,
                                       t.Rating,
-                                      //up.AdultUnitPrice,
-                                      //p.ProvinceName,
+                                      t.BabyUnitPrice,
+                                      t.ChildrenUnitPrice,
+                                      t.QuanityMax,
+                                      t.QuanityMin,
+                                      schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n", ""),
+                                      t.Rating,
+                                      t.AdultUnitPrice,
+                                      quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
+                                      t.Surcharge,
+                                      DeparturePlaceTo = _context.Province.Where(m => m.ProvinceId == t.DeparturePlaceTo).Select(m => m.ProvinceName).FirstOrDefault(),
+                                      pf.ProvinceName,
+                                      tourDetails = (from td in _context.TourDetails
+                                                     join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
+                                                     where td.TourId == TourId
+                                                         && (tatt.IsDelete == null || tatt.IsDelete == true)
+                                                         && (td.IsDelete == null || tatt.IsDelete == true)
+                                                     select new
+                                                     {
+                                                         tatt.TouristAttrName,
+                                                     }).ToList(),
                                   }).FirstOrDefaultAsync();
                 return Ok(tour);
             }
