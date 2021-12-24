@@ -19,8 +19,8 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
 
-        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
-        public const string BaseUrlServer1 = "http://localhost:8000/ImagesTouristAttractions/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
+        public const string BaseUrlServer1 = "http://192.168.1.81:8000/ImagesTouristAttractions/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public TourController(HUFI_09DHTH_TourManagerContext context)
         {
@@ -658,17 +658,22 @@ namespace QuanLyTourDuLich.Controllers
         ///get tất cả các tour
         ///
         [HttpGet("MB_Cli_GetTourListPagination")]
-        public async Task<IActionResult> Cli_GetTourListPagination(int page = 1, int limit = 10)
+        public async Task<IActionResult> Cli_GetTourListPagination(string provinceName, int page = 1, int limit = 10)
         {
             try
             {
+                bool isTourName = (!string.IsNullOrEmpty(provinceName));
                 var tourList = await (from t in _context.Tour
-                                      join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId // ty em check lai cho nay nha
+                                      join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId // ty em check lai cho nay nha
                                       //join up in _context.UnitPrice on t.TourId equals up.TourId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                       from a in ttg.DefaultIfEmpty()
-                                      where (t.IsDelete == null || t.IsDelete == true)
+                                      where isTourName==true?
+                                      ((t.IsDelete == null || t.IsDelete == true) 
+                                      && pf.ProvinceName.Contains(provinceName))
+                                      : (t.IsDelete == null || t.IsDelete == true)
+
                                       orderby t.DateStart descending
                                       select new
                                       {
@@ -683,7 +688,13 @@ namespace QuanLyTourDuLich.Controllers
                                           t.AdultUnitPrice,
                                           pf.ProvinceName, //dau
                                       }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                int totalRecord = _context.Tour.Where(m => m.Suggest == true && (m.IsDelete == null || m.IsDelete == true)).Count();
+                int totalRecord = (from t in _context.Tour
+                                   join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId
+                                   where isTourName == true ?
+                                       ((t.IsDelete == null || t.IsDelete == true)
+                                       && pf.ProvinceName.Contains(provinceName))
+                                       : (t.IsDelete == null || t.IsDelete == true)
+                                   select t).Count();
                 // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
                 var pagination = new Pagination
                 {
@@ -728,8 +739,6 @@ namespace QuanLyTourDuLich.Controllers
                                       t.Description,
                                       DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                       Time = (t.DateEnd - t.DateStart).Value.Days,
-                                      t.Schedule,
-                                      t.Rating,
                                       t.BabyUnitPrice,
                                       t.ChildrenUnitPrice,
                                       t.QuanityMax,

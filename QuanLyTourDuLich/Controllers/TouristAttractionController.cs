@@ -315,7 +315,7 @@ namespace QuanLyTourDuLich.Controllers
                                             t.TouristAttrId,
                                             t.TouristAttrName,
                                             Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            ImagesList = BaseUrlServer + t.ImagesList.Trim(),
+                                            ImagesList = t.ImagesList.Trim(),
                                             p.ProvinceName
                                         }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = _context.TouristAttraction.Where(m => (m.IsDelete == null || m.IsDelete == true)&&m.TouristAttrName.Contains(TouristAttrName)).Count();
@@ -436,7 +436,7 @@ namespace QuanLyTourDuLich.Controllers
                                     t.TouristAttrId,
                                     t.TouristAttrName,
                                     Description = t.Description != "null" ? t.Description : "Chưa cập nhật",//
-                                    ImagesList = BaseUrlServer + t.ImagesList.Trim(),
+                                    ImagesList =  t.ImagesList.Trim(),
                                     p.ProvinceName
                                 }).FirstOrDefaultAsync();
                 return Ok(rs);
