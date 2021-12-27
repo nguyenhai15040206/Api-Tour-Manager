@@ -32,6 +32,9 @@ namespace QuanLyTourDuLich.SearchModels
         public int? DeparturePlaceFrom { get; set; }
         public int? DeparturePlaceTo { get; set; }
         public DateTime? DateStart { get; set; }
+        
+        // mb
+        public string DeparturePlaceToName { get; set; }
 
         //
         public bool? QuantityDate1 { get; set; }
