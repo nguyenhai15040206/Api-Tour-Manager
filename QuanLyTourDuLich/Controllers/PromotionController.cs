@@ -48,7 +48,7 @@ namespace QuanLyTourDuLich.Controllers
                                             && (p.IsDelete == null || p.IsDelete == true)
                                         )
                                       )
-                                      orderby p.DateUpdate descending
+                                      orderby p.DateUpdate descending, p.DateEnd descending
                                       select new
                                       {
                                           p.PromotionId,
@@ -73,8 +73,8 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from p in _context.Promotion
-                       where (p.IsDelete == null || p.IsDelete == true)
-                            && p.PromotionId == pID
+                                where (p.IsDelete == null || p.IsDelete == true)
+                                     && p.PromotionId == pID
                                 select new
                                 {
                                     p.PromotionId,
@@ -83,6 +83,7 @@ namespace QuanLyTourDuLich.Controllers
                                     p.DateStart,
                                     p.Discount,
                                     p.IsApplyAll,
+                                    tourList =  _context.PromotionalTour.Where(m => (m.IsDelete == null || m.IsDelete == true) && m.PromotionId == p.PromotionId).Select(m=>m.TourId).ToArray()
                                 }).FirstOrDefaultAsync(); // Hạn chế dùng Single vì => xãy ra exception
                 if(rs== null)
                 {
@@ -100,7 +101,7 @@ namespace QuanLyTourDuLich.Controllers
 
         [HttpPost("Adm_CreatePromotion")]
         [Authorize]
-        public async Task<ActionResult> Adm_CreatePromotion([FromBody] Promotion promotion)
+        public async Task<ActionResult> Adm_CreatePromotion([FromBody] PromotionModels promotion)
         {
             try
             {
@@ -115,25 +116,31 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return StatusCode(StatusCodes.Status409Conflict, "Khyến mãi đã tồn tại trong hệ thống!");
                 }
-                promotion.DateInsert = DateTime.Now.Date;
-                promotion.DateUpdate = DateTime.Now.Date;
-                promotion.EmpIdinsert = promotion.EmpIdinsert;
-                promotion.EmpIdupdate = promotion.EmpIdupdate;
-                promotion.IsDelete = null;
+                Promotion insert = new Promotion();
+                insert.PromotionName = promotion.PromotionName;
+                insert.Discount = promotion.Discount;
+                insert.DateStart = promotion.DateStart;
+                insert.DateEnd = promotion.DateEnd;
+                insert.IsApplyAll = promotion.IsApplyAll;
+                insert.DateInsert = DateTime.Now.Date;
+                insert.DateUpdate = DateTime.Now.Date;
+                insert.EmpIdinsert = promotion.EmpIdinsert;
+                insert.EmpIdupdate = promotion.EmpIdupdate;
+                insert.IsDelete = null;
                 
-                await _context.Promotion.AddAsync(promotion);
+                await _context.Promotion.AddAsync(insert);
                 await _context.SaveChangesAsync();
                 if (promotion.IsApplyAll == true)
                 {
-                    var rs = await _context.Tour.Where(m => (m.IsDelete == null || m.IsDelete == true)).ToListAsync(); 
+
+                    var rs = await _context.Tour.Where(m => (m.IsDelete == null || m.IsDelete == true)).ToListAsync();
                     foreach(var item in rs)
                     {
                         var obj = await _context.PromotionalTour.Where(m => m.TourId == item.TourId 
                         && (m.IsDelete==null || m.IsDelete==true)).FirstOrDefaultAsync();
                         if(obj !=null) obj.IsDelete = false;
                         PromotionalTour pt = new PromotionalTour();
-                        
-                        pt.PromotionId = promotion.PromotionId;
+                        pt.PromotionId = insert.PromotionId;
                         pt.TourId = item.TourId;
                         pt.DateInsert = DateTime.Now.Date;
                         pt.DateUpdate = DateTime.Now.Date;
@@ -144,11 +151,31 @@ namespace QuanLyTourDuLich.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
+                else
+                {
+                    foreach(var item in promotion.TourList)
+                    {
+                        var obj2 = await _context.PromotionalTour.Where(m => m.TourId == item
+                        && (m.IsDelete == null || m.IsDelete == true)).FirstOrDefaultAsync();
+                        if (obj2 != null) obj2.IsDelete = false;
+                        PromotionalTour pt = new PromotionalTour();
+                        pt.PromotionId = insert.PromotionId;
+                        pt.TourId = item;
+                        pt.DateInsert = DateTime.Now.Date;
+                        pt.DateUpdate = DateTime.Now.Date;
+                        pt.EmpIdinsert = promotion.EmpIdinsert;
+                        pt.EmpIdupdate = promotion.EmpIdupdate;
+                        pt.IsDelete = null;
+                        await _context.PromotionalTour.AddAsync(pt);
+
+                    }
+                    await _context.SaveChangesAsync();
+                }
                 return Ok(promotion);
             }
-            catch
+            catch(Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
             }
         }
 
@@ -173,7 +200,7 @@ namespace QuanLyTourDuLich.Controllers
                 update.DateStart = promotion.DateStart;
                 update.DateEnd = promotion.DateEnd;
                 update.Discount = promotion.Discount;
-                update.IsApplyAll = promotion.IsApplyAll;
+                //update.IsApplyAll = promotion.IsApplyAll;
                 update.EmpIdupdate = promotion.EmpIdupdate;
                 update.DateUpdate = DateTime.Now.Date;
                 await _context.SaveChangesAsync();
@@ -225,7 +252,12 @@ namespace QuanLyTourDuLich.Controllers
                 foreach(var item in listObj)
                 {
                     var rs = await _context.PromotionalTour.Where(m => m.PromotionId == item.PromotionId).ToListAsync();
-                    rs.ForEach(m => m.IsDelete = false);
+                    rs.ForEach(m =>
+                    {
+                        m.IsDelete = false;
+                        m.DateUpdate = DateTime.Now.Date;
+                        m.EmpIdupdate = deleteModels.EmpId;
+                    });
                     await _context.SaveChangesAsync();
                 }
                 await _context.SaveChangesAsync();

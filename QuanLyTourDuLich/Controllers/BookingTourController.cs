@@ -13,6 +13,12 @@ using System.IO;
 using QRCoder;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Microsoft.Extensions.Configuration;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Net;
+using Microsoft.AspNetCore.Hosting;
+using System.Text;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -22,12 +28,85 @@ namespace QuanLyTourDuLich.Controllers
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
-        public BookingTourController(HUFI_09DHTH_TourManagerContext context)
+        public IConfiguration _config;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public BookingTourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _config = config;
+            this._webHostEnvironment = webHostEnvironment;
         }
+        
+
+        [HttpPost("Adm_GetDataBooking")]
+        public async Task<IActionResult> Adm_GetDataBooking([FromBody] BookingTourSearch bookingTour)
+        {
+            try
+            {
+                #region truy vấn thống tin
+                string[] separator = { "," };
+                var rs = await (from bk in _context.BookingTour
+                                join c in _context.Customer on bk.CustomerId equals c.CustomerId
+                                join t in _context.Tour on bk.TourId equals t.TourId
+                                where (bk.IsDelete == null || bk.IsDelete == true)
+                                orderby bk.DateConfirm descending, bk.BookingDate
+                                select new {
+                                    bk.BookingTourId,
+                                    bookingDate = DateTime.Parse(bk.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    BookingDateCheck = bk.BookingDate,
+                                    t.TourId,
+                                    t.TourName,
+                                    c.CustomerId,
+                                    c.CustomerName,
+                                    c.PhoneNumber,
+                                    c.Email,
+                                    bk.QuanityAdult,
+                                    bk.QuanityChildren,
+                                    bk.QuanityBaby,
+                                    bk.QuanityInfant,
+                                    adultUnitPrice = string.Format("{0:0,0đ}", bk.AdultUnitPrice),
+                                    childrenUnitPrice = string.Format("{0:0,0đ}", bk.ChildrenUnitPrice),
+                                    babyUnitPrice = string.Format("{0:0,0đ}", bk.BabyUnitPrice),
+                                    surcharge = string.Format("{0:0,0đ}", bk.Surcharge),
+                                    discount = string.Format("{0:0,0đ}", bk.Discount),
+                                    totalMoney = string.Format("{0:0,0đ}", bk.TotalMoney),
+                                    totalMoneyBooking = string.Format("{0:0,0đ}", bk.TotalMoneyBooking),
+                                    bk.OptionsNote,
+                                    bk.Note,
+                                    bk.Qrcode,
+                                    typePayment = bk.TypePayment == 1 ? "Thanh toán tiền mặt" : "Chuyển khoản",
+                                    status = bk.Status == false ? "Chưa thanh toán" : "Đã xác nhận thanh toán",
+                                    statusCheck = bk.Status,
+                                    empIDConfirm = bk.EmpIdconfirm == null ? "Chưa cập nhật" : bk.EmpIdconfirmNavigation.EmpName,
+                                    dateConfirm = bk.DateConfirm == null ? "Chua xác nhận" : DateTime.Parse(bk.DateConfirm.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+
+                                }).ToListAsync();
+                #endregion
+
+                if(bookingTour.TourID !=null)
+                {
+                    rs = rs.Where(m => m.TourId == bookingTour.TourID).ToList();
+                }
+                if(bookingTour.BookingDate != null)
+                {
+                    rs = rs.Where(m => m.BookingDateCheck == bookingTour.BookingDate).ToList();
+                }
+                if(bookingTour.Status != null)
+                {
+                    rs = rs.Where(m => m.statusCheck == bookingTour.Status).ToList();
+                }
+                return Ok(rs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
+
+
         // [Nguyen Tan Hai][12/17/2021]
         // Đặt tour
+        
         [HttpPost("Adm_CreateBookingTour")]
         public async Task<ActionResult<Employee>> Adm_CreateBookingTour([FromBody] BookingTourModels bookingTourModels)
         {
@@ -111,9 +190,9 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
-                string[] separator = { "^||||^" };
-                string a = "anh asdhsads ^||^ sadhajsdhjashdajsd ^||||^ anh asdhsads ^||^ sadhajsdhjashdajsd anh asdhsads ^||^ sadhajsdhjashdajsd ^||||^ anh asdhsads ^||^ sadhajsdhjashdajsd";
-                string[] arrr = a.Split(separator, System.StringSplitOptions.RemoveEmptyEntries);
+                string[] separatorAddress = { "||" };
+                //
+                #region truy vấn thông tin
                 var rs = await (from bt in _context.BookingTour
                                 join c in _context.Customer on bt.CustomerId equals c.CustomerId
                                 join t in _context.Tour on bt.TourId equals t.TourId
@@ -148,10 +227,30 @@ namespace QuanLyTourDuLich.Controllers
                                     departurePlaceFrom = pf.ProvinceName,
                                     journeys= pf.ProvinceName + " - "+ pt.ProvinceName+ " - "+ pf.ProvinceName,
                                     qrCode = string.Format("data:image/png;base64,{0}", Convert.ToBase64String(bt.Qrcode))
+
                                 }).FirstOrDefaultAsync();
+                #endregion
                 if (rs == null)
                 {
                     return NotFound();
+                }
+                string Address = rs.Address;
+                if (rs.Address != null)
+                {
+                    string[] arrAdress = rs.Address.Split(separatorAddress, System.StringSplitOptions.RemoveEmptyEntries).ToArray();
+                    Address = arrAdress[0].ToString();
+                    string wards = "";
+                    string provice = "";
+                    string districts = "";
+                    if (arrAdress.Length == 4)
+                    {
+
+                        wards = await _context.Wards.Where(m => m.WardId == int.Parse(arrAdress[1].Trim().ToString())).Select(m => m.WardName).FirstOrDefaultAsync();
+                        districts = await _context.District.Where(m => m.DistrictId == int.Parse(arrAdress[2].Trim().ToString())).Select(m => m.DistrictName).FirstOrDefaultAsync();
+                        provice = await _context.Province.Where(m => m.ProvinceId == int.Parse(arrAdress[3].Trim().ToString())).Select(m => m.ProvinceName).FirstOrDefaultAsync();
+                        Address = Address + ", " + wards + ", " + districts + ", " + provice;
+                    }
+
                 }
                 return Ok(rs);
             }
@@ -161,7 +260,190 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        
+        [HttpGet("Adm_AcceptBooking")]
+        public async Task<ActionResult> Adm_AcceptBooking(Guid pID)
+        {
+            try
+            {
+                var rs = await (from bt in _context.BookingTour
+                                where bt.BookingTourId==pID && (bt.IsDelete==true || bt.IsDelete== null)
+                                orderby bt.DateConfirm descending, bt.BookingDate
+
+                                select bt).FirstOrDefaultAsync();
+                if (rs == null)
+                {
+                    return NotFound();
+                }
+                if (rs.Status == true)
+                {
+                    return StatusCode(StatusCodes.Status204NoContent, "");
+                }
+                rs.Status = true;
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
+
+        [HttpGet("Adm_SendEmailAfterBooking")]
+        public async Task<ActionResult> Adm_SendEmailAfterBooking(Guid? pID, int? type=null)
+        {
+            try
+            {
+                string[] separator = { "," };
+                string[] separatorAddress = { "||" };
+                #region
+                var rs = await (from bt in _context.BookingTour
+                                join c in _context.Customer on bt.CustomerId equals c.CustomerId
+                                join t in _context.Tour on bt.TourId equals t.TourId
+                                join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                where bt.BookingTourId == pID
+                                select new
+                                {
+                                    bt.BookingTourId,
+                                    bt.Discount,
+                                    bt.TotalMoneyBooking,
+                                    bt.IsDelete,
+                                    bt.TotalMoney,
+                                    bt.Surcharge,
+                                    bt.TypePayment,
+                                    t.TourId,
+                                    c.CustomerName,
+                                    c.Email,
+                                    c.Address,
+                                    c.PhoneNumber,
+                                    bookingDate = DateTime.Parse(bt.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    bt.Status,
+                                    duration = DateTime.Parse(bt.BookingDate.ToString()).AddDays(2).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
+                                    t.TourName,
+                                    bt.QuanityAdult,
+                                    bt.QuanityChildren,
+                                    bt.QuanityBaby,
+                                    bt.QuanityInfant,
+                                    optionsNote = bt.OptionsNote==null?null: bt.OptionsNote.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).ToArray(),
+                                    dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    departurePlaceFrom = pf.ProvinceName,
+                                    journeys = pf.ProvinceName + " - " + pt.ProvinceName + " - " + pf.ProvinceName,
+                                    qrCode = string.Format("data:image/png;base64,{0}", Convert.ToBase64String(bt.Qrcode))
+
+                                }).FirstOrDefaultAsync();
+                #endregion
+                string arrayOptonsNote = string.Join(", ", _context.CatEnumeration.Where(m => rs.optionsNote.Contains(m.EnumerationName)).Select(m => m.EnumerationTranslate).ToList());
+                string Address = rs.Address;
+                if (rs.Address != null)
+                {
+                    string[] arrAdress = rs.Address.Split(separatorAddress, System.StringSplitOptions.RemoveEmptyEntries).ToArray();
+                    Address = arrAdress[0].ToString();
+                    string wards = "";
+                    string provice = "";
+                    string districts = "";
+                    if (arrAdress.Length == 4)
+                    {
+
+                        wards = await _context.Wards.Where(m => m.WardId == int.Parse(arrAdress[1].Trim().ToString())).Select(m => m.WardName).FirstOrDefaultAsync();
+                        districts = await _context.District.Where(m => m.DistrictId == int.Parse(arrAdress[2].Trim().ToString())).Select(m => m.DistrictName).FirstOrDefaultAsync();
+                        provice = await _context.Province.Where(m => m.ProvinceId == int.Parse(arrAdress[3].Trim().ToString())).Select(m => m.ProvinceName).FirstOrDefaultAsync();
+                        Address = Address + ", " + wards + ", " + districts + ", " + provice;
+                    }
+                    
+                }
+                if (type != null)
+                {
+                    if (type == 1)
+                    {
+                        if (rs.Status == false)
+                        {
+                            return StatusCode(StatusCodes.Status204NoContent, "Vui lòng xác nhận thanh toán booking này trước khi gửi mail!");
+                        }
+                    }
+                }
+                // send email
+                string FilePath = $"{this._webHostEnvironment.WebRootPath}\\BookingDetails.html";
+                StreamReader str = new StreamReader(FilePath);
+                string MailText = str.ReadToEnd();
+                str.Close();
+                MailText = MailText.Replace("{ImageQRCode}", $"{rs.qrCode}");
+                MailText = MailText.Replace("{FullName}", $"{rs.CustomerName}");
+                MailText = MailText.Replace("{Email}", $"{rs.Email}");
+                MailText = MailText.Replace("{Address}", $"{Address}");
+                MailText = MailText.Replace("{PhoneNumber}", $"{rs.PhoneNumber}");
+                MailText = MailText.Replace("{QuanityAdult}", $"{rs.QuanityAdult}");
+                MailText = MailText.Replace("{QuanityChildren}", $"{rs.QuanityChildren}");
+                MailText = MailText.Replace("{QuanityBaby}", $"{rs.QuanityBaby}");
+                MailText = MailText.Replace("{QuanityInfant}", $"{rs.QuanityInfant}");
+                MailText = MailText.Replace("{OptionsNote}", $"{arrayOptonsNote}");
+
+                //
+                MailText = MailText.Replace("{BookingID}", $"{rs.BookingTourId}");
+                MailText = MailText.Replace("{TourID}", $"{rs.TourId}");
+                MailText = MailText.Replace("{TotalMoney}", $"{rs.TotalMoney}");
+                MailText = MailText.Replace("{PhoneNumber}", $"{rs.PhoneNumber}");
+                MailText = MailText.Replace("{DateStart}", $"{rs.dateStart}");
+                MailText = MailText.Replace("{DateEnd}", $"{rs.dateEnd}");
+                MailText = MailText.Replace("{DeparturePlaceFrom}", $"{rs.departurePlaceFrom}");
+                string typePayment = rs.TypePayment == 1 ? "Thanh toán tiền mặt" : "Chuyển khoản";
+                MailText = MailText.Replace("{TypePayment}", $"{typePayment}");
+                string host = $"http://localhost:3000/my-tour/show-customer-for-booking-tour-details/bookingID={rs.BookingTourId}";
+                MailText = MailText.Replace("{HrefBookingDetails}", host);
+                string status = rs.Status==false?"Chưa thanh toán": "Đã thanh toán";
+                MailText = MailText.Replace("{Status}", $"{status}");
+                MailText = MailText.Replace("{Duration}", $"{rs.duration}");
+                MailText = MailText.Replace("{ImageLogo}", "https://storage.googleapis.com/tripi-assets/mytour/icons/icon_company_group.svg");
+                //$"{rs.Email.Trim()}"
+                string sending = SendEmail("nguyenhai2801a@gmail.com", "Phiếu xác nhận Booking", MailText);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
+
+
+        //======================== send email
+        public string SendEmail(string to, string subject, string html)
+        {
+            try
+            {
+                // create message
+                var sysLogin = _config["Emailkey:SmtpUser"].ToString();
+                var sysPass = _config["Emailkey:SmtpPass"].ToString();
+                var sysAddress = new MailAddress(sysLogin, "Mytour.surge.sh");
+                var receiverAddress = new MailAddress(to);
+
+                // send email
+                var sMTPClient = new SmtpClient {
+                    Host = _config["Emailkey:SmtpHost"].ToString(),
+                    EnableSsl = true,
+                    Port = int.Parse(_config["Emailkey:SmtpPort"].ToString()),
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(sysLogin,sysPass )
+                };
+                using (var email = new MailMessage(sysAddress,receiverAddress) { 
+                    Subject= subject,
+                    IsBodyHtml= true,
+                    Body= html,
+                })
+                {
+                    sMTPClient.Send(email);
+                } 
+                return "Send mail success";
+            }catch(Exception ex)
+            {
+                return $"{ex}";
+            }
+            
+        }
+
+
+
 
     }
 }

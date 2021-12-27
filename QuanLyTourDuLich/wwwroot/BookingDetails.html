@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 style="margin: 0 auto;text-align: center;font-size: 15px; color: #2d4271; font-weight: 600; margin-bottom: 20px;">Phiếu xác nhận booking</h1>
+    <div>
+        <h1 style="color: rgb(253, 80, 86);font-size: 15px;font-weight: 600;">THÔNG TIN LIÊN LẠC</h1>
+        <hr>
+        <div style="display: flex;justify-content: flex-start;align-items: center;">
+            <div style="width: 400px;">
+                <p style="font-size: 14px; color: #0c0505;">
+                    Họ tên:
+                    <span style="color: #2d4271; margin-left: 10px;">{FullName}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Email:
+                    <span style="color: #2d4271; margin-left: 10px;">{Email}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Địa chỉ:
+                    <span style="color: #2d4271; margin-left: 10px;">{Address}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Số điện thoại:
+                    <span style="color: #2d4271; margin-left: 10px;">{PhoneNumber}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Số lượng khách:
+                    <span style="color: #2d4271; margin-left: 10px;">{QuanityAdult} người lớn, {QuanityChildren} Trẻ em, {QuanityBaby} Trẻ nhỏ, {QuanityInfant} Em bé</span>
+                </p>
+            </div>
+            <div style="margin-left: 20px;">
+                <img style="width: 150px; height: 140px; object-fit: cover;border-radius: 0px;" src="{ImageQRCode}"  />
+            </div>
+        </div>
+    </div>
+    <div>
+        <h1 style="color: rgb(253, 80, 86);font-size: 15px;font-weight: 600;">Chi tiết Booking</h1>
+        <hr>
+        <div style="display: flex;justify-content: flex-start;align-items: center;">
+            <div style="width: 1000px;">
+                <p style="font-size: 14px; color: #0c0505;">
+                    Mã booking:
+                    <span style="color: rgb(253, 80, 86); margin-left: 10px;">{BookingID}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Mã tour:
+                    <span style="color: #2d4271; margin-left: 10px;">{TourID}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Trị giá booking:
+                    <span style="color: #2d4271; margin-left: 10px;">{TotalMoney}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Ngày đi:
+                    <span style="color: #2d4271; margin-left: 10px;">{DateStart}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Ngày vê:
+                    <span style="color: #2d4271; margin-left: 10px;">{DateEnd}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Nơi khỏi hành:
+                    <span style="color: #2d4271; margin-left: 10px;">{DeparturePlaceFrom}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Nơi khỏi hành:
+                    <span style="color: #2d4271; margin-left: 10px;">{OptionsNote}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Hình thức thanh toán:
+                    <span style="color: #2d4271; margin-left: 10px;">{TypePayment}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Tình trạng:
+                    <span style="color: #2d4271; margin-left: 10px;">{Status}</span>
+                </p>
+                <p style="font-size: 14px; color: #0c0505;">
+                    Hạn thanh toán:
+                    <span style="color: #2d4271; margin-left: 10px; color: rgb(253, 80, 86);">{Duration}</span>
+                </p>
+            </div>
+        </div>
+        <hr>
+        <p style="font-size: 14px; color: rgb(253, 80, 86);">
+            Xem chi tiết tại:
+            <a  href="{HrefBookingDetails}" style="margin-left: 10px;">Mytou.surge.sh</a>
+        </p>
+    </div>
+    <hr>
+    <div style="padding: 12px 0px 12px 0px; width: 100%;">
+        <p style="text-align: center;font-size: 13px;line-height: 24px;">
+            Mytour là thành viên của VNTravel Group - Một trong những tập đoàn
+            đứng đầu Đông Nam Á về du lịch trực tuyến và các dịch vụ liên quan
+        </p>
+        <div style="margin: 12px 0px 12px 0px; display: flex;justify-content: center; align-items: center;">
+            <img style="width: 392px;height: 32px;" src="{ImageLogo}" alt="" />
+            <!--<img  src="" https: //beansoftware.com/Images/Logo.jpg"" alt="" Logo"">-->
+        </div>
+        <p style="text-align: center;font-size: 13px;line-height: 24px;">
+            Copyright © 2020 - CÔNG TY CỔ PHẦN DU LỊCH VIỆT NAM VNTRAVEL - Đăng
+            ký kinh doanh số 0108886908 - do Sở Kế hoạch và Đầu tư thành phố Hà
+            Nội cấp lần đầu ngày 04 tháng 09 năm 2019
+        </p>
+    </div>
+</body>
+</html>
