@@ -70,11 +70,11 @@ namespace QuanLyTourDuLich.Controllers
                             {
                                 emp.EmpId,
                                 emp.EmpName,
-                                emp.Gender,
-                                emp.DateOfBirth,
-                                emp.PhoneNumber,
-                                emp.Email,
-                                emp.Avatar,
+                                //emp.Gender,
+                                //emp.DateOfBirth,
+                                //emp.PhoneNumber,
+                                //emp.Email,
+                                //emp.Avatar,
                             },
                             accessTokenEmp = new JwtSecurityTokenHandler().WriteToken(token)
                         });

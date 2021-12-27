@@ -12,6 +12,11 @@ namespace QuanLyTourDuLich.SearchModels
         public bool? IsApplyAll{ get; set; }
     }
 
+    public class PromotionModels: Promotion
+    {
+        public List<Guid> TourList { get; set; }
+    }
+
     public class UnitPriceSearch
     {
         public Guid? TravelTypeID { get; set; }

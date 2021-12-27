@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -36,8 +37,6 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
-                //EmailService.Send("nguyenhai15040206@gmail.com", "nguyenhai15040206@gmail.com", "Noi dung", "<p>This test</p>");
-                //bool kq = EmailService.Send("nguyenhai15040206@gmail.com", "Tanhai123", "smtp.gmail.com", 25, "thaikieudiem2801@gmail.com", "Alo alo", "Bạn vừa nhận được liên hê từ: <b>{0}</b><br/>Email: {1}<br/>Nội dung: </br>");
                 Guid travelType = new Guid();
                 bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
                 var tourList = await (from t in _context.Tour
@@ -58,7 +57,7 @@ namespace QuanLyTourDuLich.Controllers
                                           t.TourName,
                                           tourImg = BaseUrlServer + t.TourImg.Trim(),
                                           t.DateStart,
-                                          dateStartFormat= DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                          dateStartFormat = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                           TotalDays = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,
                                           TotalCurrentQuanity = t.QuanityMax - t.CurrentQuanity,
                                           t.Rating,
@@ -67,12 +66,16 @@ namespace QuanLyTourDuLich.Controllers
                                           t.TravelTypeId,
                                           type.EnumerationTranslate,
                                           t.GroupNumber,
-                                          promotion = a.IsDelete ==false? null: b.Discount,
+                                          //promotion = a.IsDelete ==false? null: b.DateEnd < DateTime.Now.Date? null: b.Discount,
+                                          promotion =  _context.PromotionalTour.Where(m => (m.IsDelete == null || m.IsDelete == true) 
+                                                                && m.TourId==t.TourId && m.Promotion.DateEnd >= DateTime.Now.Date)
+                                                                .OrderByDescending(m=>m.Promotion.DateEnd).Select(m=>m.Promotion.Discount).FirstOrDefault(),
                                           ptt.Regions,
                                           t.Suggest,
                                           //tourGuideName = a.TourGuideName?? null,
                                       }).Distinct().ToListAsync();
                 var listObj = tourList.GroupBy(x => x.TourName.Trim()).Select(m => m.FirstOrDefault());
+                // lọc các tour khi người dùng click vào trang details => lọc ra các tour có chứa 
                 if(regions != null)
                 {
                     listObj = listObj.Where(m => m.Regions == regions).ToList();
@@ -115,7 +118,7 @@ namespace QuanLyTourDuLich.Controllers
                                         // Xử lý search 
                                         // nếu check == true => xuất tất cả => ngược lại (với trạng thái isDelete là Null)
                                     where (t.IsDelete == null || t.IsDelete == true) && (td.IsDelete == null || td.IsDelete == true)
-                                    orderby t.DateUpdate descending
+                                    orderby t.DateUpdate descending, t.DateStart ascending
                                     select new
                                     {
                                         t.TourId,
@@ -184,6 +187,8 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
+        
         [HttpPost("Cli_GetDataTourSearch")]
         public async Task<ActionResult> Cli_GetDataTourSearch([FromBody] TourSearchModelClient tourSearch = null)
         {
@@ -194,6 +199,10 @@ namespace QuanLyTourDuLich.Controllers
                                 join tt in _context.CatEnumeration on t.TravelTypeId equals tt.EnumerationId
                                 join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
                                 join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                join ptt in _context.PromotionalTour on t.TourId equals ptt.TourId into tpt
+                                from a in tpt.DefaultIfEmpty()
+                                join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
+                                from b in kma.DefaultIfEmpty()
                                 where (t.IsDelete == null || t.IsDelete == true) && t.DateStart >= DateTime.Now.Date.AddDays(1)
                                 orderby t.DateUpdate descending
                                 select new TourModel {
@@ -205,6 +214,7 @@ namespace QuanLyTourDuLich.Controllers
                                     DateEnd = t.DateEnd,
                                     TotalDays = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,
                                     Rating = t.Rating,
+                                    GroupNumber = t.GroupNumber,
                                     AdultUnitPrice = t.AdultUnitPrice,
                                     ChildrenUnitPrice = t.ChildrenUnitPrice,
                                     BabyUnitPrice = t.BabyUnitPrice,
@@ -217,9 +227,14 @@ namespace QuanLyTourDuLich.Controllers
                                     TotalCurrentQuanity = t.QuanityMax - t.CurrentQuanity,
                                     CurrentQuanity = t.CurrentQuanity,
                                     TravelTypeId = t.TravelTypeId,
-                                    TravelTypeName = tt.EnumerationTranslate
+                                    TravelTypeName = tt.EnumerationTranslate,
+                                    Promotion = _context.PromotionalTour.Where(m => (m.IsDelete == null || m.IsDelete == true)
+                                                                && m.TourId == t.TourId && m.Promotion.DateEnd >= DateTime.Now.Date)
+                                                                .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
 
-                                }).ToListAsync();
+                                }).Distinct().ToListAsync();
+
+                var listObjTemp = rs.GroupBy(x => x.TourId).Select(m => m.FirstOrDefault());
 
                 // lấy loại phương tiên => để lọc theo phương tiện
                 var cat_Enum = await _context.CatEnumeration.Where(m => (m.IsDelete == null || m.IsDelete == true)
@@ -228,19 +243,19 @@ namespace QuanLyTourDuLich.Controllers
                 #region lọc bởi các điều kiện cơ bản
                 if (tourSearch.TravelTypeID != null)
                 {
-                    rs = rs.Where(m => m.TravelTypeId == tourSearch.TravelTypeID).ToList();
+                    listObjTemp = listObjTemp.Where(m => m.TravelTypeId == tourSearch.TravelTypeID).ToList();
                 }
                 if (tourSearch.DeparturePlaceFrom != null)
                 {
-                    rs = rs.Where(m => m.DeparturePlaceFrom == tourSearch.DeparturePlaceFrom).ToList();
+                    listObjTemp = listObjTemp.Where(m => m.DeparturePlaceFrom == tourSearch.DeparturePlaceFrom).ToList();
                 }
                 if (tourSearch.DeparturePlaceTo != null)
                 {
-                    rs = rs.Where(m => m.DeparturePlaceTo == tourSearch.DeparturePlaceTo).ToList();
+                    listObjTemp = listObjTemp.Where(m => m.DeparturePlaceTo == tourSearch.DeparturePlaceTo).ToList();
                 }
                 if (tourSearch.DateStart != null)
                 {
-                    rs = rs.Where(m => m.DateStart >= tourSearch.DateStart).ToList();
+                    listObjTemp = listObjTemp.Where(m => m.DateStart >= tourSearch.DateStart).ToList();
                 }
                 #endregion
 
@@ -263,7 +278,7 @@ namespace QuanLyTourDuLich.Controllers
                             listObjNew.Add(rs[i]);
                         }
                     }
-                    rs = listObjNew;
+                    listObjTemp = listObjNew;
                 }
 
                 #endregion
@@ -306,7 +321,7 @@ namespace QuanLyTourDuLich.Controllers
                             listObjNew.Add(rs[i]);
                         }
                     }
-                    rs = listObjNew;
+                    listObjTemp = listObjNew;
                 }
 
                 #endregion
@@ -325,7 +340,7 @@ namespace QuanLyTourDuLich.Controllers
 
                 #region phân trang
 
-                int totalRecord = rs.Count();
+                int totalRecord = listObjTemp.Count();
                 var pagination = new Pagination
                 {
                     count = totalRecord,
@@ -336,7 +351,7 @@ namespace QuanLyTourDuLich.Controllers
                     indexTwo = (((tourSearch.Page - 1) * tourSearch.Limit + tourSearch.Limit) <= totalRecord ? ((tourSearch.Page - 1) * tourSearch.Limit * tourSearch.Limit) : totalRecord)
                 };
 
-                var listObj = rs.Skip((tourSearch.Page - 1) * tourSearch.Limit).Take(tourSearch.Limit).ToList();
+                var listObj = listObjTemp.Skip((tourSearch.Page - 1) * tourSearch.Limit).Take(tourSearch.Limit).ToList();
                 #endregion
                 return Ok(new {
                     data = listObj,
@@ -466,7 +481,9 @@ namespace QuanLyTourDuLich.Controllers
                                              surcharge = t.Surcharge,
                                              p.ProvinceName,
                                              t.GroupNumber,
-                                             promotion = b.Discount,
+                                             promotion = _context.PromotionalTour.Where(m => (m.IsDelete == null || m.IsDelete == true)
+                                                               && m.TourId == t.TourId && m.Promotion.DateEnd >= DateTime.Now.Date)
+                                                                .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
                                              t.TravelTypeId,
                                              t.TravelType.EnumerationTranslate,
                                              tourDetails = (from td in _context.TourDetails

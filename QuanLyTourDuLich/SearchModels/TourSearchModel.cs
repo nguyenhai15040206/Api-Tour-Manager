@@ -66,6 +66,7 @@ namespace QuanLyTourDuLich.SearchModels
         public int? QuanityMax { get; set; }
         public int? QuanityMin { get; set; }
         public int? CurrentQuanity { get; set; }
+        public int? GroupNumber { get; set; }
         public decimal? AdultUnitPrice { get; set; }
         public decimal? ChildrenUnitPrice { get; set; }
         public decimal? BabyUnitPrice { get; set; }
@@ -77,5 +78,6 @@ namespace QuanLyTourDuLich.SearchModels
         public int? TotalDays { get; set; }
         public Guid? TravelTypeId { get; set; }
         public string TravelTypeName { get; set; }
+        public double? Promotion { get; set; }
     }
 }
