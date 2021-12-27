@@ -65,10 +65,10 @@ namespace QuanLyTourDuLich.Controllers
                         data = new { 
                             customer.CustomerId,
                             customer.CustomerName,
-                            customer.Gender,
-                            customer.PhoneNumber,
-                            customer.Email,
-                            customer.Address,
+                            //customer.Gender,
+                            //customer.PhoneNumber,
+                            //customer.Email,
+                            //customer.Address,
                         },
                         accessToken = new JwtSecurityTokenHandler().WriteToken(token)
                     });
@@ -396,6 +396,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                string[] separator = { "||" };
                 var rs = await (from c in _context.Customer
                                 where c.CustomerId == CustomerId
                                 select new
@@ -403,6 +404,7 @@ namespace QuanLyTourDuLich.Controllers
                                     c.CustomerId,
                                     c.CustomerName,
                                     c.Email,
+                                    c.Gender,
                                     c.PhoneNumber,
                                     c.Address,
                                 }).FirstOrDefaultAsync();
@@ -416,6 +418,7 @@ namespace QuanLyTourDuLich.Controllers
 
         //Cập nhật thông tin khách hàng
         [HttpPut("MB_Cli_UpdateCustomer")]
+        [Authorize]
         public async Task<IActionResult> Cli_UpdateCustomer([FromBody] Customer cus)
         {
             try
@@ -429,15 +432,35 @@ namespace QuanLyTourDuLich.Controllers
                     var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
                     if (email > 0)
                     {
-                        return StatusCode(StatusCodes.Status400BadRequest, "Email đã tồn tại");
+                        return StatusCode(StatusCodes.Status409Conflict, "Email đã tồn tại");
                     }
                 }
-                rs.CustomerName = cus.CustomerName;
+                if(cus.CustomerName != null)
+                {
+                    rs.CustomerName = cus.CustomerName;
+                }
+                if(cus.Gender != null)
+                {
+                    rs.Gender = cus.Gender;
+                }
+                if(cus.PhoneNumber != null)
+                {
+                    rs.PhoneNumber = cus.PhoneNumber;
+                }
+                
                 rs.DateUpdate = DateTime.Now.Date;
-                rs.Email = cus.Email;
-                rs.Address = cus.Address;
+                if (cus.Email != null)
+                {
+                    rs.Email = cus.Email;
+                }
+                if(cus.Address != null)
+                {
+                    rs.Address = cus.Address;
+                }
+                
+                
                 await _context.SaveChangesAsync();
-                return Ok(rs);
+                return Ok();
             }
             catch
             {
