@@ -21,7 +21,7 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
 
-        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)

@@ -292,7 +292,6 @@ namespace QuanLyTourDuLich.Controllers
 
         //kiểm tra số điện thoại có tồn tại
         [HttpGet("MB_Cli_CheckPhoneCustomer")]
-
         public async Task<IActionResult> Cli_CheckPhoneCustomer(string phoneNumber)
         {
             try
