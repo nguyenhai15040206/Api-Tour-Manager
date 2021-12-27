@@ -184,82 +184,6 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
         
-        // phiếu xác nhận booking tour
-        [HttpGet("Adm_BookingTourDetails")]
-        public async Task<ActionResult> Adm_GetBookingTourDetails(Guid pID)
-        {
-            try
-            {
-                string[] separatorAddress = { "||" };
-                //
-                #region truy vấn thông tin
-                var rs = await (from bt in _context.BookingTour
-                                join c in _context.Customer on bt.CustomerId equals c.CustomerId
-                                join t in _context.Tour on bt.TourId equals t.TourId
-                                join pf in _context.Province on t.DeparturePlaceFrom equals pf .ProvinceId
-                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
-                                where bt.BookingTourId == pID
-                                select new
-                                {
-                                    bt.BookingTourId,
-                                    bt.Discount,
-                                    bt.TotalMoneyBooking,
-                                    bt.IsDelete,
-                                    bt.TotalMoney,
-                                    bt.Surcharge,
-                                    bt.TypePayment,
-                                    t.TourId,
-                                    c.CustomerName,
-                                    c.Email,
-                                    c.Address,
-                                    c.PhoneNumber,
-                                    bookingDate = DateTime.Parse(bt.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                    bt.Status,
-                                    duration = DateTime.Parse(bt.BookingDate.ToString()).AddDays(2).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
-                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
-                                    t.TourName,
-                                    bt.QuanityAdult,
-                                    bt.QuanityChildren,
-                                    bt.QuanityBaby,
-                                    bt.QuanityInfant,
-                                    dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                    dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                    departurePlaceFrom = pf.ProvinceName,
-                                    journeys= pf.ProvinceName + " - "+ pt.ProvinceName+ " - "+ pf.ProvinceName,
-                                    qrCode = string.Format("data:image/png;base64,{0}", Convert.ToBase64String(bt.Qrcode))
-
-                                }).FirstOrDefaultAsync();
-                #endregion
-                if (rs == null)
-                {
-                    return NotFound();
-                }
-                string Address = rs.Address;
-                if (rs.Address != null)
-                {
-                    string[] arrAdress = rs.Address.Split(separatorAddress, System.StringSplitOptions.RemoveEmptyEntries).ToArray();
-                    Address = arrAdress[0].ToString();
-                    string wards = "";
-                    string provice = "";
-                    string districts = "";
-                    if (arrAdress.Length == 4)
-                    {
-
-                        wards = await _context.Wards.Where(m => m.WardId == int.Parse(arrAdress[1].Trim().ToString())).Select(m => m.WardName).FirstOrDefaultAsync();
-                        districts = await _context.District.Where(m => m.DistrictId == int.Parse(arrAdress[2].Trim().ToString())).Select(m => m.DistrictName).FirstOrDefaultAsync();
-                        provice = await _context.Province.Where(m => m.ProvinceId == int.Parse(arrAdress[3].Trim().ToString())).Select(m => m.ProvinceName).FirstOrDefaultAsync();
-                        Address = Address + ", " + wards + ", " + districts + ", " + provice;
-                    }
-
-                }
-                return Ok(rs);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
-            }
-        }
-
         [HttpGet("Adm_AcceptBooking")]
         public async Task<ActionResult> Adm_AcceptBooking(Guid pID)
         {
@@ -441,9 +365,44 @@ namespace QuanLyTourDuLich.Controllers
             }
             
         }
+        
+        
+        //
+        ///get tour theo id customer,
+        ///
+        [HttpGet("MB_GetBookedByCustomer")] 
+        public async Task<IActionResult> MB_GetBookedByCustomer(Guid? customerId)
+        {
+            try
+            {
+                var rs = await (from b in _context.BookingTour
+                                join c in _context.Customer on b.CustomerId equals c.CustomerId
+                                join t in _context.Tour on b.TourId equals t.TourId
+                                join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                where b.CustomerId == customerId
+                                select new
+                                {
+                                    b.BookingTourId,
+                                    t.TourName,
+                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
+                                    t.Rating,
+                                    dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    bookingDate = DateTime.Parse(b.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    departurePlaceFrom = pf.ProvinceName,
+                                    journeys = pf.ProvinceName + " - " + pt.ProvinceName + " - " + pf.ProvinceName,
+                                    b.TotalMoney,
+                                    b.TotalMoneyBooking,
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
 
-
-
+        }
 
     }
 }

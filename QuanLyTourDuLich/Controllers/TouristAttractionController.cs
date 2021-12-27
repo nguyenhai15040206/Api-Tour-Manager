@@ -20,7 +20,7 @@ namespace QuanLyTourDuLich.Controllers
         /// <summary>
         /// [Thái Trần Kiều Diễm 20211109- xử lý danh sách địa điểm du lịch]
         /// </summary>
-        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTouristAttractions/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
 
         public TouristAttractionController(HUFI_09DHTH_TourManagerContext context)
@@ -289,6 +289,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                string[] separator = { "||" };
                 bool checkModelSearchIsNull = true;
                 bool istouristAttrName = (!string.IsNullOrEmpty(TouristAttrName));
                 bool isprovinceID = false;
@@ -315,7 +316,7 @@ namespace QuanLyTourDuLich.Controllers
                                             t.TouristAttrId,
                                             t.TouristAttrName,
                                             Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            ImagesList = t.ImagesList.Trim(),
+                                            ImagesList = BaseUrlServer + t.ImagesList==null?null: t.ImagesList.Trim().Split(separator, StringSplitOptions.RemoveEmptyEntries)[0].ToString().Trim(),
                                             p.ProvinceName
                                         }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = _context.TouristAttraction.Where(m => (m.IsDelete == null || m.IsDelete == true)&&m.TouristAttrName.Contains(TouristAttrName)).Count();
@@ -342,80 +343,6 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
-
-
-        /// <summary>
-        /// get tour theo ten tinh thanh
-        /// </summary>
-        /// <param name="ProvinceName"></param>
-        /// <param name="page"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        [HttpGet("MB_Cli_GetTourAttractByProvinceName")]
-        public async Task<IActionResult> Cli_GetTourAttractByProvinceName(string ProvinceName = null, int page = 1, int limit = 10)
-        {
-            try
-            {
-                bool checkModelSearchIsNull = true;
-                bool isProvinceName = (!string.IsNullOrEmpty(ProvinceName));
-                bool isprovinceID = false;
-                //if (ProvinceID.Length > 0)
-                //{
-                //    isprovinceID = true;
-                //}
-
-                if (isprovinceID || isProvinceName)
-                {
-                    checkModelSearchIsNull = false;
-                }
-
-                var tourAttrac = await (from t in _context.TouristAttraction
-                                        join p in _context.Province on t.ProvinceId equals p.ProvinceId
-                                        join e in _context.Employee on t.EmpIdupdate equals e.EmpId
-                                        where checkModelSearchIsNull == true ? (t.IsDelete == null || t.IsDelete == true)
-                                         : (
-                                            (t.IsDelete == null || t.IsDelete == true)
-                                             && (isProvinceName && p.ProvinceName.Contains(ProvinceName))
-                                        )
-                                        orderby t.DateUpdate descending
-                                        select new
-                                        {
-                                            t.TouristAttrId,
-                                            t.TouristAttrName,
-                                            Description = t.Description != "null" ? t.Description : "Chưa cập nhật",
-                                            ImagesList = BaseUrlServer + t.ImagesList.Trim(),
-                                            p.ProvinceName
-                                        }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                int totalRecord = (from t in _context.TouristAttraction
-                                   join p in _context.Province on t.ProvinceId equals p.ProvinceId
-                                   where (t.IsDelete == null || t.IsDelete == true)
-                                         && (isProvinceName && p.ProvinceName.Contains(ProvinceName))
-                                   select t).Count();
-                    //_context.TouristAttraction.Where(m => (m.IsDelete == null || m.IsDelete == true)&& _context.Province.Where(p => p.ProvinceName.Contains(ProvinceName))).Count();
-                    // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
-                var pagination = new Pagination
-                {
-                    count = totalRecord,
-                    currentPage = page,
-                    pagsize = limit,
-                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
-                    indexOne = ((page - 1) * limit + 1),
-                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
-                };
-                // status code 200
-                return Ok(new
-                {
-                    data = tourAttrac,
-                    pagination = pagination
-
-                });
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
-
 
         ///get touristAttractionDetails
         ///

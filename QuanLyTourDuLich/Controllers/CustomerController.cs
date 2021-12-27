@@ -297,12 +297,19 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
-                var phone =  _context.Customer.Where(m => m.PhoneNumber == phoneNumber).Count();
-                if (phone > 0)
+                var rs = await (from c in _context.Customer
+                                where c.PhoneNumber == phoneNumber
+                                select c).FirstOrDefaultAsync();
+                if (rs != null && rs.Password!=null )
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, "Số điện thoại đã tồn tại");
                 }
+                if (rs != null)
+                {
+                    return Ok(rs);
+                }
                 return Ok();
+                
             }
             catch
             {
@@ -326,7 +333,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
 
                 var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
-                if (phone > 0)
+                if (email > 0)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest, "Tài khoản email đã tồn tại");
                 }
@@ -342,6 +349,45 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
 
+        }
+
+        //regisster khasch hangf khi da co so dien thoai(update)
+        [HttpPut("MB_RegisterPhoneNumber")]
+        public async Task<IActionResult> MB_RegisterPhoneNumber([FromBody] Customer cus)
+        {
+            try
+            {
+                var rs = await (from c in _context.Customer
+                                where c.PhoneNumber == cus.PhoneNumber
+                                select c).FirstOrDefaultAsync();
+                var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
+                if (email > 0)
+                {
+                    if(rs.Email!=cus.Email)
+                    {
+                        return StatusCode(StatusCodes.Status400BadRequest, "Tài khoản email đã tồn tại");
+                    }
+                    else {
+                        rs.CustomerName = cus.CustomerName;
+                        rs.Email = cus.Email;
+                        rs.Password = cus.Password;
+                        rs.DateUpdate = DateTime.Now.Date;
+                        await _context.SaveChangesAsync();
+                        return Ok(rs);
+                    }
+                }
+                rs.CustomerName = cus.CustomerName;
+                rs.Email = cus.Email;
+                rs.Password = cus.Password;
+                rs.DateUpdate = DateTime.Now.Date;
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
         }
 
         //get thông tin khashc hàng theo mã
@@ -360,7 +406,6 @@ namespace QuanLyTourDuLich.Controllers
                                     c.Email,
                                     c.Gender,
                                     c.PhoneNumber,
-                                    c.Password,
                                     c.Address,
                                 }).FirstOrDefaultAsync();
                 return Ok(rs);
@@ -381,6 +426,7 @@ namespace QuanLyTourDuLich.Controllers
                 var rs = await (from c in _context.Customer
                                 where c.CustomerId == cus.CustomerId
                                 select c).FirstOrDefaultAsync();
+
                 if (rs.Email != cus.Email)
                 {
                     var email = _context.Customer.Where(m => m.Email == cus.Email).Count();
@@ -425,13 +471,17 @@ namespace QuanLyTourDuLich.Controllers
         //đổi mật khẩu
 
         [HttpPut("MB_Cli_ChangePassword")]
-        public async Task<IActionResult> MB_Cli_ChangePassword([FromBody] Customer cus)
+        public async Task<IActionResult> MB_Cli_ChangePassword([FromBody] CustomerUpdatePass cus)
         {
             try
             {
                 var rs = await (from c in _context.Customer
                                 where c.CustomerId == cus.CustomerId
                                 select c).FirstOrDefaultAsync();
+                if (rs.Password != cus.PasswordOld)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Sai mật khẩu");
+                }
                 rs.Password = cus.Password;
                 rs.DateUpdate = DateTime.Now.Date;
                 await _context.SaveChangesAsync();
