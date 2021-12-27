@@ -20,7 +20,7 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
 
-        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -437,7 +437,7 @@ namespace QuanLyTourDuLich.Controllers
                 var tourDetails = await (from t in _context.Tour
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                          join ptt in _context.Province on t.DeparturePlaceTo equals ptt.ProvinceId
-                                         join td in _context.TourDetails on t.TourId equals td.TourId
+                                         //join td in _context.TourDetails on t.TourId equals td.TourId
                                          join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
                                          from a in tpt.DefaultIfEmpty()
                                          join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
@@ -677,23 +677,32 @@ namespace QuanLyTourDuLich.Controllers
         ///get tất cả các tour
         ///
         [HttpGet("MB_Cli_GetTourListPagination")]
-        public async Task<IActionResult> Cli_GetTourListPagination(string provinceName, int page = 1, int limit = 10)
+        public async Task<IActionResult> Cli_GetTourListPagination(string provinceName,Guid? tourFamily, int page = 1, int limit = 10)
         {
             try
             {
                 bool isTourName = (!string.IsNullOrEmpty(provinceName));
+                Guid travelType = new Guid();
+                bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
                 var tourList = await (from t in _context.Tour
                                       join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId // ty em check lai cho nay nha
                                       //join up in _context.UnitPrice on t.TourId equals up.TourId
                                       join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                       join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                       from a in ttg.DefaultIfEmpty()
-                                      where isTourName==true?
-                                      ((t.IsDelete == null || t.IsDelete == true) 
-                                      && pf.ProvinceName.Contains(provinceName))
-                                      : (t.IsDelete == null || t.IsDelete == true)
+                                      where isTourName == true ?
+                                       ((t.IsDelete == null || t.IsDelete == true)
+                                      && pf.ProvinceName.Contains(provinceName)
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
+                                      : isGuid == true ?
+                                      (t.TravelTypeId == tourFamily
+                                      && (t.IsDelete == null || t.IsDelete == true)
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
+                                      : ((t.IsDelete == null || t.IsDelete == true)
+                                      && t.Suggest == true
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
 
-                                      orderby t.DateStart descending
+                                      orderby t.DateUpdate descending, t.DateStart ascending
                                       select new
                                       {
                                           t.TourId,
@@ -706,13 +715,22 @@ namespace QuanLyTourDuLich.Controllers
                                           t.QuanityMin,
                                           t.AdultUnitPrice,
                                           pf.ProvinceName, //dau
+                                          t.Suggest,
+                                          t.TravelTypeId,
                                       }).Skip((page - 1) * limit).Take(limit).ToListAsync();
                 int totalRecord = (from t in _context.Tour
                                    join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId
                                    where isTourName == true ?
                                        ((t.IsDelete == null || t.IsDelete == true)
-                                       && pf.ProvinceName.Contains(provinceName))
-                                       : (t.IsDelete == null || t.IsDelete == true)
+                                      && pf.ProvinceName.Contains(provinceName)
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
+                                      : isGuid == true ?
+                                      (t.TravelTypeId == tourFamily 
+                                      && (t.IsDelete == null || t.IsDelete == true)
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
+                                      : ((t.IsDelete == null || t.IsDelete == true) 
+                                      && t.Suggest == true
+                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
                                    select t).Count();
                 // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
                 var pagination = new Pagination
@@ -745,10 +763,9 @@ namespace QuanLyTourDuLich.Controllers
             {
                 var tour = await (from t in _context.Tour
                                   join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
-                                  join td in _context.TourDetails on t.TourId equals td.TourId
                                   join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                  join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                  from a in ttg.DefaultIfEmpty()
+                                  //join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
+                                  //from a in ttg.DefaultIfEmpty()
                                   where t.TourId == TourId
                                   select new
                                   {
@@ -768,7 +785,15 @@ namespace QuanLyTourDuLich.Controllers
                                       quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
                                       t.Surcharge,
                                       DeparturePlaceTo = _context.Province.Where(m => m.ProvinceId == t.DeparturePlaceTo).Select(m => m.ProvinceName).FirstOrDefault(),
+                                      t.TravelTypeId,
                                       pf.ProvinceName,
+                                      touGuideName = t.TourGuideId == null ? null : t.TourGuide.TourGuideName,
+                                      transportStart = t.CompanyTransportStartId == null ? null : t.CompanyTransportStart.Enumeration.EnumerationTranslate,
+                                      transportInTour = t.CompanyTransportInTourId == null ? null : t.CompanyTransportInTour.Enumeration.EnumerationTranslate,
+                                      t.NoteByMyTour,
+                                      t.NoteByTour,
+                                      t.ConditionByTour,
+                                      t.GroupNumber,
                                       tourDetails = (from td in _context.TourDetails
                                                      join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
                                                      where td.TourId == TourId

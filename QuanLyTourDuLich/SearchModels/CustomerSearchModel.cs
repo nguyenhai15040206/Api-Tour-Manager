@@ -19,4 +19,11 @@ namespace QuanLyTourDuLich.SearchModels
         public Guid? TransportTypeID { get; set; }
         public string CompanyName { get; set; }
     }
+
+    public class CustomerUpdatePass
+    {
+        public Guid? CustomerId { get; set; }
+        public string Password { get; set; }
+        public string PasswordOld { get; set; }
+    }
 }

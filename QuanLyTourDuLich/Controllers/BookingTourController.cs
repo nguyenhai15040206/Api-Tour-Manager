@@ -21,7 +21,7 @@ namespace QuanLyTourDuLich.Controllers
     public class BookingTourController : ControllerBase
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
-        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
         public BookingTourController(HUFI_09DHTH_TourManagerContext context)
         {
             _context = context;
@@ -120,6 +120,7 @@ namespace QuanLyTourDuLich.Controllers
                                 join pf in _context.Province on t.DeparturePlaceFrom equals pf .ProvinceId
                                 join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
                                 where bt.BookingTourId == pID
+                                
                                 select new
                                 {
                                     bt.BookingTourId,
@@ -161,7 +162,41 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        
+        ///get tour theo id customer
+        ///
+        [HttpGet("MB_GetBookedByCustomer")] 
+        public async Task<IActionResult> MB_GetBookedByCustomer(Guid? customerId)
+        {
+            try
+            {
+                var rs = await (from b in _context.BookingTour
+                                join c in _context.Customer on b.CustomerId equals c.CustomerId
+                                join t in _context.Tour on b.TourId equals t.TourId
+                                join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                where b.CustomerId == customerId
+                                select new
+                                {
+                                    b.BookingTourId,
+                                    t.TourName,
+                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
+                                    t.Rating,
+                                    dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    bookingDate = DateTime.Parse(b.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    departurePlaceFrom = pf.ProvinceName,
+                                    journeys = pf.ProvinceName + " - " + pt.ProvinceName + " - " + pf.ProvinceName,
+                                    b.TotalMoney,
+                                    b.TotalMoneyBooking,
+                                }).ToListAsync();
+                return Ok(rs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+
+        }
 
     }
 }
