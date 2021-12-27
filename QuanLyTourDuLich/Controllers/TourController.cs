@@ -338,6 +338,13 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 #endregion
 
+                #region loc boi ten dia diem den
+                if (tourSearch.DeparturePlaceToName !=null)
+                {
+                    listObjTemp = listObjTemp.Where(m => m.DeparturePlaceToName.Trim().Contains(tourSearch.DeparturePlaceToName.Trim())).ToList();
+                }
+                    #endregion
+                
                 #region phân trang
 
                 int totalRecord = listObjTemp.Count();
