@@ -49,7 +49,7 @@ namespace QuanLyTourDuLich.Controllers
                                 join c in _context.Customer on bk.CustomerId equals c.CustomerId
                                 join t in _context.Tour on bk.TourId equals t.TourId
                                 where (bk.IsDelete == null || bk.IsDelete == true)
-                                orderby bk.DateConfirm descending, bk.BookingDate
+                                orderby bk.DateConfirm descending, bk.BookingDate descending
                                 select new {
                                     bk.BookingTourId,
                                     bookingDate = DateTime.Parse(bk.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
@@ -82,7 +82,18 @@ namespace QuanLyTourDuLich.Controllers
 
                                 }).ToListAsync();
                 #endregion
-
+                var ListObj = rs;
+                foreach(var item in ListObj.ToList())
+                {
+                    var dateCheck = DateTime.Parse(item.BookingDateCheck.ToString()).AddDays(2);
+                    if (item.statusCheck == false && dateCheck < DateTime.Now.Date)
+                    {
+                        rs.Remove(item);
+                        var bookingOutOfDate = await _context.BookingTour.Where(m => (m.IsDelete == true || m.IsDelete == null) && m.BookingTourId == item.BookingTourId).FirstOrDefaultAsync();
+                        bookingOutOfDate.IsDelete = false;
+                    }
+                }
+                await _context.SaveChangesAsync();
                 if(bookingTour.TourID !=null)
                 {
                     rs = rs.Where(m => m.TourId == bookingTour.TourID).ToList();
@@ -95,6 +106,7 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     rs = rs.Where(m => m.statusCheck == bookingTour.Status).ToList();
                 }
+                //if(bookingTour)
                 return Ok(rs);
             }
             catch (Exception ex)
@@ -243,7 +255,11 @@ namespace QuanLyTourDuLich.Controllers
                                     bt.TotalMoney,
                                     bt.Surcharge,
                                     bt.TypePayment,
+                                    bt.AdultUnitPrice,
+                                    bt.ChildrenUnitPrice,
+                                    bt.BabyUnitPrice,
                                     t.TourId,
+                                    c.CustomerId,
                                     c.CustomerName,
                                     c.Email,
                                     c.Address,
@@ -257,6 +273,8 @@ namespace QuanLyTourDuLich.Controllers
                                     bt.QuanityChildren,
                                     bt.QuanityBaby,
                                     bt.QuanityInfant,
+                                    bt.OptionsNote,
+                                    bt.Note,
                                     dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     departurePlaceFrom = pf.ProvinceName,
@@ -287,7 +305,19 @@ namespace QuanLyTourDuLich.Controllers
                     }
 
                 }
-                return Ok(rs);
+                string Options = "";
+                if(rs.OptionsNote !=null && rs.OptionsNote.Trim() != "")
+                {
+                    string[] arrOptionNote = rs.OptionsNote.Split(",").ToArray();
+                    var listObjOptions = await _context.CatEnumeration.Where(m => arrOptionNote.Contains(m.EnumerationName.Trim())).Select(m => m.EnumerationTranslate).ToArrayAsync();
+                    Options = string.Join(", ", listObjOptions);
+                }
+
+                return Ok(new { 
+                    data = rs,
+                    address = Address,
+                    OptionsNote = Options,
+                });
             }
             catch (Exception ex)
             {
@@ -403,8 +433,7 @@ namespace QuanLyTourDuLich.Controllers
                 MailText = MailText.Replace("{Status}", $"{status}");
                 MailText = MailText.Replace("{Duration}", $"{rs.duration}");
                 MailText = MailText.Replace("{ImageLogo}", "https://storage.googleapis.com/tripi-assets/mytour/icons/icon_company_group.svg");
-                //$"{rs.Email.Trim()}"
-                string sending = SendEmail("nguyenhai2801a@gmail.com", "Phiếu xác nhận Booking", MailText);
+                string sending = SendEmail($"{rs.Email.Trim()}", "Phiếu xác nhận Booking", MailText);
                 return Ok();
             }
             catch (Exception ex)

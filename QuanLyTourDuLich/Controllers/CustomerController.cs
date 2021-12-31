@@ -14,6 +14,7 @@ using System;
 using Microsoft.AspNetCore.Http;
 using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -105,51 +106,38 @@ namespace QuanLyTourDuLich.Controllers
         // [Thai Tran Kieu Diem][11/09/2021]
         // search danh sách khách hàng
         [HttpPost("Adm_GetDataCustomerList")]
-        public async Task<IActionResult> Adm_GetDataCustomerList([FromBody] CustomerSearchModel customerSearch)
+        public async Task<IActionResult> Adm_GetDataCustomerList([FromBody] CustomerSearchModel pSearch)
         {
             try {
-
-                
-
-                bool isCustomerId = Guid.TryParse(customerSearch.CustomerId.ToString(), out Guid cusomerID);
-                bool isCustomerName = (!string.IsNullOrEmpty(customerSearch.CustomerName));
-                bool isGender = bool.TryParse(customerSearch.Gender.ToString(), out bool gender);
-                bool isPhoneNumber = (!string.IsNullOrEmpty(customerSearch.PhoneNumber));
-                bool isEmail = (!string.IsNullOrEmpty(customerSearch.Email));
-
-                bool checkModelSearchIsNull = true;
-
-                if (isCustomerId || isCustomerName || isGender || isPhoneNumber || isEmail)
-                {
-                    checkModelSearchIsNull= false;
-                }
-
-                var cusSearch = await (from kh in _context.Customer
+                var listObj = await (from kh in _context.Customer
                                   where (kh.IsDelete == null || kh.IsDelete == true) 
-                                  && checkModelSearchIsNull == true ? true:
-                                  (
-                                    (isCustomerId && kh.CustomerId==customerSearch.CustomerId)
-                                    ||(isCustomerName && kh.CustomerName.Contains(customerSearch.CustomerName))
-                                    ||(isGender && kh.Gender==customerSearch.Gender)
-                                    ||(isPhoneNumber && kh.PhoneNumber.Contains(customerSearch.PhoneNumber))
-                                    ||(isEmail && kh.Email.Contains(customerSearch.Email))
-                                  )
                                   orderby kh.DateUpdate descending
                                   select new
                                   {
                                       kh.CustomerId,
                                       kh.CustomerName,
-                                      kh.Gender,
+                                      gender= kh.Gender==null? "Chưa xác định": kh.Gender==true?"Nam":"Nữ",
                                       kh.Email,
                                       kh.PhoneNumber,
-                                      kh.Address
+                                      kh.Address,
+                                      empIdUpdate = kh.EmpIdupdate==null? "": kh.EmpIdupdateNavigation.EmpName,
+                                      dateUpdate = kh.DateUpdate==null? "": DateTime.Parse(kh.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                   }).ToListAsync();
-                if (cusSearch == null)
+
+                if (pSearch.CustomerName != null && pSearch.CustomerName != "")
                 {
-                    return NotFound();
+                    listObj = listObj.Where(m => m.CustomerName.Contains(pSearch.CustomerName)).ToList();
                 }
-                
-                return Ok(cusSearch);
+                if (pSearch.PhoneNumber != null && pSearch.PhoneNumber != "")
+                {
+                    listObj = listObj.Where(m => m.PhoneNumber.Contains(pSearch.PhoneNumber)).ToList();
+                }
+                if (pSearch.Email != null && pSearch.Email != "")
+                {
+                    listObj = listObj.Where(m => m.Email.Contains(pSearch.Email)).ToList();
+                }
+
+                return Ok(listObj);
             }
             catch
             {
@@ -157,10 +145,6 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-
-        ///get danh sách khách hàng theo mã khách hàng
-        ///chưa get được
-        ///
 
 
         [HttpGet("Adm_GetCustomerById/{CustomerId:int}")]
@@ -268,21 +252,21 @@ namespace QuanLyTourDuLich.Controllers
 
         // [Thai Tran Kieu Diem][11/06/2021]
         //Vô hiệu hóa tài khoản khách hàng  
-        [HttpPut("Adm_DeleteCustomer/{customerId:int}")]
-        public async Task<IActionResult> Adm_DeleteCustomer(Guid? customerId)
+        [HttpPut("Adm_DeleteCustomer")]
+        [Authorize]
+        public async Task<IActionResult> Adm_DeleteCustomer([FromBody] DeleteModels deleteModels)
         {
             try 
             {
-                var delCus = await (from cus in _context.Customer
-                                    where (cus.IsDelete == null || cus.IsDelete == true)
-                                    && cus.CustomerId == customerId
-                                    select cus).FirstOrDefaultAsync();
-                if (delCus == null)
-                    return NotFound();
-                delCus.DateUpdate = DateTime.Now;
-                delCus.IsDelete = false;
+                var listObj = await _context.Customer.Where(m => deleteModels.SelectByIds.Contains(m.CustomerId)).ToListAsync();
+                listObj.ForEach(m =>
+                {
+                    m.EmpIdupdate = deleteModels.EmpId;
+                    m.DateUpdate = DateTime.Now;
+                    m.IsDelete = false;
+                });
                 await _context.SaveChangesAsync();
-                return Ok(delCus);
+                return Ok();
             }
             catch
             {
