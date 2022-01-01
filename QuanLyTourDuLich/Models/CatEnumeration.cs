@@ -7,7 +7,6 @@ namespace QuanLyTourDuLich.Models
     {
         public CatEnumeration()
         {
-            Hotel = new HashSet<Hotel>();
             News = new HashSet<News>();
             Tour = new HashSet<Tour>();
             TravelCompanyTransport = new HashSet<TravelCompanyTransport>();
@@ -25,7 +24,6 @@ namespace QuanLyTourDuLich.Models
 
         public virtual Employee EmpIdinsertNavigation { get; set; }
         public virtual Employee EmpIdupdateNavigation { get; set; }
-        public virtual ICollection<Hotel> Hotel { get; set; }
         public virtual ICollection<News> News { get; set; }
         public virtual ICollection<Tour> Tour { get; set; }
         public virtual ICollection<TravelCompanyTransport> TravelCompanyTransport { get; set; }

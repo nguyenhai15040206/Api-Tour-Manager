@@ -14,12 +14,14 @@ namespace QuanLyTourDuLich.Models
 
         public virtual DbSet<BookingTour> BookingTour { get; set; }
         public virtual DbSet<CatEnumeration> CatEnumeration { get; set; }
+        public virtual DbSet<CatScreen> CatScreen { get; set; }
         public virtual DbSet<Comments> Comments { get; set; }
         public virtual DbSet<Customer> Customer { get; set; }
         public virtual DbSet<District> District { get; set; }
+        public virtual DbSet<EmpUserGroup> EmpUserGroup { get; set; }
         public virtual DbSet<Employee> Employee { get; set; }
-        public virtual DbSet<Hotel> Hotel { get; set; }
         public virtual DbSet<News> News { get; set; }
+        public virtual DbSet<Permission> Permission { get; set; }
         public virtual DbSet<Promotion> Promotion { get; set; }
         public virtual DbSet<PromotionalTour> PromotionalTour { get; set; }
         public virtual DbSet<Province> Province { get; set; }
@@ -28,6 +30,7 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<TourGuide> TourGuide { get; set; }
         public virtual DbSet<TouristAttraction> TouristAttraction { get; set; }
         public virtual DbSet<TravelCompanyTransport> TravelCompanyTransport { get; set; }
+        public virtual DbSet<UserGroup> UserGroup { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
 
 
@@ -172,6 +175,22 @@ namespace QuanLyTourDuLich.Models
                     .HasConstraintName("fk_Cat_Enumeration_Employee_Update");
             });
 
+            modelBuilder.Entity<CatScreen>(entity =>
+            {
+                entity.HasKey(e => e.ScreenId)
+                    .HasName("PK__Cat_Scre__19F2D7EDB1BFD4AC");
+
+                entity.ToTable("Cat_Screen");
+
+                entity.Property(e => e.ScreenId)
+                    .HasColumnName("screenID")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.ScreenName)
+                    .HasColumnName("screenName")
+                    .HasMaxLength(500);
+            });
+
             modelBuilder.Entity<Comments>(entity =>
             {
                 entity.HasKey(e => e.CommentId)
@@ -301,6 +320,30 @@ namespace QuanLyTourDuLich.Models
                     .HasConstraintName("fk_District_Province");
             });
 
+            modelBuilder.Entity<EmpUserGroup>(entity =>
+            {
+                entity.HasKey(e => new { e.EmpId, e.UserGroupId })
+                    .HasName("PK__Emp_User__5EC07C2BBA878F0B");
+
+                entity.ToTable("Emp_UserGroup");
+
+                entity.Property(e => e.EmpId).HasColumnName("empID");
+
+                entity.Property(e => e.UserGroupId).HasColumnName("userGroupID");
+
+                entity.HasOne(d => d.Emp)
+                    .WithMany(p => p.EmpUserGroup)
+                    .HasForeignKey(d => d.EmpId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("fk_Emp_UserGroup_Employee");
+
+                entity.HasOne(d => d.UserGroup)
+                    .WithMany(p => p.EmpUserGroup)
+                    .HasForeignKey(d => d.UserGroupId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("fk_Emp_UserGroup_UserGroup");
+            });
+
             modelBuilder.Entity<Employee>(entity =>
             {
                 entity.HasKey(e => e.EmpId)
@@ -365,87 +408,6 @@ namespace QuanLyTourDuLich.Models
                     .HasColumnType("date");
             });
 
-            modelBuilder.Entity<Hotel>(entity =>
-            {
-                entity.Property(e => e.HotelId)
-                    .HasColumnName("hotelID")
-                    .HasDefaultValueSql("(newid())");
-
-                entity.Property(e => e.Address)
-                    .HasColumnName("address")
-                    .HasMaxLength(500);
-
-                entity.Property(e => e.DateInsert)
-                    .HasColumnName("dateInsert")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.DateUpdate)
-                    .HasColumnName("dateUpdate")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Email)
-                    .HasColumnName("email")
-                    .HasMaxLength(36)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.EmpIdinsert).HasColumnName("empIDInsert");
-
-                entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
-
-                entity.Property(e => e.EnumerationId).HasColumnName("enumerationID");
-
-                entity.Property(e => e.HotelName)
-                    .HasColumnName("hotelName")
-                    .HasMaxLength(500);
-
-                entity.Property(e => e.ImagesList)
-                    .HasColumnName("imagesList")
-                    .HasMaxLength(2000);
-
-                entity.Property(e => e.Introduce).HasColumnName("introduce");
-
-                entity.Property(e => e.IsDelete).HasColumnName("isDelete");
-
-                entity.Property(e => e.Note).HasColumnName("note");
-
-                entity.Property(e => e.PhoneNumber)
-                    .HasColumnName("phoneNumber")
-                    .HasMaxLength(20)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Rating).HasColumnName("rating");
-
-                entity.Property(e => e.Representative)
-                    .HasColumnName("representative")
-                    .HasMaxLength(100);
-
-                entity.Property(e => e.RoomNumber).HasColumnName("roomNumber");
-
-                entity.Property(e => e.Status).HasColumnName("status");
-
-                entity.Property(e => e.WardId).HasColumnName("wardID");
-
-                entity.HasOne(d => d.EmpIdinsertNavigation)
-                    .WithMany(p => p.HotelEmpIdinsertNavigation)
-                    .HasForeignKey(d => d.EmpIdinsert)
-                    .HasConstraintName("fk_Hotel_Employee_Insert");
-
-                entity.HasOne(d => d.EmpIdupdateNavigation)
-                    .WithMany(p => p.HotelEmpIdupdateNavigation)
-                    .HasForeignKey(d => d.EmpIdupdate)
-                    .HasConstraintName("fk_Hotel_Employee_Update");
-
-                entity.HasOne(d => d.Enumeration)
-                    .WithMany(p => p.Hotel)
-                    .HasForeignKey(d => d.EnumerationId)
-                    .HasConstraintName("fk_Hotel_Cat_Enumeration");
-
-                entity.HasOne(d => d.Ward)
-                    .WithMany(p => p.Hotel)
-                    .HasForeignKey(d => d.WardId)
-                    .HasConstraintName("fk_Hotel_Wards");
-            });
-
             modelBuilder.Entity<News>(entity =>
             {
                 entity.Property(e => e.NewsId)
@@ -494,6 +456,30 @@ namespace QuanLyTourDuLich.Models
                     .WithMany(p => p.News)
                     .HasForeignKey(d => d.EnumerationId)
                     .HasConstraintName("fk_News_Cat_Enumeration");
+            });
+
+            modelBuilder.Entity<Permission>(entity =>
+            {
+                entity.HasKey(e => new { e.UserGroupId, e.ScreenId })
+                    .HasName("PK__Permissi__D6A629105DA3972F");
+
+                entity.Property(e => e.UserGroupId).HasColumnName("userGroupID");
+
+                entity.Property(e => e.ScreenId).HasColumnName("screenID");
+
+                entity.Property(e => e.Status).HasColumnName("status");
+
+                entity.HasOne(d => d.Screen)
+                    .WithMany(p => p.Permission)
+                    .HasForeignKey(d => d.ScreenId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("fk_Permission_Screen");
+
+                entity.HasOne(d => d.UserGroup)
+                    .WithMany(p => p.Permission)
+                    .HasForeignKey(d => d.UserGroupId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("fk_Permission_UserGroup");
             });
 
             modelBuilder.Entity<Promotion>(entity =>
@@ -748,8 +734,6 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
 
-                entity.Property(e => e.HotelId).HasColumnName("hotelID");
-
                 entity.Property(e => e.IsDelete).HasColumnName("isDelete");
 
                 entity.HasOne(d => d.EmpIdinsertNavigation)
@@ -761,11 +745,6 @@ namespace QuanLyTourDuLich.Models
                     .WithMany(p => p.TourDetailsEmpIdupdateNavigation)
                     .HasForeignKey(d => d.EmpIdupdate)
                     .HasConstraintName("fk_TourDetails_Employee_Update");
-
-                entity.HasOne(d => d.Hotel)
-                    .WithMany(p => p.TourDetails)
-                    .HasForeignKey(d => d.HotelId)
-                    .HasConstraintName("fk_TourDetails_Hotel");
 
                 entity.HasOne(d => d.Tour)
                     .WithMany(p => p.TourDetails)
@@ -955,6 +934,17 @@ namespace QuanLyTourDuLich.Models
                     .WithMany(p => p.TravelCompanyTransport)
                     .HasForeignKey(d => d.ProvinceId)
                     .HasConstraintName("fk_TravelCompanyTransport_Province");
+            });
+
+            modelBuilder.Entity<UserGroup>(entity =>
+            {
+                entity.Property(e => e.UserGroupId)
+                    .HasColumnName("userGroupID")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.UserGroupName)
+                    .HasColumnName("userGroupName")
+                    .HasMaxLength(500);
             });
 
             modelBuilder.Entity<Wards>(entity =>
