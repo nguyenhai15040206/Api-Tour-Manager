@@ -19,7 +19,6 @@ namespace QuanLyTourDuLich.Models
         public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
         public int? ProvinceId { get; set; }
-        public bool? Status { get; set; }
         public bool? IsDelete { get; set; }
 
         public virtual Employee EmpIdinsertNavigation { get; set; }

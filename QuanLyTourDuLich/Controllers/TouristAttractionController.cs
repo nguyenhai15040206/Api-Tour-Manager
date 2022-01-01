@@ -240,7 +240,6 @@ namespace QuanLyTourDuLich.Controllers
                 
                 rs.ProvinceId = tour.ProvinceId;
                 rs.EmpIdupdate = tour.EmpIdupdate;
-                rs.Status = tour.Status;
                 rs.DateUpdate = DateTime.Now.Date;
 
                 await _context.SaveChangesAsync();

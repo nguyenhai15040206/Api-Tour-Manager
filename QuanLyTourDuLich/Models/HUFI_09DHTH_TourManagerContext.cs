@@ -803,8 +803,6 @@ namespace QuanLyTourDuLich.Models
                     .HasMaxLength(20)
                     .IsUnicode(false);
 
-                entity.Property(e => e.Status).HasColumnName("status");
-
                 entity.Property(e => e.TourGuideName)
                     .HasColumnName("tourGuideName")
                     .HasMaxLength(150);
@@ -848,8 +846,6 @@ namespace QuanLyTourDuLich.Models
                 entity.Property(e => e.IsDelete).HasColumnName("isDelete");
 
                 entity.Property(e => e.ProvinceId).HasColumnName("provinceID");
-
-                entity.Property(e => e.Status).HasColumnName("status");
 
                 entity.Property(e => e.TouristAttrName)
                     .HasColumnName("touristAttrName")
