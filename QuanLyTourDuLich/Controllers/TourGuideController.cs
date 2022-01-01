@@ -156,7 +156,6 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 gui.DateInsert = DateTime.Now;
                 gui.DateUpdate = DateTime.Now;
-                gui.Status = gui.Status;
                 gui.IsDelete = null;
 
                 await _context.TourGuide.AddAsync(gui);
@@ -194,7 +193,6 @@ namespace QuanLyTourDuLich.Controllers
                 guiUpdate.Address = gui.Address;
                 guiUpdate.EmpIdupdate = gui.EmpIdupdate;
                 guiUpdate.DateUpdate = DateTime.Now;
-                guiUpdate.Status =true;
                 await _context.SaveChangesAsync();
                 return Ok(guiUpdate);
             }

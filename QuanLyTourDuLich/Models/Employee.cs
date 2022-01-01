@@ -13,8 +13,7 @@ namespace QuanLyTourDuLich.Models
             Comments = new HashSet<Comments>();
             CustomerEmpIdinsertNavigation = new HashSet<Customer>();
             CustomerEmpIdupdateNavigation = new HashSet<Customer>();
-            HotelEmpIdinsertNavigation = new HashSet<Hotel>();
-            HotelEmpIdupdateNavigation = new HashSet<Hotel>();
+            EmpUserGroup = new HashSet<EmpUserGroup>();
             NewsEmpIdinsertNavigation = new HashSet<News>();
             NewsEmpIdupdateNavigation = new HashSet<News>();
             PromotionEmpIdinsertNavigation = new HashSet<Promotion>();
@@ -55,8 +54,7 @@ namespace QuanLyTourDuLich.Models
         public virtual ICollection<Comments> Comments { get; set; }
         public virtual ICollection<Customer> CustomerEmpIdinsertNavigation { get; set; }
         public virtual ICollection<Customer> CustomerEmpIdupdateNavigation { get; set; }
-        public virtual ICollection<Hotel> HotelEmpIdinsertNavigation { get; set; }
-        public virtual ICollection<Hotel> HotelEmpIdupdateNavigation { get; set; }
+        public virtual ICollection<EmpUserGroup> EmpUserGroup { get; set; }
         public virtual ICollection<News> NewsEmpIdinsertNavigation { get; set; }
         public virtual ICollection<News> NewsEmpIdupdateNavigation { get; set; }
         public virtual ICollection<Promotion> PromotionEmpIdinsertNavigation { get; set; }

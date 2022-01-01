@@ -75,7 +75,6 @@ namespace QuanLyTourDuLich.Controllers
                     TourDetails tourInsert = new TourDetails();
                     tourInsert.TourId = tourDetails.TourID;
                     tourInsert.TouristAttrId = item;
-                    tourInsert.HotelId = null;
                     tourInsert.EmpIdinsert = tourDetails.EmpId;
                     tourInsert.DateInsert = DateTime.Now.Date;
                     tourInsert.EmpIdupdate = tourDetails.EmpId;

@@ -109,6 +109,7 @@ namespace QuanLyTourDuLich.Controllers
         public async Task<IActionResult> Adm_GetDataCustomerList([FromBody] CustomerSearchModel pSearch)
         {
             try {
+                string[] separatorAddress = { "||" };
                 var listObj = await (from kh in _context.Customer
                                   where (kh.IsDelete == null || kh.IsDelete == true) 
                                   orderby kh.DateUpdate descending
@@ -119,7 +120,7 @@ namespace QuanLyTourDuLich.Controllers
                                       gender= kh.Gender==null? "Chưa xác định": kh.Gender==true?"Nam":"Nữ",
                                       kh.Email,
                                       kh.PhoneNumber,
-                                      kh.Address,
+                                      Address= kh.Address == null ? "Chưa cập nhật" : kh.Address.Split(separatorAddress, System.StringSplitOptions.RemoveEmptyEntries)[0].ToString(),
                                       empIdUpdate = kh.EmpIdupdate==null? "": kh.EmpIdupdateNavigation.EmpName,
                                       dateUpdate = kh.DateUpdate==null? "": DateTime.Parse(kh.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                   }).ToListAsync();

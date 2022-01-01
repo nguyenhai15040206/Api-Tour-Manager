@@ -22,7 +22,6 @@ namespace QuanLyTourDuLich.Models
         public DateTime? DateInsert { get; set; }
         public Guid? EmpIdupdate { get; set; }
         public DateTime? DateUpdate { get; set; }
-        public bool? Status { get; set; }
         public bool? IsDelete { get; set; }
 
         public virtual Employee EmpIdinsertNavigation { get; set; }
