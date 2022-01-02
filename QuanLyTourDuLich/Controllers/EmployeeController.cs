@@ -72,7 +72,7 @@ namespace QuanLyTourDuLich.Controllers
                                 //emp.DateOfBirth,
                                 //emp.PhoneNumber,
                                 emp.Email,
-                                emp.Avatar,
+                                Avatar = emp.Avatar.Trim()==null? null: BaseUrlServer+ emp.Avatar.Trim(),
                             },
                             accessTokenEmp = new JwtSecurityTokenHandler().WriteToken(token)
                         });
