@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -17,6 +18,7 @@ namespace QuanLyTourDuLich.Controllers
     public class NewsController : ControllerBase
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
+        public const string BaseUrlServer = "http://localhost:8000/ImagesNews/";
         public NewsController(HUFI_09DHTH_TourManagerContext context)
         {
             _context = context;
@@ -27,45 +29,43 @@ namespace QuanLyTourDuLich.Controllers
         //[Thái Trần Kiều Diễm 20211109]
         //lấy dữ liệu tin tức
         [HttpPost("Adm_GetDataNewsList")]
-        public async Task<IActionResult> Adm_GetDataNewsList([FromBody] NewsSearchModel newSearch)
+        public async Task<IActionResult> Adm_GetDataNewsList([FromBody] NewsSearchModel pSearch)
         {
 
             try
             {
-                bool checkModelSearchIsNull = true;
-
-                bool isNewsId = Guid.TryParse(newSearch.NewsId.ToString(), out Guid newsId);
-                bool isNewsName = (!string.IsNullOrEmpty(newSearch.NewsName));
-                bool isKindOfNewsId = Guid.TryParse(newSearch.KindOfNewsId.ToString(), out Guid kindOfNews);
-
-                if (isNewsId || isNewsName || isKindOfNewsId)
-                {
-                    checkModelSearchIsNull = false;
-                }
-   
                 // truy van thong tin lay nhung j can thiet
-                var newsList = await (from n in _context.News
-                                      join e in _context.Employee on n.EmpIdupdate equals e.EmpId
-                                      where (n.IsDelete == null || n.IsDelete == true)
-                                      && checkModelSearchIsNull == true ? true 
-                                      :(
-                                        (isNewsId && n.NewsId==newSearch.NewsId)
-                                        ||(isNewsName && n.NewsName.Contains(newSearch.NewsName))
-                                        )
-                                      orderby n.DateUpdate descending
-                                      select new
-                                      {
-                                          n.NewsId,
-                                          n.NewsName,
-                                          n.Content,
-                                          n.NewsImg,
-                                          n.Active,
-                                          e.EmpName,
-                                          DateUpdate=DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
+                var listObj = await (from n in _context.News
+                                     where (n.IsDelete == null || n.IsDelete == true)
+                                     orderby n.DateUpdate descending
+                                     select new
+                                     {
+                                         n.NewsId,
+                                         n.NewsName,
+                                         //n.Content,
+                                         n.NewsImg,
+                                         KindOfNew = n.Enumeration.EnumerationTranslate,
+                                         n.EnumerationId,
+                                         n.Active,
+                                         n.EmpIdupdateNavigation.EmpName,
+                                         DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                         DateCheck = n.DateUpdate
 
-                                      }).ToListAsync();
-               
-                return Ok(newsList);
+                                     }).ToListAsync();
+                if(pSearch.NewsName != "")
+                {
+                    listObj = listObj.Where(m => m.NewsName.Trim().ToLower().Contains(pSearch.NewsName.Trim().ToLower())).ToList();
+                }
+
+                if (pSearch.DateUpdate != null)
+                {
+                    listObj = listObj.Where(m => m.DateCheck == pSearch.DateUpdate).ToList();
+                }
+                if(pSearch.KindOfNewsID !=null )
+                {
+                    listObj = listObj.Where(m => m.EnumerationId == pSearch.KindOfNewsID).ToList();
+                }
+                return Ok(listObj);
             }
             catch
             {
@@ -73,8 +73,8 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
         
-        [HttpGet("NewsDetails/{newsID:int}")] // chỉ chấp nhận nó là int
-        public async Task<IActionResult> News_GetDataDetails(Guid? newsID )
+        [HttpGet("Adm_GetNewsDetails")]
+        public async Task<IActionResult> Adm_GetNewsDetails(Guid? newsID )
         {
             try
             {
@@ -86,14 +86,11 @@ namespace QuanLyTourDuLich.Controllers
                            n.NewsId,
                            n.NewsName,
                            n.Content,
-                           n.NewsImg,
+                           NewsImg = BaseUrlServer+ n.NewsImg.Trim(),
+                           n.EnumerationId,
                            n.Active,
-                           DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                           n.EmpIdinsertNavigation.EmpId,
-                           n.EmpIdinsertNavigation.EmpName,
-                           // tùy thuột vào mức độ tư duy mà truy vấn
-                           // cảm thấy đủ là oke không đủ sau vào thêm
-                       }).FirstOrDefaultAsync(); // Hạn chế dùng Single vì => xãy ra exception
+                           n.DateUpdate,
+                       }).FirstOrDefaultAsync();
                 if(rs== null)
                 {
                     return NotFound(); // 404
@@ -107,11 +104,13 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
         //[Thái Trần Kiều Diễm 20211109]
         //thêm mới 1 tin tức
 
-        [HttpPost("Adm_CreateNews")]
-        public async Task<ActionResult> Adm_CreateNews([FromBody] News news)
+        [HttpPost("Adm_InsertNews")]
+        [Authorize]
+        public async Task<ActionResult> Adm_InsertNews([FromBody] News news)
         {
             try
             {
@@ -119,23 +118,17 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     return BadRequest();
                 }
-                News n = new News();
-                n.NewsName = news.NewsName;
-                n.Content = news.Content;
-                n.NewsImg = news.NewsImg;
-                n.ImagesList = news.ImagesList;
-                n.EmpIdinsert = news.EmpIdinsert;
-                n.DateInsert = DateTime.Now;
-                n.EmpIdupdate = news.EmpIdupdate;
-                n.DateUpdate = DateTime.Now;
-                n.Active = news.Active;
-                n.IsDelete = null;
+                news.EmpIdinsert = news.EmpIdinsert;
+                news.DateInsert = DateTime.Now.Date;
+                news.EmpIdupdate = news.EmpIdupdate;
+                news.DateUpdate = DateTime.Now.Date;
+                news.IsDelete = null;
 
-                await _context.AddAsync(n);
+                await _context.News.AddAsync(news);
                 await _context.SaveChangesAsync();
-                return Ok(n);
+                return Ok(news);
             }
-            catch
+            catch(Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
             }
@@ -144,33 +137,53 @@ namespace QuanLyTourDuLich.Controllers
         //[Thái Trần Kiều Diễm 20211109]
         // Update một tin tức
 
-        [HttpPost("Adm_UpdateNews/{id:int}")]
-        public async Task<IActionResult> Adm_UpdateNews([FromBody] News news, Guid? id)
+        [HttpPut("Adm_UpdateNews")]
+        [Authorize]
+        public async Task<IActionResult> Adm_UpdateNews([FromBody] News news)
         {
-            if (news.NewsId != id)
-            {
-                return BadRequest();
-            }
             try
             {
                 var update = await (from n in _context.News
                                     where (n.IsDelete == null || n.IsDelete == true)
-                                    && n.NewsId==id
+                                    && n.NewsId== news.NewsId
                                     select n).FirstOrDefaultAsync();
                 if (update == null)
                     return NotFound(update);
 
                 update.NewsName = news.NewsName;
                 update.Content = news.Content;
-                update.NewsImg = news.NewsImg;
-                update.ImagesList = news.ImagesList;
+                if(news.NewsImg != "")
+                {
+                    update.NewsImg = news.NewsImg;
+                }
                 update.EmpIdupdate = news.EmpIdupdate;
+                update.EnumerationId = news.EnumerationId;
                 update.DateUpdate = DateTime.Now;
                 update.Active = news.Active;
-
-
                 await _context.SaveChangesAsync();
-                return Ok(update);
+                return Ok();
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
+            }
+        }
+
+        [HttpGet("Adm_ActiveNews")]
+        [Authorize]
+        public async Task<IActionResult> Adm_ActiveNews(Guid? pID)
+        {
+            try
+            {
+                var update = await (from n in _context.News
+                                    where (n.IsDelete == null || n.IsDelete == true)
+                                    && n.NewsId == pID
+                                    select n).FirstOrDefaultAsync();
+                if (update == null)
+                    return NotFound(update);
+                update.Active = update.Active == false ? true : false;
+                await _context.SaveChangesAsync();
+                return Ok();
             }
             catch
             {
@@ -179,30 +192,29 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
+
+
         ////[Thái Trần Kiều Diễm 20211109]
         ///Xóa một tin tức
         ///
-        [HttpPost("Adm_DeleteNews/{NewsID:int}/{empId:int}")]
-        public async Task<IActionResult> Adm_DeleteNews ( Guid? NewsID, Guid? empId = null)
+        [HttpPut("Adm_DeleteNews")]
+        public async Task<IActionResult> Adm_DeleteNews([FromBody] DeleteModels deleteModels)
         {
             try
             {
-                var delete = await (from n in _context.News
-                                    where (n.IsDelete == null || n.IsDelete == true)
-                                    && n.NewsId == NewsID
-                                    select n).FirstOrDefaultAsync();
-                if (delete == null)
-                    return NotFound();
-                delete.IsDelete = false;
-                delete.EmpIdupdate = empId;
-                delete.DateUpdate = DateTime.Now;
-
+                var listObj = await _context.News.Where(m => deleteModels.SelectByIds.Contains(m.NewsId)).ToListAsync();
+                listObj.ForEach(m =>
+                {
+                    m.EmpIdupdate = deleteModels.EmpId;
+                    m.DateUpdate = DateTime.Now;
+                    m.IsDelete = false;
+                });
                 await _context.SaveChangesAsync();
-                return Ok(delete);
+                return Ok();
             }
             catch
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
     }

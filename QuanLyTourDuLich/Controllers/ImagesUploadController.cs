@@ -55,6 +55,35 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("Adm_UploadImageNews")]
+        [Authorize]
+        public async Task<IActionResult> UploadImageNews([FromForm] IFormFile file)
+        {
+            try
+            {
+                string fileName = string.Empty;
+                string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesNews";
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                if (file.Length > 0)
+                {
+                    fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    string fullPath = Path.Combine(path, fileName);
+                    using (var image = Image.Load(file.OpenReadStream()))
+                    {
+                        image.Mutate(m => m.Resize(1000, 667));
+                        await image.SaveAsync(fullPath);
+                    }
+                }
+                return Ok(new { FileName = fileName });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
 
         [HttpPost]
         [Route("Adm_UploadImageTourGuide")]

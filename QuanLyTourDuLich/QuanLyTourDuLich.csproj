@@ -37,6 +37,7 @@
     <Folder Include="wwwroot\ImagesEmployee\" />
     <Folder Include="wwwroot\ImagesTouristAttractions\" />
     <Folder Include="wwwroot\ImagesCompanyTravel\" />
+    <Folder Include="wwwroot\ImagesNews\" />
   </ItemGroup>
 
 

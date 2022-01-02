@@ -7,8 +7,8 @@ namespace QuanLyTourDuLich.SearchModels
 {
     public class NewsSearchModel
     {
-        public Guid? NewsId { get; set; }
         public string NewsName { get; set; }
-        public Guid? KindOfNewsId { get; set; }
+        public Guid? KindOfNewsID { get; set; }
+        public DateTime? DateUpdate { get; set; }
     }
 }

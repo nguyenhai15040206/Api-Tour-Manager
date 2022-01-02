@@ -33,7 +33,7 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<UserGroup> UserGroup { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
 
-
+ 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BookingTour>(entity =>
@@ -432,15 +432,11 @@ namespace QuanLyTourDuLich.Models
 
                 entity.Property(e => e.EnumerationId).HasColumnName("enumerationID");
 
-                entity.Property(e => e.ImagesList).HasColumnName("imagesList");
-
                 entity.Property(e => e.IsDelete).HasColumnName("isDelete");
 
                 entity.Property(e => e.NewsImg).HasColumnName("newsImg");
 
-                entity.Property(e => e.NewsName)
-                    .HasColumnName("newsName")
-                    .HasMaxLength(500);
+                entity.Property(e => e.NewsName).HasColumnName("newsName");
 
                 entity.HasOne(d => d.EmpIdinsertNavigation)
                     .WithMany(p => p.NewsEmpIdinsertNavigation)

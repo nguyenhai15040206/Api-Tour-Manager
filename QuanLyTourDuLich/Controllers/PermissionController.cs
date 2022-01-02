@@ -191,7 +191,9 @@ namespace QuanLyTourDuLich.Controllers
 
                 foreach(var item in rs)
                 {
+                    var deleteEmp_UserGroup =  await _context.EmpUserGroup.Where(m => m.UserGroupId == item.UserGroupId).ToListAsync();
                     var deletePermission = await _context.Permission.Where(m => m.UserGroupId == item.UserGroupId).ToListAsync();
+                    _context.EmpUserGroup.RemoveRange(deleteEmp_UserGroup);
                     _context.Permission.RemoveRange(deletePermission);
                     _context.UserGroup.Remove(item);
                 }
@@ -214,14 +216,14 @@ namespace QuanLyTourDuLich.Controllers
                 // lấy tất cả các nhóm quyền
                 var rs = await (from emp in _context.Employee
                                 where (emp.IsDelete == null || emp.IsDelete == true) &&
-                                      !  _context.EmpUserGroup.Any(m => m.EmpId == emp.EmpId && m.UserGroupId== pID)
+                                      !_context.EmpUserGroup.Any(m => m.EmpId == emp.EmpId && m.UserGroupId == pID)
                                 select new
                                 {
                                     emp.EmpId,
                                     emp.EmpName,
                                     Gender = emp.Gender == true ? "Nam" : "Nữ",
-                                    DateOfBirth = DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                    WorkingDate = DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    DateOfBirth = emp.DateOfBirth==null? "Chưa cập nhật":  DateTime.Parse(emp.DateOfBirth.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    WorkingDate = emp.WorkingDate == null ? "Chưa cập nhật": DateTime.Parse(emp.WorkingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                     emp.PhoneNumber,
                                     emp.Email,
                                 }).ToListAsync();
