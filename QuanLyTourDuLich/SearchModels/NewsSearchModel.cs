@@ -11,4 +11,10 @@ namespace QuanLyTourDuLich.SearchModels
         public Guid? KindOfNewsID { get; set; }
         public DateTime? DateUpdate { get; set; }
     }
+
+    public class NewsSearchClientModels : NewsSearchModel
+    {
+        public int Page { get; set; }
+        public int Limit { get; set; }
+    }
 }

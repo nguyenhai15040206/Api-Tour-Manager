@@ -83,4 +83,5 @@ namespace QuanLyTourDuLich.SearchModels
         public string TravelTypeName { get; set; }
         public double? Promotion { get; set; }
     }
+
 }

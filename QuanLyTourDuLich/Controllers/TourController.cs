@@ -577,7 +577,7 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 if (tour.TourId == Guid.Empty) return StatusCode(StatusCodes.Status400BadRequest, $"Vui lòng kiểm tra dữ liệu cập nhật");
-                var rs = await _context.Tour.Where(m => m.TourId == tour.TourId).FirstOrDefaultAsync();
+                var rs = await _context.Tour.Where(m => m.TourId == tour.TourId && (m.IsDelete==null || m.IsDelete==true)).FirstOrDefaultAsync();
                 if (rs == null) return StatusCode(StatusCodes.Status404NotFound, $"Không tìm thấy dữ liệu");
 
 
@@ -630,6 +630,89 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
+        //===================== nhân bảng tour by id
+        [HttpPost("Adm_InsertTourAvailable")]
+        [Authorize]
+        public async Task<ActionResult> Adm_InsertTourAvailable([FromBody] Tour tour)
+        {
+            try
+            {
+                if (tour.TourId == Guid.Empty) return StatusCode(StatusCodes.Status400BadRequest, $"Vui lòng kiểm tra dữ liệu cập nhật");
+                var rs = await _context.Tour.Where(m => m.TourId == tour.TourId && (m.IsDelete == null || m.IsDelete == true)).FirstOrDefaultAsync();
+                
+                if (rs == null) return StatusCode(StatusCodes.Status404NotFound, $"Không tìm thấy dữ liệu");
+
+                if(rs.DateStart == tour.DateStart && rs.DateEnd == tour.DateEnd && rs.DeparturePlaceFrom==tour.DeparturePlaceFrom)
+                {
+                    return StatusCode(StatusCodes.Status409Conflict, $"Vui lòng nhập ngày hoặc điểm xuất phát khác!");
+                }
+                Tour objNew = new Tour();
+                objNew.TourName = rs.TourName;
+                objNew.Description = rs.Description;
+                objNew.TourImg = rs.TourImg;
+
+                // hai cái ngày mới diểm đi
+                objNew.DateStart = tour.DateStart;
+                objNew.DateEnd = tour.DateEnd;
+                objNew.DeparturePlaceFrom = tour.DeparturePlaceFrom;
+                objNew.Suggest = tour.Suggest;
+                //
+                objNew.Rating = rs.Rating;
+                objNew.QuanityMax = rs.QuanityMax;
+                objNew.QuanityMin = rs.QuanityMin;
+                objNew.CurrentQuanity = 0;
+                objNew.GroupNumber = rs.GroupNumber;
+                objNew.AdultUnitPrice = rs.AdultUnitPrice;
+                objNew.ChildrenUnitPrice = rs.ChildrenUnitPrice;
+                objNew.BabyUnitPrice = rs.BabyUnitPrice;
+                objNew.Surcharge = rs.Surcharge;
+                objNew.Schedule = rs.Schedule;
+                objNew.DeparturePlaceTo = rs.DeparturePlaceTo;
+
+                //
+                objNew.CompanyTransportStartId = rs.CompanyTransportStartId;
+                objNew.CompanyTransportInTourId = rs.CompanyTransportInTourId;
+                objNew.TourGuideId = rs.TourGuideId;
+                objNew.TravelTypeId = rs.TravelTypeId;
+                objNew.NoteByTour = rs.NoteByTour;
+                objNew.ConditionByTour = rs.ConditionByTour;
+                objNew.NoteByMyTour = rs.NoteByMyTour;
+
+                //
+                objNew.DateInsert = DateTime.Now.Date;
+                objNew.DateUpdate = DateTime.Now.Date;
+                objNew.EmpIdinsert = tour.EmpIdinsert;
+                objNew.EmpIdupdate = tour.EmpIdupdate;
+                objNew.IsDelete = null;
+                await _context.Tour.AddAsync(objNew);
+                await _context.SaveChangesAsync();
+
+                // bắt đầu đi lấy tour details
+                var listTourDetails = await _context.TourDetails.Where(m => m.TourId == rs.TourId && (m.IsDelete == null || m.IsDelete == true)).ToListAsync();
+                foreach(var item in listTourDetails)
+                {
+                    TourDetails pInsert = new TourDetails();
+                    pInsert.TourId = objNew.TourId;
+                    pInsert.TouristAttrId = item.TouristAttrId;
+                    pInsert.DateInsert = DateTime.Now.Date;
+                    pInsert.DateUpdate = DateTime.Now.Date;
+                    pInsert.EmpIdinsert = tour.EmpIdinsert;
+                    pInsert.EmpIdupdate = tour.EmpIdupdate;
+                    pInsert.IsDelete = null;
+                    await _context.TourDetails.AddAsync(pInsert);
+                }
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
+
+
+        //================
 
         // Delete Multi row
         [HttpPut("Adm_DeleteTourByIds")]
@@ -686,6 +769,7 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+        //
 
         //============ sendmessage
         // kiểm tra tour gần tới ngày hết hạn thì thông báo tới người dùng
