@@ -35,6 +35,7 @@ namespace QuanLyTourDuLich.SearchModels
         
         // mb
         public string DeparturePlaceToName { get; set; }
+        public string DeparturePlaceFromName { get; set; }
 
         //
         public bool? QuantityDate1 { get; set; }

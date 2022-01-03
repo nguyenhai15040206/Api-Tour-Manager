@@ -27,7 +27,7 @@ namespace QuanLyTourDuLich.Controllers
     public class BookingTourController : ControllerBase
     {
         private readonly HUFI_09DHTH_TourManagerContext _context;
-        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
         public IConfiguration _config;
         private readonly IWebHostEnvironment _webHostEnvironment;
         public BookingTourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config, IWebHostEnvironment webHostEnvironment)
@@ -301,7 +301,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
-                string[] separator = { "," };
+               string[] separator = { "," };
                 string[] separatorAddress = { "||" };
                 #region
                 var rs = await (from bt in _context.BookingTour
@@ -404,7 +404,7 @@ namespace QuanLyTourDuLich.Controllers
                 MailText = MailText.Replace("{Duration}", $"{rs.duration}");
                 MailText = MailText.Replace("{ImageLogo}", "https://storage.googleapis.com/tripi-assets/mytour/icons/icon_company_group.svg");
                 //$"{rs.Email.Trim()}"
-                string sending = SendEmail("nguyenhai2801a@gmail.com", "Phiếu xác nhận Booking", MailText);
+                string sending = SendEmail($"{rs.Email.Trim()}", "Phiếu xác nhận Booking", MailText);
                 return Ok();
             }
             catch (Exception ex)
@@ -449,13 +449,13 @@ namespace QuanLyTourDuLich.Controllers
             }
             
         }
-        
-        
+
+
         //
-        ///get tour theo id customer,
+        ///get tour theo id customer,thái trần kiều diễm
         ///
         [HttpGet("MB_GetBookedByCustomer")] 
-        public async Task<IActionResult> MB_GetBookedByCustomer(Guid? customerId)
+        public async Task<IActionResult> MB_GetBookedByCustomer(Guid? customerId,bool isDelete)
         {
             try
             {
@@ -464,7 +464,13 @@ namespace QuanLyTourDuLich.Controllers
                                 join t in _context.Tour on b.TourId equals t.TourId
                                 join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
                                 join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
-                                where b.CustomerId == customerId
+                                where isDelete == true
+                                    ?
+                                    ((b.IsDelete == null || b.IsDelete == true)
+                                    && b.CustomerId == customerId)
+                                    :
+                                    ((b.IsDelete == false)
+                                    && b.CustomerId == customerId)
                                 select new
                                 {
                                     b.BookingTourId,
@@ -486,6 +492,27 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
             }
 
+        }
+
+
+        //hủy tour thái trần kiều diễm
+        [HttpPut("MB_DeleteTourBooked")]
+        public async Task<IActionResult> MB_DeleteTourBooked(BookingTourDelete booked)
+        {
+            try {
+                var rs = _context.BookingTour.Where(m => m.BookingTourId == booked.BookingTourID).FirstOrDefault();
+                var tour = _context.Tour.Where(m => m.TourId == rs.TourId).FirstOrDefault();
+                int date = (int)(int?)((TimeSpan)(tour.DateStart - DateTime.Now.Date)).TotalDays;
+                if (date <= 5)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, "Đã quá thời gian hủy tour");
+                }
+                rs.IsDelete = false;
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            } catch {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
         }
 
     }

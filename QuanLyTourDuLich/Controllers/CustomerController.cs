@@ -469,7 +469,9 @@ namespace QuanLyTourDuLich.Controllers
 
         //đổi mật khẩu
 
+        
         [HttpPut("MB_Cli_ChangePassword")]
+
         public async Task<IActionResult> MB_Cli_ChangePassword([FromBody] CustomerUpdatePass cus)
         {
             try
