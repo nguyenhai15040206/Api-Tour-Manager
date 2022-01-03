@@ -20,4 +20,9 @@ namespace QuanLyTourDuLich.SearchModels
         public DateTime? BookingDate { get; set; }
         public bool? Status { get; set; }
     }
+
+    public class BookingTourDelete
+    {
+        public Guid? BookingTourID { get; set; }
+    }
 }

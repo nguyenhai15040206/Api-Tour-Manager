@@ -21,7 +21,7 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
 
-        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -257,7 +257,12 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 if (tourSearch.DateStart != null)
                 {
-                    listObjTemp = listObjTemp.Where(m => m.DateStart >= tourSearch.DateStart).ToList();
+                    listObjTemp = listObjTemp.Where(m => m.DateStart == tourSearch.DateStart).ToList();
+                    // kiểm tra nếu không có ngày ddossex lấy ra danh sách co ngay lon hon
+                    if (listObjTemp.Count() == 0)
+                    {
+                        listObjTemp = listObjTemp.Where(m => m.DateStart >= tourSearch.DateStart).OrderBy(m=>m.DateStart).ToList();
+                    }
                 }
                 #endregion
 
@@ -344,6 +349,10 @@ namespace QuanLyTourDuLich.Controllers
                 if (tourSearch.DeparturePlaceToName !=null)
                 {
                     listObjTemp = listObjTemp.Where(m => m.DeparturePlaceToName.Trim().Contains(tourSearch.DeparturePlaceToName.Trim())).ToList();
+                }
+                if(tourSearch.DeparturePlaceFromName != null)
+                {
+                    listObjTemp = listObjTemp.Where(m => m.DeparturePlaceFromName.Trim().Contains(tourSearch.DeparturePlaceFromName.Trim())).ToList();
                 }
                     #endregion
                 
