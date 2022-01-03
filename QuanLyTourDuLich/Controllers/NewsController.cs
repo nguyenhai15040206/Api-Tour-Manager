@@ -217,5 +217,87 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
             }
         }
+
+        //=============================== Client
+        [HttpPost("Cli_GetDataNews")]
+        public async Task<IActionResult> Cli_GetDataNews([FromBody] NewsSearchClientModels pSearch)
+        {
+
+            try
+            {
+                // truy van thong tin lay nhung j can thiet
+                var listObj = await (from n in _context.News
+                                     where (n.IsDelete == null || n.IsDelete == true)
+                                     orderby n.DateUpdate descending
+                                     select new
+                                     {
+                                         n.NewsId,
+                                         n.NewsName,
+                                         //n.Content,
+                                         newsImg = BaseUrlServer+ n.NewsImg.Trim(),
+                                         KindOfNew = n.Enumeration.EnumerationTranslate,
+                                         n.EnumerationId,
+                                         DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+
+                                     }).ToListAsync();
+                if (pSearch.KindOfNewsID != null)
+                {
+                    listObj = listObj.Where(m => m.EnumerationId == pSearch.KindOfNewsID).ToList();
+                }
+                int totalRecord = listObj.Count();
+                var pagination = new Pagination
+                {
+                    count = totalRecord,
+                    currentPage = pSearch.Page,
+                    pagsize = pSearch.Limit,
+                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, pSearch.Limit)),
+                    indexOne = ((pSearch.Page - 1) * pSearch.Limit + 1),
+                    indexTwo = (((pSearch.Page - 1) * pSearch.Limit + pSearch.Limit) <= totalRecord ? ((pSearch.Page - 1) * pSearch.Limit * pSearch.Limit) : totalRecord)
+                };
+
+                listObj = listObj.Skip((pSearch.Page - 1) * pSearch.Limit).Take(pSearch.Limit).ToList();
+                return Ok(new
+                {
+                    data = listObj,
+                    pagination = pagination
+                }) ;
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+    
+        [HttpGet("Cli_GetDataNewsDetails")]
+        public async Task<IActionResult> Cli_GetDataNewsDetails(Guid? newsID)
+        {
+            try
+            {
+                var rs = await (from n in _context.News
+                                where (n.IsDelete == null || n.IsDelete == true)
+                                     && n.NewsId == newsID
+                                select new
+                                {
+                                    n.NewsId,
+                                    n.NewsName,
+                                    n.Content,
+                                    NewsImg = BaseUrlServer + n.NewsImg.Trim(),
+                                    n.Enumeration.EnumerationTranslate,
+                                    n.EnumerationId,
+                                    DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                }).FirstOrDefaultAsync();
+                if (rs == null)
+                {
+                    return NotFound(); // 404
+                }
+                return Ok(rs); // 200
+
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
     }
 }
