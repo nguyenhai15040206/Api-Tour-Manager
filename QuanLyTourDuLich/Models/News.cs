@@ -9,7 +9,6 @@ namespace QuanLyTourDuLich.Models
         public string NewsName { get; set; }
         public string Content { get; set; }
         public string NewsImg { get; set; }
-        public string ImagesList { get; set; }
         public Guid? EmpIdinsert { get; set; }
         public DateTime? DateInsert { get; set; }
         public Guid? EmpIdupdate { get; set; }

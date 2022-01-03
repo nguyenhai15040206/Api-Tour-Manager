@@ -56,6 +56,65 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         [HttpPost]
+        [Route("Adm_UploadImageNews")]
+        [Authorize]
+        public async Task<IActionResult> UploadImageNews([FromForm] IFormFile file)
+        {
+            try
+            {
+                string fileName = string.Empty;
+                string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesNews";
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                if (file.Length > 0)
+                {
+                    fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    string fullPath = Path.Combine(path, fileName);
+                    using (var image = Image.Load(file.OpenReadStream()))
+                    {
+                        image.Mutate(m => m.Resize(1000, 667));
+                        await image.SaveAsync(fullPath);
+                    }
+                }
+                return Ok(new { FileName = fileName });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+
+        [HttpPost]
+        [Route("Adm_UploadImageTourGuide")]
+        [Authorize]
+        public async Task<IActionResult> UploadImageTourGuide([FromForm] IFormFile file)
+        {
+            try
+            {
+                string fileName = string.Empty;
+                string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesEmployee";
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                if (file.Length > 0)
+                {
+                    fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    string fullPath = Path.Combine(path, fileName);
+                    using (var image = Image.Load(file.OpenReadStream()))
+                    {
+                        image.Mutate(m => m.Resize(1000, 667));
+                        await image.SaveAsync(fullPath);
+                    }
+                }
+                return Ok(new { FileName = fileName });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
+
+        [HttpPost]
         [Route("UploadImageCompany")]
         [Authorize]
         public async Task<IActionResult> UploadImageCompany([FromForm] IFormFile file)
@@ -87,25 +146,26 @@ namespace QuanLyTourDuLich.Controllers
         // Upload image Employee
         [HttpPost]
         [Route("Adm_UploadImageEmployee")]
+        [Authorize]
         public async Task<IActionResult> UploadImageEmployee([FromForm] IFormFile file)
         {
             try
             {
-                var path = $"{this._webHostEnvironment.WebRootPath}\\ImagesEmployee";
+                string fileName = string.Empty;
+                string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesEmployee";
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
-                FileInfo fileInfo = new FileInfo(file.FileName);
-                var fullPath = Path.Combine(path, fileInfo.Name);
-                var fullPathNew = fullPath;
-                if (!System.IO.File.Exists(fullPath))
+                if (file.Length > 0)
                 {
-                    //fullPathNew = GetUniqueFilePath(fullPath);
+                    fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    string fullPath = Path.Combine(path, fileName);
+                    using (var image = Image.Load(file.OpenReadStream()))
+                    {
+                        image.Mutate(m => m.Resize(1000, 667));
+                        await image.SaveAsync(fullPath);
+                    }
                 }
-                using (FileStream fileStream = new FileStream(fullPathNew, FileMode.Create))
-                {
-                    await file.CopyToAsync(fileStream);
-                }
-                return Ok(new { FileName = _baseUrl + "ImagesEmployee/" + fullPathNew.Split("\\").LastOrDefault() });
+                return Ok(new { FileName = fileName });
             }
             catch (Exception)
             {

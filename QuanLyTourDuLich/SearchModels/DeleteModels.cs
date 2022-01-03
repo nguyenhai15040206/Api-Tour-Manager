@@ -18,4 +18,10 @@ namespace QuanLyTourDuLich.SearchModels
         public Guid[] TourAttrIds {get;set;}
         public Guid? EmpId { get; set; }
     }
+
+    public class EmpUserGroupModels
+    {
+        public Guid[] EmpIds { get; set; }
+        public Guid UserGroupId { get; set; }
+    }
 }

@@ -130,6 +130,7 @@ namespace QuanLyTourDuLich.Controllers
                                         dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                         t.Rating,
+                                        t.GroupNumber,
                                         t.QuanityMax,
                                         t.QuanityMin,
                                         t.CurrentQuanity,
@@ -176,7 +177,7 @@ namespace QuanLyTourDuLich.Controllers
                 }
                 if (tourSearch.TourIsExpired == true)
                 {
-                    result = result.Where(m => m.dateStartCheck <= DateTime.Now.Date.AddDays(5)).ToList();
+                    result = result.Where(m => m.dateStartCheck <= DateTime.Now.Date.AddDays(3)).OrderBy(m=>m.dateStartCheck).ToList();
                 }
                 #endregion
                 return Ok(result);
@@ -194,6 +195,7 @@ namespace QuanLyTourDuLich.Controllers
         {
             try
             {
+                #region truy vấn thông tin
                 // lấy danh sách tất cả các tour thỏa
                 var rs = await (from t in _context.Tour
                                 join tt in _context.CatEnumeration on t.TravelTypeId equals tt.EnumerationId
@@ -233,7 +235,7 @@ namespace QuanLyTourDuLich.Controllers
                                                                 .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
 
                                 }).Distinct().ToListAsync();
-
+                #endregion
                 var listObjTemp = rs.GroupBy(x => x.TourId).Select(m => m.FirstOrDefault());
 
                 // lấy loại phương tiên => để lọc theo phương tiện
@@ -646,12 +648,22 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var listObj = await _context.Tour.Where(m => deleteModels.SelectByIds.Contains(m.TourId)).ToListAsync();
-                listObj.ForEach(m =>
+                foreach(var item in listObj)
                 {
-                    m.IsDelete = false;
-                    m.DateUpdate = DateTime.Now.Date;
-                    m.EmpIdupdate = deleteModels.EmpId;
-                });
+                    // kiểm tra danh sách tour đó dã có người đặt hay chưa, chưa thì xóa, không thì thông báo
+                    var checkTour = await _context.BookingTour.Where(m => m.TourId == item.TourId 
+                        && (m.IsDelete==null || m.IsDelete==true) && m.Status==true).ToListAsync();
+                    if(checkTour.Count() > 0)
+                    {
+                        return StatusCode(StatusCodes.Status400BadRequest, $"Tour ID đã có người đặt!");
+                    }
+                    else
+                    {
+                        item.IsDelete = false;
+                        item.DateUpdate = DateTime.Now.Date;
+                        item.EmpIdupdate = deleteModels.EmpId;
+                    }
+                }
                 await _context.SaveChangesAsync();
                 return StatusCode(StatusCodes.Status200OK, "Xóa thành công!");
             }

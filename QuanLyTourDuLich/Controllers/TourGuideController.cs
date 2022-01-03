@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -19,6 +20,7 @@ namespace QuanLyTourDuLich.Controllers
     {
         //Thái Trần Kiều Diễm [06/11/2021]
         //
+        public const string BaseUrlServer = "http://localhost:8000/ImagesEmployee/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourGuideController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -29,38 +31,22 @@ namespace QuanLyTourDuLich.Controllers
 
         //get danh sách tour guide
         [HttpPost("Adm_GetDataTourGuide")]
-        public async Task<IActionResult> Adm_GetDataTourGuide([FromBody] TourGuideSearchModel guiSearch)
+        public async Task<IActionResult> Adm_GetDataTourGuide([FromBody] TourGuideSearchModel pSearch)
         {
             
             try 
             {
-                bool checkModelSearchIsNull = true;
 
-                bool isTourGuideName = (!string.IsNullOrEmpty(guiSearch.TourGuideName));
-                bool isPhoneNumber = (!string.IsNullOrEmpty(guiSearch.PhoneNumber));
-                bool isEmail = (!string.IsNullOrEmpty(guiSearch.Email));
-
-                if (isTourGuideName || isPhoneNumber || isEmail)
-                {
-                    checkModelSearchIsNull = false;
-                }
-
-                var list = await (from guide in _context.TourGuide
+                var listObj = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdinsert equals e.EmpId
-                                  where  checkModelSearchIsNull == true ? (guide.IsDelete == null || guide.IsDelete == true) :
-                                  (
-                                      (guide.IsDelete == null || guide.IsDelete == true)
-                                      &&((isTourGuideName && guide.TourGuideName.Contains(guiSearch.TourGuideName))
-                                      || (isPhoneNumber && guide.PhoneNumber.Contains(guiSearch.PhoneNumber))
-                                      || (isEmail && guide.Email.Contains(guiSearch.Email)))
-                                  )
+                                  where  (guide.IsDelete == null || guide.IsDelete == true)
                                   orderby guide.DateUpdate descending
                                   select new
                                   {
                                       guide.TourGuideId,
                                       guide.TourGuideName,
                                       gender = guide.Gender == true ? "Nam" : "Nữ",
-                                      guide.DateOfBirth,
+                                      dateOfBirth= guide.DateOfBirth ==null? "": DateTime.Parse(guide.DateOfBirth.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
                                       guide.PhoneNumber,
                                       guide.Email,
                                       guide.Address,
@@ -68,13 +54,20 @@ namespace QuanLyTourDuLich.Controllers
                                       e.EmpName,
                                       DateUpdate=DateTime.Parse(guide.DateUpdate.ToString()).ToString("dd/MM/yyyy",CultureInfo.InvariantCulture),
                                   }).ToListAsync();
-
-                if (list == null)
+                if(pSearch.TourGuideName!=null && pSearch.TourGuideName != "")
                 {
-                    return NotFound();
+                    listObj = listObj.Where(m => m.TourGuideName.Contains(pSearch.TourGuideName)).ToList();
+                }
+                if (pSearch.PhoneNumber !=null && pSearch.PhoneNumber !="")
+                {
+                    listObj = listObj.Where(m => m.PhoneNumber.Contains(pSearch.PhoneNumber)).ToList();
+                }
+                if(pSearch.Email !=null && pSearch.Email != "")
+                {
+                    listObj = listObj.Where(m => m.Email.Contains(pSearch.Email)).ToList();
                 }
                 // status code 200
-                return Ok(list);
+                return Ok(listObj);
             }
             catch (Exception)
             {
@@ -116,12 +109,12 @@ namespace QuanLyTourDuLich.Controllers
         }
 
         //get thông tin theo mã
-        [HttpGet("Adm_GetTourGuideByID/{TourGuideId:int}")]
-        public async Task<IActionResult> Adm_GetTourGuideById (Guid? TourGuideId)
+        [HttpGet("Adm_GetTourGuideByID")]
+        public async Task<IActionResult> Adm_GetTourGuideById(Guid? TourGuideId)
         {
             try {
 
-                var list = await (from guide in _context.TourGuide
+                var rs = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdupdate equals e.EmpId
                                   where (guide.IsDelete == null || guide.IsDelete == true)
                                   && guide.TourGuideId== TourGuideId
@@ -129,18 +122,18 @@ namespace QuanLyTourDuLich.Controllers
                                   {
                                       guide.TourGuideId,
                                       guide.TourGuideName,
-                                      gender=guide.Gender==true?"Nam":"Nữ",
+                                      gender=guide.Gender,
                                       guide.DateOfBirth,
                                       guide.PhoneNumber,
                                       guide.Email,
                                       guide.Address,
-                                      guide.Avatar,
+                                      avatar = BaseUrlServer + guide.Avatar,
                                       e.EmpName,
-                                      DateUpdate = DateTime.Parse(guide.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                      DateUpdate = guide.DateUpdate,
                                   }).FirstOrDefaultAsync();
 
                 // status code 200
-                return Ok(list);
+                return Ok(rs);
             }
             catch (Exception)
             {
@@ -151,15 +144,18 @@ namespace QuanLyTourDuLich.Controllers
         //thêm một hướng dẫn viên
 
         [HttpPost("Adm_CreateTourGuide")]
+        [Authorize]
         public async Task<ActionResult> Adm_CreateTourGuide([FromBody] TourGuide gui)
         {
             try {
                 if (gui == null)
                     return BadRequest();
-
+                if(gui.Avatar == "")
+                {
+                    gui.Avatar = null;
+                }
                 gui.DateInsert = DateTime.Now;
                 gui.DateUpdate = DateTime.Now;
-                gui.Status = gui.Status;
                 gui.IsDelete = null;
 
                 await _context.TourGuide.AddAsync(gui);
@@ -174,33 +170,29 @@ namespace QuanLyTourDuLich.Controllers
         //update thông tin của một hướng dẫn viên bằng mã
 
         [HttpPut("Adm_UpdateTourGuide")]
-        public async Task<IActionResult> Adm_UpdateTourGuide(Guid? TourGuideId, [FromBody] TourGuide gui)
+        [Authorize]
+        public async Task<IActionResult> Adm_UpdateTourGuide([FromBody] TourGuide gui)
         {
-            if (TourGuideId != gui.TourGuideId)
-            {
-                return BadRequest();
-            }
             try
             {
                 var guiUpdate = await (from nv in _context.TourGuide
                                        where (nv.IsDelete == null || nv.IsDelete == true)
-                                       && nv.TourGuideId == TourGuideId
+                                       && nv.TourGuideId == gui.TourGuideId
                                        select nv).FirstOrDefaultAsync();
                 if (guiUpdate == null)
                     return NotFound();
-
 
                 guiUpdate.TourGuideName = gui.TourGuideName;
                 guiUpdate.Gender = gui.Gender;
                 guiUpdate.DateOfBirth = gui.DateOfBirth;
                 guiUpdate.PhoneNumber = gui.PhoneNumber;
+                if(gui.Avatar != "")
+                {
+                    guiUpdate.Avatar = gui.Avatar;
+                }
                 guiUpdate.Address = gui.Address;
-                guiUpdate.Avatar = gui.Avatar;
-                guiUpdate.EmpIdupdate = TourGuideId;
+                guiUpdate.EmpIdupdate = gui.EmpIdupdate;
                 guiUpdate.DateUpdate = DateTime.Now;
-                guiUpdate.Status = gui.Status;
-
-
                 await _context.SaveChangesAsync();
                 return Ok(guiUpdate);
             }
@@ -213,20 +205,21 @@ namespace QuanLyTourDuLich.Controllers
 
         //xóa một nhân viên
         [HttpPut("Adm_DeleteTourGuide")]
-        public async Task<IActionResult> Adm_DeleteTourGuide(Guid? TourGuideId, [FromBody]Guid? []Ids)
+        [Authorize]
+        public async Task<IActionResult> Adm_DeleteTourGuide([FromBody] DeleteModels deleteModels)
         {
 
             try
             {
-                var guiDelete = await _context.TourGuide.Where(m => Ids.Contains(m.TourGuideId)).ToListAsync();
+                var guiDelete = await _context.TourGuide.Where(m => deleteModels.SelectByIds.Contains(m.TourGuideId)).ToListAsync();
                 guiDelete.ForEach(m =>
                 {
-                    m.EmpIdupdate = TourGuideId;
+                    m.EmpIdupdate = deleteModels.EmpId;
                     m.DateUpdate = DateTime.Now;
                     m.IsDelete = false;
                 });
                 await _context.SaveChangesAsync();
-                return Ok(guiDelete);
+                return Ok();
             }
             catch
             {
