@@ -1,0 +1,200 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        .header {
+            color: #333 !important;
+           
+            font-weight: bold !important;
+        }
+        .tour-details__map-route .title {
+            font-size: 15pt;
+            text-transform: uppercase;
+            font-weight: bold !important;
+            color: #333 !important;
+            text-align: center !important;
+            margin-bottom: 20px !important;
+        }
+
+        .content .timeline-title {
+            color: #333 !important;
+            margin-bottom: 0.5rem !important;
+            font-weight: bold !important;
+            font-size: 14pt !important;
+            text-transform: capitalize !important;
+            line-height: 1.9 !important;
+        }
+        .content .timeline .timeline-details {
+            color: #333 !important;
+            font-size: 13pt !important;
+            font-weight: normal !important;
+            line-height: 32pt !important;
+            text-align: justify !important;
+        }
+            .content .timeline .timeline-details p, span {
+                color: #333 !important;
+                font-size: 13pt !important;
+                font-weight: normal !important;
+                line-height: 32pt !important;
+                text-align: justify !important;
+            }
+        .info-customer{
+            font-size: 13pt;
+        }
+            .info-customer p {
+                font-weight: bold;
+                color: #333;
+            }
+    </style>
+</head>
+<body>
+    <div {stylesMarrgin}>
+        <!--Header-->
+        <div class="header">
+            <img src="http://192.168.1.9:8000/ImagesCompanyTravel/icon_logo_mytour.png" alt="logo" />
+            <p style="margin-top:0pt">CÔNG TY CỔ PHẦN DU LỊCH VIỆT NAM VNTRAVEL</p>
+            <p style="margin-top:-5pt">Địa chỉ: 35 Nguyễn Hữu Tiến, phường Tây Thạnh, quận Tân Phú </p>
+            <p style="margin-top:-5pt">Số điện thoại: 0357866848</p>
+        </div>
+
+        <!--Thông tin đặt-->
+        <div>
+            <h2 style="color: rgb(253, 80, 86); font-size: 15pt;font-weight: bold;margin-bottom: 20pt ">THÔNG TIN KHÁCH HÀNG</h2>
+            <hr />
+            <div class="info-customer" style="display: flex; justify-content: flex-start; align-items: stretch; font-size: 13pt;; margin-top: -10pt">
+                <div style="width: 25%">
+                    <span>Họ tên</span>
+                    <p style="margin-top: -5pt">{h-customer-name}</p>
+                </div>
+                <div style="width: 35%">
+                    <span>Email</span>
+                    <p style="margin-top: -5pt">{h-customer-email}</p>
+                </div>
+                <div style="width: 40%">
+                    <span>Địa chỉ</span>
+                    <p style="margin-top: -5pt">{h-customer-address}</p>
+                </div>
+            </div>
+            <div class="info-customer" style="display: flex;justify-content:flex-start; align-items: stretch; font-size: 13pt;margin-top: -10pt">
+                <div style="width: 25%">
+                    <span>Số điện thoại</span>
+                    <p style="margin-top: -5pt">{h-phone-number}</p>
+                </div>
+                <div style="width: 35%">
+                    <span>Số lượng khách</span>
+                    <p style="margin-top: -5pt">{h-qadult} Người lớn,{h-qChildren} Trẻ em,{h-qbaby} Trẻ nhỏ, {h-qInfant} Em bé</p>
+                </div>
+                <div>
+                    <span style="width: 40%">Các ghi chú</span>
+                    <p style="margin-top: -5pt">{h-customer-optionsNote}</p>
+                </div>
+            </div>
+
+        </div>
+        <!--Thông tin phiếu đặt-->
+        <div>
+            <h2 style="color: rgb(253, 80, 86); font-size: 15pt;font-weight: bold;margin-bottom: 20pt ">CHI TIẾT BOOKING</h2>
+            <hr />
+
+
+            <div class="info-customer" style="display: flex;justify-content:flex-start; align-items: stretch; font-size: 13pt;">
+                <div style="width: 60%">
+                    <div>
+                        <span>Mã booking</span>
+                        <p style="margin-top: -5pt; color: #2d4271">{h-BookingTourID}</p>
+                    </div>
+                    <div style="margin-top: -10pt">
+                        <span>Mã tour</span>
+                        <p style="margin-top: -5pt; color: #2d4271">{h-TourID}</p>
+                    </div>
+                    <div style="display: flex; justify-content: flex-start; align-items: stretch; margin-top: -10pt">
+                        <div style="width: 30%">
+                            <span>Ngày đặt tour</span>
+                            <p style="margin-top: -5pt;">{h-booking-date}</p>
+                        </div>
+                        <div style="width: 35%">
+                            <span>Tình trạng thanh toán</span>
+                            <p style="margin-top: -5pt;">{h-status}</p>
+                        </div>
+                        <div style="width: 35%">
+                            <span>Hình thức thanh toán</span>
+                            <p style="margin-top: -5pt;">{h-type-payment}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-start; align-items: stretch; margin-top: -10pt">
+                        <div style="width: 30%">
+                            <span>Tổng tiền booking</span>
+                            <p style="margin-top: -5pt;">{h-total-money-booking}</p>
+                        </div>
+                        <div style="width: 35%">
+                            <span>Tổng giảm giá</span>
+                            <p style="margin-top: -5pt;">{h-total-money-discount}</p>
+                        </div>
+                        <div style="width: 35%">
+                            <span>Tổng tiền (tất cả)</span>
+                            <p style="margin-top: -5pt;">{h-total-money}</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex;justify-content:flex-start; align-items: stretch;">
+                    <img style="width: 220px; height: 205px; object-fit: cover; margin-top: 20px" src="{h-QR}" />
+                </div>
+
+            </div>
+            <div class="info-customer" style="display: flex;justify-content:flex-start; align-items: stretch; font-size: 13pt;margin-top: -10pt">
+                <div style="width: 100%">
+                    <span>Tên tour</span>
+                    <p style="margin-top: -5pt">{h-Tour-Name}</p>
+                </div>
+
+            </div>
+            <div class="info-customer" style="display: flex;justify-content:flex-start; align-items: stretch; font-size: 13pt;margin-top: -10pt">
+                <div style="width: 60%">
+                    <span>Hành trình</span>
+                    <p style="margin-top: -5pt">{h-journeys}</p>
+                </div>
+                <div style="width: 20%">
+                    <span>Ngày đi</span>
+                    <p style="margin-top: -5pt">{h-Date-Start}</p>
+                </div>
+                <div style="width: 20%">
+                    <span>Ngày về</span>
+                    <p style="margin-top: -5pt">{h-Date-End}</p>
+                </div>
+
+            </div>
+
+        </div>
+            
+        <!--Bản đồ và lịch trình-->
+        <div class="tour-details__map-route">
+            <h2 class="title">LỊCH TRÌNH TOUR</h2>
+            <div class="content">
+                {h-shedule-mytour}
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: stretch">
+
+            <div style="display: flex; justify-content: flex-end; align-items: center;">
+                <div style="margin-right: 70pt; font-size: 13pt; line-height: 13px">
+                    <p style="text-align: center">Đại diện khách hàng</p>
+                    <p style="text-align: center">(Kí tên)</p>
+                    <p style="text-align: center; margin-top: 30pt">{h-customer-name}</p>
+                </div>
+                <div style="margin-right: 40pt; font-size: 13pt; line-height: 12px">
+                    <p style="text-align: center">Nhân viên xác nhận</p>
+                    <p style="text-align: center">(Kí tên)</p>
+                    <p style="text-align: center; margin-top: 30pt">{h-employee}</p>
+                </div>
+            </div>
+        </div>
+        <!--Footer-->
+    </div>
+</body>
+</html>
+
