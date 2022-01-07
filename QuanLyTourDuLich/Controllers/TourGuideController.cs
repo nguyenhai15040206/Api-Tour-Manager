@@ -40,7 +40,7 @@ namespace QuanLyTourDuLich.Controllers
                 var listObj = await (from guide in _context.TourGuide
                                   join e in _context.Employee on guide.EmpIdinsert equals e.EmpId
                                   where  (guide.IsDelete == null || guide.IsDelete == true)
-                                  orderby guide.DateUpdate descending
+                                  orderby guide.DateUpdate descending, guide.DateInsert descending
                                   select new
                                   {
                                       guide.TourGuideId,

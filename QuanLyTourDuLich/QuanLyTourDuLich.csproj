@@ -29,6 +29,8 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.12.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="sautinsoft.htmltortf" Version="8.2.12.7" />
+    <PackageReference Include="Select.HtmlToPdf.NetCore" Version="21.2.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
   </ItemGroup>

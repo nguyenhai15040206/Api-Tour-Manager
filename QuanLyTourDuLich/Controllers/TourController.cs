@@ -12,6 +12,8 @@ using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -21,7 +23,7 @@ namespace QuanLyTourDuLich.Controllers
     {
         // Nguyễn Tấn Hải [24/10/2021] - Rest full api Tour
 
-        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTour/";
+        public const string BaseUrlServer = "http://localhost:8000/ImagesTour/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
         public IConfiguration _config;
         public TourController(HUFI_09DHTH_TourManagerContext context, IConfiguration config)
@@ -73,7 +75,9 @@ namespace QuanLyTourDuLich.Controllers
                                           ptt.Regions,
                                           t.Suggest,
                                           //tourGuideName = a.TourGuideName?? null,
-                                      }).Distinct().ToListAsync();
+                                      }).ToListAsync();
+                // nhóm dữ liệu 
+                tourList = tourList.Distinct().ToList();
                 var listObj = tourList.GroupBy(x => x.TourName.Trim()).Select(m => m.FirstOrDefault());
                 // lọc các tour khi người dùng click vào trang details => lọc ra các tour có chứa 
                 if(regions != null)
@@ -115,8 +119,6 @@ namespace QuanLyTourDuLich.Controllers
                                     join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
                                     join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
                                     from a in ttg.DefaultIfEmpty()
-                                        // Xử lý search 
-                                        // nếu check == true => xuất tất cả => ngược lại (với trạng thái isDelete là Null)
                                     where (t.IsDelete == null || t.IsDelete == true) && (td.IsDelete == null || td.IsDelete == true)
                                     orderby t.DateUpdate descending, t.DateStart ascending
                                     select new
@@ -148,11 +150,10 @@ namespace QuanLyTourDuLich.Controllers
                                         t.TravelTypeId,
                                         travelTypeName = type.EnumerationTranslate,
                                         //type.TravelTypeName,
-
                                         tourGuideName = t.TourGuideId == null ? "Chưa cập nhật" : a.TourGuideName
-                                    }).Distinct().ToListAsync();
+                                    }).ToListAsync();
                 #endregion
-
+                result = result.Distinct().ToList();
                 #region lọc dữ liệu với các điều kiện
                 if (tourSearch.TourName != "" && tourSearch.TourName !=null)
                 {
@@ -234,7 +235,8 @@ namespace QuanLyTourDuLich.Controllers
                                                                 && m.TourId == t.TourId && m.Promotion.DateEnd >= DateTime.Now.Date)
                                                                 .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
 
-                                }).Distinct().ToListAsync();
+                                }).ToListAsync();
+                rs = rs.Distinct().ToList();
                 #endregion
                 var listObjTemp = rs.GroupBy(x => x.TourId).Select(m => m.FirstOrDefault());
 
@@ -490,6 +492,9 @@ namespace QuanLyTourDuLich.Controllers
                                              t.QuanityMax,
                                              quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
                                              schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n", ""),
+                                             NoteByTour = t.NoteByTour==null? "": t.NoteByTour.Replace("&nbsp;", "").Replace("\n", ""),
+                                             NoteByMyTour = t.NoteByMyTour == null ? "" : t.NoteByMyTour.Replace("&nbsp;", "").Replace("\n", ""),
+                                             ConditionByTour = t.ConditionByTour == null ? "" : t.ConditionByTour.Replace("&nbsp;", "").Replace("\n", ""),
                                              touGuideName = t.TourGuideId ==null? null: t.TourGuide.TourGuideName,
                                              transportStart = t.CompanyTransportStartId ==null? null: t.CompanyTransportStart.Enumeration.EnumerationTranslate,
                                              transportInTour = t.CompanyTransportInTourId ==null? null: t.CompanyTransportInTour.Enumeration.EnumerationTranslate,
@@ -712,7 +717,7 @@ namespace QuanLyTourDuLich.Controllers
                     await _context.TourDetails.AddAsync(pInsert);
                 }
                 await _context.SaveChangesAsync();
-                return Ok(rs);
+                return Ok(objNew);
             }
             catch (Exception ex)
             {
@@ -803,142 +808,5 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
-        ///get tất cả các tour
-        ///
-        [HttpGet("MB_Cli_GetTourListPagination")]
-        public async Task<IActionResult> Cli_GetTourListPagination(string provinceName,Guid? tourFamily, int page = 1, int limit = 10)
-        {
-            try
-            {
-                bool isTourName = (!string.IsNullOrEmpty(provinceName));
-                Guid travelType = new Guid();
-                bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
-                var tourList = await (from t in _context.Tour
-                                      join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId // ty em check lai cho nay nha
-                                      //join up in _context.UnitPrice on t.TourId equals up.TourId
-                                      join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                      join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                      from a in ttg.DefaultIfEmpty()
-                                      where isTourName == true ?
-                                       ((t.IsDelete == null || t.IsDelete == true)
-                                      && pf.ProvinceName.Contains(provinceName)
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-                                      : isGuid == true ?
-                                      (t.TravelTypeId == tourFamily
-                                      && (t.IsDelete == null || t.IsDelete == true)
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-                                      : ((t.IsDelete == null || t.IsDelete == true)
-                                      && t.Suggest == true
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-
-                                      orderby t.DateUpdate descending, t.DateStart ascending
-                                      select new
-                                      {
-                                          t.TourId,
-                                          t.TourName,
-                                          tourImg = BaseUrlServer + t.TourImg.Trim(),
-                                          DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                          Time= (t.DateEnd - t.DateStart).Value.Days,
-                                          t.Rating,
-                                          t.QuanityMax,
-                                          t.QuanityMin,
-                                          t.AdultUnitPrice,
-                                          pf.ProvinceName, //dau
-                                          t.Suggest,
-                                          t.TravelTypeId,
-                                      }).Skip((page - 1) * limit).Take(limit).ToListAsync();
-                int totalRecord = (from t in _context.Tour
-                                   join pf in _context.Province on t.DeparturePlaceTo equals pf.ProvinceId
-                                   where isTourName == true ?
-                                       ((t.IsDelete == null || t.IsDelete == true)
-                                      && pf.ProvinceName.Contains(provinceName)
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-                                      : isGuid == true ?
-                                      (t.TravelTypeId == tourFamily 
-                                      && (t.IsDelete == null || t.IsDelete == true)
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-                                      : ((t.IsDelete == null || t.IsDelete == true) 
-                                      && t.Suggest == true
-                                      && t.DateStart >= DateTime.Now.Date.AddDays(1))
-                                   select t).Count();
-                // lay du lieu phan trang, tinh ra duoc tong so trang, page thu may,... Ham nay cu coppy
-                var pagination = new Pagination
-                {
-                    count = totalRecord,
-                    currentPage = page,
-                    pagsize = limit,
-                    totalPage = (int)Math.Ceiling(decimal.Divide(totalRecord, limit)),
-                    indexOne = ((page - 1) * limit + 1),
-                    indexTwo = (((page - 1) * limit + limit) <= totalRecord ? ((page - 1) * limit * limit) : totalRecord)
-                };
-                // status code 200
-                return Ok(new
-                {
-                    data = tourList,
-                    pagination = pagination
-
-                });
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
-
-        [HttpGet("MB_Cli_GetTourDescriptionById")]
-        public async Task<IActionResult> Cli_GetTourDescriptionById(Guid TourId)
-        {
-            try
-            {
-                var tour = await (from t in _context.Tour
-                                  join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
-                                  join emp in _context.Employee on t.EmpIdupdate equals emp.EmpId
-                                  //join tg in _context.TourGuide on t.TourGuideId equals tg.TourGuideId into ttg
-                                  //from a in ttg.DefaultIfEmpty()
-                                  where t.TourId == TourId
-                                  select new
-                                  {
-                                      t.TourId,
-                                      t.TourName,
-                                      tourImg = BaseUrlServer + t.TourImg.Trim(),
-                                      t.Description,
-                                      DateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                      Time = (t.DateEnd - t.DateStart).Value.Days,
-                                      t.BabyUnitPrice,
-                                      t.ChildrenUnitPrice,
-                                      t.QuanityMax,
-                                      t.QuanityMin,
-                                      schedule = t.Schedule.Replace("&nbsp;", "").Replace("\n", ""),
-                                      t.Rating,
-                                      t.AdultUnitPrice,
-                                      quanity = t.QuanityMax > t.CurrentQuanity ? (t.QuanityMax - t.CurrentQuanity) : 0,
-                                      t.Surcharge,
-                                      DeparturePlaceTo = _context.Province.Where(m => m.ProvinceId == t.DeparturePlaceTo).Select(m => m.ProvinceName).FirstOrDefault(),
-                                      t.TravelTypeId,
-                                      pf.ProvinceName,
-                                      touGuideName = t.TourGuideId == null ? null : t.TourGuide.TourGuideName,
-                                      transportStart = t.CompanyTransportStartId == null ? null : t.CompanyTransportStart.Enumeration.EnumerationTranslate,
-                                      transportInTour = t.CompanyTransportInTourId == null ? null : t.CompanyTransportInTour.Enumeration.EnumerationTranslate,
-                                      t.NoteByMyTour,
-                                      t.NoteByTour,
-                                      t.ConditionByTour,
-                                      t.GroupNumber,
-                                      tourDetails = (from td in _context.TourDetails
-                                                     join tatt in _context.TouristAttraction on td.TouristAttrId equals tatt.TouristAttrId
-                                                     where td.TourId == TourId
-                                                         && (tatt.IsDelete == null || tatt.IsDelete == true)
-                                                         && (td.IsDelete == null || tatt.IsDelete == true)
-                                                     select new
-                                                     {
-                                                         tatt.TouristAttrName,
-                                                     }).ToList(),
-                                  }).FirstOrDefaultAsync();
-                return Ok(tour);
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
-            }
-        }
     }
 }

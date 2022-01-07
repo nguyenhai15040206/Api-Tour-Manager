@@ -117,7 +117,7 @@ namespace QuanLyTourDuLich.Controllers
                 string[] separatorAddress = { "||" };
                 var listObj = await (from emp in _context.Employee
                                      where (emp.IsDelete == null || emp.IsDelete == true)
-                                     orderby emp.DateUpdate descending
+                                     orderby emp.DateUpdate descending, emp.DateInsert descending
                                      select new
                                      {
                                          emp.EmpId,

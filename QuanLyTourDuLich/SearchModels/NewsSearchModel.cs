@@ -14,6 +14,7 @@ namespace QuanLyTourDuLich.SearchModels
 
     public class NewsSearchClientModels : NewsSearchModel
     {
+        public bool MainPage { get; set; }
         public int Page { get; set; }
         public int Limit { get; set; }
     }
