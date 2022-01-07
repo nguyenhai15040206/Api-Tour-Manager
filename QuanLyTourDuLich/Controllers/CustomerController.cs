@@ -392,7 +392,29 @@ namespace QuanLyTourDuLich.Controllers
                                     c.PhoneNumber,
                                     c.Address,
                                 }).FirstOrDefaultAsync();
-                return Ok(rs);
+                string Address = rs.Address;
+                if (rs.Address != null)
+                {
+                    string[] arrAdress = rs.Address.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).ToArray();
+                    Address = arrAdress[0].ToString();
+                    string wards = "";
+                    string provice = "";
+                    string districts = "";
+                    if (arrAdress.Length == 4)
+                    {
+
+                        wards = await _context.Wards.Where(m => m.WardId == int.Parse(arrAdress[1].Trim().ToString())).Select(m => m.WardName).FirstOrDefaultAsync();
+                        districts = await _context.District.Where(m => m.DistrictId == int.Parse(arrAdress[2].Trim().ToString())).Select(m => m.DistrictName).FirstOrDefaultAsync();
+                        provice = await _context.Province.Where(m => m.ProvinceId == int.Parse(arrAdress[3].Trim().ToString())).Select(m => m.ProvinceName).FirstOrDefaultAsync();
+                        Address = Address + ", " + wards + ", " + districts + ", " + provice;
+                    }
+
+                }
+                return Ok(new
+                {
+                    data = rs,
+                    address = Address,
+                });
             }
             catch
             {

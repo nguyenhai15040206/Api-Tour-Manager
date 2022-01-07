@@ -25,4 +25,12 @@ namespace QuanLyTourDuLich.SearchModels
     {
         public Guid? BookingTourID { get; set; }
     }
+
+    public class BookingSaerchCli
+    {
+        public Guid? CustomerId { get; set; }
+        public bool isDelete { get; set; }
+        public int Page { get; set; }
+        public int Limit { get; set; }
+    }
 }

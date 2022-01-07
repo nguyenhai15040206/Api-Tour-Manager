@@ -293,7 +293,7 @@ namespace QuanLyTourDuLich.Controllers
                                 {
                                     n.NewsId,
                                     n.NewsName,
-                                    n.Content,
+                                    Content= n.Content.Replace("<p></p>","").Replace("<p>&nbsp;</p>","").Replace("&nbsp;","").Replace("\n",""),
                                     NewsImg = BaseUrlServer + n.NewsImg.Trim(),
                                     n.Enumeration.EnumerationTranslate,
                                     n.EnumerationId,
