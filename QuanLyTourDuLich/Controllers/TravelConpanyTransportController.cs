@@ -52,7 +52,7 @@ namespace QuanLyTourDuLich.Controllers
                                             && ((tct.IsDelete == null || tct.IsDelete == true) &&
                                                 (cat.IsDelete == null || cat.IsDelete == true))
                                         )
-                                      orderby tct.DateUpdate descending
+                                      orderby tct.DateUpdate descending, tct.DateInsert descending
                                       select new
                                       {
                                           tct.CompanyId,

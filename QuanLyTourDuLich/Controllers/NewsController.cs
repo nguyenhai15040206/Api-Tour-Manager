@@ -10,6 +10,7 @@ using QuanLyTourDuLich.SearchModels;
 using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 
 namespace QuanLyTourDuLich.Controllers
 {
@@ -37,7 +38,7 @@ namespace QuanLyTourDuLich.Controllers
                 // truy van thong tin lay nhung j can thiet
                 var listObj = await (from n in _context.News
                                      where (n.IsDelete == null || n.IsDelete == true)
-                                     orderby n.DateUpdate descending
+                                     orderby n.DateUpdate descending, n.DateInsert descending
                                      select new
                                      {
                                          n.NewsId,
@@ -225,24 +226,36 @@ namespace QuanLyTourDuLich.Controllers
 
             try
             {
+                
+                string[] separator = { "." };
                 // truy van thong tin lay nhung j can thiet
                 var listObj = await (from n in _context.News
+                                     join c in _context.CatEnumeration on n.EnumerationId equals c.EnumerationId
                                      where (n.IsDelete == null || n.IsDelete == true)
-                                     orderby n.DateUpdate descending
+                                     orderby c.EnumerationTranslate ascending
                                      select new
                                      {
                                          n.NewsId,
                                          n.NewsName,
-                                         //n.Content,
+                                         Content =  Regex.Replace(n.Content, @"<(.|\n)*?>", string.Empty).Replace("\n", ""),
                                          newsImg = BaseUrlServer+ n.NewsImg.Trim(),
                                          KindOfNew = n.Enumeration.EnumerationTranslate,
                                          n.EnumerationId,
                                          DateUpdate = DateTime.Parse(n.DateUpdate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
 
                                      }).ToListAsync();
-                if (pSearch.KindOfNewsID != null)
+                if (pSearch.MainPage == true)
                 {
-                    listObj = listObj.Where(m => m.EnumerationId == pSearch.KindOfNewsID).ToList();
+                    var listObjTemp = listObj.GroupBy(x => x.KindOfNew.Trim(), (key,g)=> new { EnumerationId = g.Count()==0? "":g.ToArray()[0].EnumerationId.ToString(),
+                                                    KindOfNew = key, Data=g.Take(pSearch.Limit).OrderByDescending(m=>m.DateUpdate).ToList() }).ToList();
+                    return Ok(listObjTemp);
+                }
+                else
+                {
+                    if (pSearch.KindOfNewsID != null)
+                    {
+                        listObj = listObj.Where(m => m.EnumerationId == pSearch.KindOfNewsID).ToList();
+                    }
                 }
                 int totalRecord = listObj.Count();
                 var pagination = new Pagination

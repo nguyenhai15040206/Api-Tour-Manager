@@ -41,7 +41,7 @@ namespace QuanLyTourDuLich.Controllers
                                         join p in _context.Province on t.ProvinceId equals p.ProvinceId
                                         where (t.IsDelete == null || t.IsDelete == true)
                                             && p.Regions== regions
-                                        orderby t.DateUpdate descending
+                                        orderby t.DateUpdate descending, t.DateInsert descending
                                         select new
                                         {
                                             value= t.TouristAttrId,
@@ -117,7 +117,7 @@ namespace QuanLyTourDuLich.Controllers
                                              && (istouristAttrName && t.TouristAttrName.Contains(trsa.TouristAttrName.Trim()))
                                             || (isprovinceID && trsa.ProvinceID.Contains(t.ProvinceId))
                                         )
-                                        orderby t.DateUpdate descending
+                                        orderby t.DateUpdate descending, t.DateInsert descending
                                         select new
                                         {
                                             t.TouristAttrId,
