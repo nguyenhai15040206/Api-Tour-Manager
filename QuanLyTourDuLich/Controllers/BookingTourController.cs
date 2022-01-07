@@ -149,6 +149,14 @@ namespace QuanLyTourDuLich.Controllers
                     await _context.SaveChangesAsync();
                     rs = customer;
                 }
+                else
+                {
+                    if (bookingTourModels.Address != "")
+                    {
+                        rs.Address = bookingTourModels.Address;
+                        await _context.SaveChangesAsync();
+                    }
+                }
                 
                     // Theem thoong tin Booking tour
                 BookingTour bookingTour = new BookingTour();
@@ -483,8 +491,8 @@ namespace QuanLyTourDuLich.Controllers
         //
         ///get tour theo id customer,thái trần kiều diễm
         ///
-        [HttpGet("MB_GetBookedByCustomer")] 
-        public async Task<IActionResult> MB_GetBookedByCustomer(Guid? customerId,bool isDelete)
+        [HttpPost("MB_GetBookedByCustomer")] 
+        public async Task<IActionResult> MB_GetBookedByCustomer(BookingSaerchCli search)
         {
             try
             {
@@ -493,13 +501,13 @@ namespace QuanLyTourDuLich.Controllers
                                 join t in _context.Tour on b.TourId equals t.TourId
                                 join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
                                 join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
-                                where isDelete == true
+                                where search.isDelete == true
                                     ?
                                     ((b.IsDelete == null || b.IsDelete == true)
-                                    && b.CustomerId == customerId)
+                                    && b.CustomerId == search.CustomerId)
                                     :
                                     ((b.IsDelete == false)
-                                    && b.CustomerId == customerId)
+                                    && b.CustomerId == search.CustomerId)
                                 select new
                                 {
                                     b.BookingTourId,
