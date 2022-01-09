@@ -19,7 +19,6 @@ namespace QuanLyTourDuLich.Controllers
     public class ImagesUploadController : ControllerBase
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private string _baseUrl = "http://192.168.1.9:8000/";
         public ImagesUploadController(IWebHostEnvironment webHostEnvironment)
         {
             this._webHostEnvironment = webHostEnvironment;
@@ -211,6 +210,36 @@ namespace QuanLyTourDuLich.Controllers
             }
         }
 
+
+        //
+        [HttpPost]
+        [Route("Adm_UploadImageBanner")]
+        [Authorize]
+        public async Task<IActionResult> UploadImageBanner([FromForm] IFormFile file)
+        {
+            try
+            {
+                string fileName = string.Empty;
+                string path = $"{this._webHostEnvironment.WebRootPath}\\ImagesBanner";
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                if (file.Length > 0)
+                {
+                    fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    string fullPath = Path.Combine(path, fileName);
+                    using (var image = Image.Load(file.OpenReadStream()))
+                    {
+                        image.Mutate(m => m.Resize(1980, 488));
+                        await image.SaveAsync(fullPath);
+                    }
+                }
+                return Ok(new { FileName = fileName });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database");
+            }
+        }
 
 
     }

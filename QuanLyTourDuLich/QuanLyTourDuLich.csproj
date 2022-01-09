@@ -40,6 +40,7 @@
     <Folder Include="wwwroot\ImagesTouristAttractions\" />
     <Folder Include="wwwroot\ImagesCompanyTravel\" />
     <Folder Include="wwwroot\ImagesNews\" />
+    <Folder Include="wwwroot\ImagesBanner\" />
   </ItemGroup>
 
 

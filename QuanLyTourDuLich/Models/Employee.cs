@@ -7,6 +7,8 @@ namespace QuanLyTourDuLich.Models
     {
         public Employee()
         {
+            BannerEmpIdinsertNavigation = new HashSet<Banner>();
+            BannerEmpIdupdateNavigation = new HashSet<Banner>();
             BookingTour = new HashSet<BookingTour>();
             CatEnumerationEmpIdinsertNavigation = new HashSet<CatEnumeration>();
             CatEnumerationEmpIdupdateNavigation = new HashSet<CatEnumeration>();
@@ -48,6 +50,8 @@ namespace QuanLyTourDuLich.Models
         public bool? Status { get; set; }
         public bool? IsDelete { get; set; }
 
+        public virtual ICollection<Banner> BannerEmpIdinsertNavigation { get; set; }
+        public virtual ICollection<Banner> BannerEmpIdupdateNavigation { get; set; }
         public virtual ICollection<BookingTour> BookingTour { get; set; }
         public virtual ICollection<CatEnumeration> CatEnumerationEmpIdinsertNavigation { get; set; }
         public virtual ICollection<CatEnumeration> CatEnumerationEmpIdupdateNavigation { get; set; }
