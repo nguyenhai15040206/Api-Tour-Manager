@@ -554,6 +554,7 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
+
         //hủy tour thái trần kiều diễm
         [HttpPut("MB_DeleteTourBooked")]
         public async Task<IActionResult> MB_DeleteTourBooked(BookingTourDelete booked)
@@ -578,6 +579,53 @@ namespace QuanLyTourDuLich.Controllers
         }
 
 
+        [HttpGet("Cli_GetBookingByCustomer")]
+        public async Task<IActionResult> Cli_GetBookingByCustomer(Guid? customerId)
+        {
+            try
+            {
+                var rs = await (from b in _context.BookingTour
+                                join c in _context.Customer on b.CustomerId equals c.CustomerId
+                                join t in _context.Tour on b.TourId equals t.TourId
+                                join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
+                                join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
+                                orderby b.BookingDate descending
+                                where b.CustomerId == customerId
+                                select new
+                                {
+                                    b.BookingTourId,
+                                    t.TourName,
+                                    b.Status,
+                                    BookingDateCheck = b.BookingDate,
+                                    tourImg = BaseUrlServer + t.TourImg.Trim(),
+                                    totalDay = (int?)((TimeSpan)(t.DateEnd - t.DateStart)).TotalDays,
+                                    t.Rating,
+                                    dateStart = DateTime.Parse(t.DateStart.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    dateEnd = DateTime.Parse(t.DateEnd.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    bookingDate = DateTime.Parse(b.BookingDate.ToString()).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                                    b.TotalMoney,
+                                    b.TotalMoneyBooking,
+                                    b.IsDelete
+                                }).ToListAsync();
+                var ListObj = rs;
+                foreach (var item in ListObj.ToList())
+                {
+                    var dateCheck = DateTime.Parse(item.BookingDateCheck.ToString()).AddDays(2);
+                    if (item.Status == false && dateCheck < DateTime.Now.Date)
+                    {
+                        rs.Remove(item);
+                        var bookingOutOfDate = await _context.BookingTour.Where(m => (m.IsDelete == true || m.IsDelete == null) && m.BookingTourId == item.BookingTourId).FirstOrDefaultAsync();
+                        bookingOutOfDate.IsDelete = false;
+                    }
+                }
+                await _context.SaveChangesAsync();
+                return Ok(rs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex}");
+            }
+        }
 
         //===============================
         [HttpGet("Adm_ExportDataBookingTour")]

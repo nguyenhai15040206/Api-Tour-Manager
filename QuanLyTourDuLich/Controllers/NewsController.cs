@@ -172,7 +172,7 @@ namespace QuanLyTourDuLich.Controllers
 
         [HttpGet("Adm_ActiveNews")]
         [Authorize]
-        public async Task<IActionResult> Adm_ActiveNews(Guid? pID)
+        public async Task<IActionResult> Adm_ActiveNews(Guid? pID, Guid? pEmpID)
         {
             try
             {
@@ -183,6 +183,7 @@ namespace QuanLyTourDuLich.Controllers
                 if (update == null)
                     return NotFound(update);
                 update.Active = update.Active == false ? true : false;
+                update.EmpIdupdate = pEmpID;
                 await _context.SaveChangesAsync();
                 return Ok();
             }
@@ -199,6 +200,7 @@ namespace QuanLyTourDuLich.Controllers
         ///Xóa một tin tức
         ///
         [HttpPut("Adm_DeleteNews")]
+        [Authorize]
         public async Task<IActionResult> Adm_DeleteNews([FromBody] DeleteModels deleteModels)
         {
             try

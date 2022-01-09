@@ -12,6 +12,7 @@ namespace QuanLyTourDuLich.Models
         {
         }
 
+        public virtual DbSet<Banner> Banner { get; set; }
         public virtual DbSet<BookingTour> BookingTour { get; set; }
         public virtual DbSet<CatEnumeration> CatEnumeration { get; set; }
         public virtual DbSet<CatScreen> CatScreen { get; set; }
@@ -33,9 +34,53 @@ namespace QuanLyTourDuLich.Models
         public virtual DbSet<UserGroup> UserGroup { get; set; }
         public virtual DbSet<Wards> Wards { get; set; }
 
- 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Banner>(entity =>
+            {
+                entity.Property(e => e.BannerId)
+                    .HasColumnName("bannerID")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.Active).HasColumnName("active");
+
+                entity.Property(e => e.BannerImg)
+                    .HasColumnName("bannerImg")
+                    .HasMaxLength(150);
+
+                entity.Property(e => e.DateInsert)
+                    .HasColumnName("dateInsert")
+                    .HasColumnType("date");
+
+                entity.Property(e => e.DateUpdate)
+                    .HasColumnName("dateUpdate")
+                    .HasColumnType("date");
+
+                entity.Property(e => e.EmpIdinsert).HasColumnName("empIDInsert");
+
+                entity.Property(e => e.EmpIdupdate).HasColumnName("empIDUpdate");
+
+                entity.Property(e => e.EnumerationId).HasColumnName("enumerationID");
+
+                entity.Property(e => e.IsDelete).HasColumnName("isDelete");
+
+                entity.HasOne(d => d.EmpIdinsertNavigation)
+                    .WithMany(p => p.BannerEmpIdinsertNavigation)
+                    .HasForeignKey(d => d.EmpIdinsert)
+                    .HasConstraintName("fk_Banner_Employee_Insert");
+
+                entity.HasOne(d => d.EmpIdupdateNavigation)
+                    .WithMany(p => p.BannerEmpIdupdateNavigation)
+                    .HasForeignKey(d => d.EmpIdupdate)
+                    .HasConstraintName("fk_Banner_Employee_Update");
+
+                entity.HasOne(d => d.Enumeration)
+                    .WithMany(p => p.Banner)
+                    .HasForeignKey(d => d.EnumerationId)
+                    .HasConstraintName("fk_Banner_CatEnum");
+            });
+
             modelBuilder.Entity<BookingTour>(entity =>
             {
                 entity.Property(e => e.BookingTourId)

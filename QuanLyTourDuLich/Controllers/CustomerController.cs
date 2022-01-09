@@ -68,7 +68,7 @@ namespace QuanLyTourDuLich.Controllers
                             customer.CustomerName,
                             //customer.Gender,
                             //customer.PhoneNumber,
-                            //customer.Email,
+                            customer.Email,
                             //customer.Address,
                         },
                         accessToken = new JwtSecurityTokenHandler().WriteToken(token)
