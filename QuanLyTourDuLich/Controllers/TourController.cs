@@ -42,6 +42,7 @@ namespace QuanLyTourDuLich.Controllers
                 Guid travelType = new Guid();
                 bool isGuid = Guid.TryParse(tourFamily.ToString(), out travelType);
                 var tourList = await (from t in _context.Tour
+                                      join td in _context.TourDetails on t.TourId equals td.TourId
                                       join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                       join ptt in _context.Province on t.DeparturePlaceTo equals ptt.ProvinceId
                                       join type in _context.CatEnumeration on t.TravelTypeId equals type.EnumerationId
@@ -77,7 +78,7 @@ namespace QuanLyTourDuLich.Controllers
                                           //tourGuideName = a.TourGuideName?? null,
                                       }).ToListAsync();
                 // nhóm dữ liệu 
-                tourList = tourList.Distinct().ToList();
+                tourList = tourList.Where(m=>m.TotalCurrentQuanity > 0).Distinct().ToList();
                 var listObj = tourList.GroupBy(x => x.TourName.Trim()).Select(m => m.FirstOrDefault());
                 // lọc các tour khi người dùng click vào trang details => lọc ra các tour có chứa 
                 if(regions != null)
@@ -199,6 +200,7 @@ namespace QuanLyTourDuLich.Controllers
                 #region truy vấn thông tin
                 // lấy danh sách tất cả các tour thỏa
                 var rs = await (from t in _context.Tour
+                                join td in _context.TourDetails on t.TourId equals td.TourId
                                 join tt in _context.CatEnumeration on t.TravelTypeId equals tt.EnumerationId
                                 join pf in _context.Province on t.DeparturePlaceFrom equals pf.ProvinceId
                                 join pt in _context.Province on t.DeparturePlaceTo equals pt.ProvinceId
@@ -236,7 +238,7 @@ namespace QuanLyTourDuLich.Controllers
                                                                 .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
 
                                 }).ToListAsync();
-                rs = rs.Distinct().ToList();
+                rs = rs.Where(m => m.TotalCurrentQuanity > 0).Distinct().ToList();
                 #endregion
                 var listObjTemp = rs.GroupBy(x => x.TourId).Select(m => m.FirstOrDefault());
 
@@ -472,7 +474,7 @@ namespace QuanLyTourDuLich.Controllers
                 var tourDetails = await (from t in _context.Tour
                                          join p in _context.Province on t.DeparturePlaceFrom equals p.ProvinceId
                                          join ptt in _context.Province on t.DeparturePlaceTo equals ptt.ProvinceId
-                                         //join td in _context.TourDetails on t.TourId equals td.TourId
+                                         join td in _context.TourDetails on t.TourId equals td.TourId
                                          join pt in _context.PromotionalTour on t.TourId equals pt.TourId into tpt
                                          from a in tpt.DefaultIfEmpty()
                                          join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
