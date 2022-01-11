@@ -20,7 +20,7 @@ namespace QuanLyTourDuLich.Controllers
         /// <summary>
         /// [Thái Trần Kiều Diễm 20211109- xử lý danh sách địa điểm du lịch]
         /// </summary>
-        public const string BaseUrlServer = "http://192.168.1.81:8000/ImagesTouristAttractions/";
+        public const string BaseUrlServer = "http://localhost:8000/ImagesTouristAttractions/";
         private readonly HUFI_09DHTH_TourManagerContext _context;
 
         public TouristAttractionController(HUFI_09DHTH_TourManagerContext context)

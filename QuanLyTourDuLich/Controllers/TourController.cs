@@ -209,7 +209,7 @@ namespace QuanLyTourDuLich.Controllers
                                 join km in _context.Promotion on a.PromotionId equals km.PromotionId into kma
                                 from b in kma.DefaultIfEmpty()
                                 where (t.IsDelete == null || t.IsDelete == true) && t.DateStart >= DateTime.Now.Date.AddDays(1)
-                                orderby t.DateUpdate descending
+                                orderby t.DateUpdate descending, t.DateInsert
                                 select new TourModel {
                                     TourId = t.TourId,
                                     TourName = t.TourName,
@@ -237,7 +237,7 @@ namespace QuanLyTourDuLich.Controllers
                                                                 && m.TourId == t.TourId && m.Promotion.DateEnd >= DateTime.Now.Date)
                                                                 .OrderByDescending(m => m.Promotion.DateEnd).Select(m => m.Promotion.Discount).FirstOrDefault(),
 
-                                }).ToListAsync();
+                                }).Distinct().ToListAsync();
                 rs = rs.Where(m => m.TotalCurrentQuanity > 0).Distinct().ToList();
                 #endregion
                 var listObjTemp = rs.GroupBy(x => x.TourId).Select(m => m.FirstOrDefault());
