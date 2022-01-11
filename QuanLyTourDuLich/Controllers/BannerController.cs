@@ -189,5 +189,35 @@ namespace QuanLyTourDuLich.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
             }
         }
+        /// đọc thông tin banner
+        /// 
+        public async Task<IActionResult> Cli_GetBannerByType(int type)
+        {
+            try
+            {
+                var rs = await (from b in _context.Banner
+                                where (b.IsDelete == null || b.IsDelete == true)
+                                orderby b.DateUpdate descending, b.DateInsert descending
+                                select new
+                                {
+                                    b.BannerId,
+                                    b.BannerImg,
+                                }).Take(5).ToListAsync();
+                //switch (type)
+                //{
+                //    case 1:
+                //        rs = rs.Where(m=>m.)
+                //        break;
+                //    case 2:
+                //        break;
+                //    default: break;
+                //}
+                return Ok(rs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new News record");
+            }
+        }
     }
 }
