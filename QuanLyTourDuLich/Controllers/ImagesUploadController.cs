@@ -213,9 +213,9 @@ namespace QuanLyTourDuLich.Controllers
 
         //
         [HttpPost]
-        [Route("Adm_UploadImageBanner")]
+        [Route("Adm_UploadImageBanner/{type}")]
         [Authorize]
-        public async Task<IActionResult> UploadImageBanner([FromForm] IFormFile file)
+        public async Task<IActionResult> UploadImageBanner([FromForm] IFormFile file, int? type=1)
         {
             try
             {
@@ -229,8 +229,17 @@ namespace QuanLyTourDuLich.Controllers
                     string fullPath = Path.Combine(path, fileName);
                     using (var image = Image.Load(file.OpenReadStream()))
                     {
-                        image.Mutate(m => m.Resize(1980, 488));
-                        await image.SaveAsync(fullPath);
+                        if (type == 1)
+                        {
+                            image.Mutate(m => m.Resize(1980, 488));
+                            await image.SaveAsync(fullPath);
+                        }
+                        else
+                        {
+                            image.Mutate(m => m.Resize(600, 376));
+                            await image.SaveAsync(fullPath);
+                        }
+                        
                     }
                 }
                 return Ok(new { FileName = fileName });
