@@ -132,6 +132,7 @@ namespace QuanLyTourDuLich.Controllers
                 {
                     rs.BannerImg = update.BannerImg;
                 }
+                rs.Active = update.Active;
                 rs.EnumerationId = update.EnumerationId;
                 rs.DateUpdate = DateTime.Now.Date;
                 rs.EmpIdupdate = update.EmpIdupdate;
@@ -196,22 +197,24 @@ namespace QuanLyTourDuLich.Controllers
             try
             {
                 var rs = await (from b in _context.Banner
-                                where (b.IsDelete == null || b.IsDelete == true)
+                                where (b.IsDelete == null || b.IsDelete == true) && b.Active==true
                                 orderby b.DateUpdate descending, b.DateInsert descending
                                 select new
                                 {
                                     b.BannerId,
                                     b.BannerImg,
+                                    b.EnumerationId,
                                 }).Take(5).ToListAsync();
-                //switch (type)
-                //{
-                //    case 1:
-                //        rs = rs.Where(m=>m.)
-                //        break;
-                //    case 2:
-                //        break;
-                //    default: break;
-                //}
+                switch (type)
+                {
+                    case 1:
+                        rs = rs.Where(m => m.EnumerationId == new Guid("7A1B2EAA-7C49-4657-9B73-5FB570BBDDC7")).ToList();
+                        break;
+                    case 2:
+                        rs = rs.Where(m => m.EnumerationId == new Guid("3A38ABE0-01FB-42B0-9879-D1DD6C68BB53")).ToList();
+                        break;
+                    default: break;
+                }
                 return Ok(rs);
             }
             catch (Exception)
